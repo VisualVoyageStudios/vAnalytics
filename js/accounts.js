@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }, token);
 
             if(result.message === "Account created"){
-                modal.style.display = "none";
+                closeModal();
                 document.getElementById("accountForm").reset();
                 await loadAccounts();
             } else {
