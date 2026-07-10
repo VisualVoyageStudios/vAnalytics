@@ -83,7 +83,7 @@
 
         <div class="page-header">
             <h2>Trading Accounts</h2>
-        
+
             <button id="connectAccountBtn" class="btn-primary" style="border:none; cursor:pointer;">
                 + Connect Account
             </button>
@@ -120,40 +120,29 @@
 
         <button type="button" class="modal-close" id="closeAccountModal"><i class="fas fa-xmark"></i></button>
 
-        <h2>Connect MT5 Account</h2>
+        <h2>Add Trading Account</h2>
+        <p style="color:var(--muted); font-size:13px; margin-top:-8px;">
+            Give it a name so you can tell your accounts apart. You'll sync real trades separately via the Sync Agent in Settings.
+        </p>
 
         <form id="accountForm">
 
             <input
                 type="text"
+                id="accountName"
+                placeholder="Account Name (e.g. Main FTMO, Personal)"
+                required
+            >
+
+            <input
+                type="text"
                 id="broker"
-                placeholder="Broker"
-                required
-            >
-
-            <input
-                type="text"
-                id="accountNumber"
-                placeholder="Account Number"
-                required
-            >
-
-            <input
-                type="text"
-                id="server"
-                placeholder="Server"
-                required
-            >
-
-            <input
-                type="password"
-                id="investorPassword"
-                placeholder="Investor Password"
+                placeholder="Broker (e.g. FTMO, IC Markets)"
                 required
             >
 
             <button type="submit">
-                Connect Account
+                Add Account
             </button>
 
         </form>
@@ -161,6 +150,7 @@
     </div>
 
 </div>
+
 <script src="../js/api.js"></script>
 <script src="../js/accounts.js"></script>
 <script src="../js/nav.js"></script>
