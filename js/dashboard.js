@@ -251,4 +251,7 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
 window.onload = () => {
     loadDashboard();
     loadHighImpactNews();
+    loadWeekCards();
+    loadAccountBalance();
 };
+
