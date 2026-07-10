@@ -140,11 +140,19 @@
 //const token = localStorage.token;
 //if(!token) window.location.href = "../login.html";
 
+let currentGoalData = null;
+
 const editor   = document.getElementById("goalEditor");
 const editBtn  = document.getElementById("editGoalBtn");
 
 editBtn.addEventListener("click", () => {
-    editor.style.display = editor.style.display === "none" ? "block" : "none";
+    const opening = editor.style.display === "none";
+    editor.style.display = opening ? "block" : "none";
+
+    if(opening && currentGoalData && currentGoalData.has_goal){
+        document.getElementById("targetProfit").value = currentGoalData.target_profit;
+        document.getElementById("targetTrades").value = currentGoalData.target_trades ?? "";
+    }
 });
 
 
@@ -154,7 +162,11 @@ async function loadGoal(){
             headers: { "Authorization": `Bearer ${token}` }
         });
         const data = await res.json();
+        currentGoalData = data;
         renderProgress(data);
+        editBtn.innerHTML = data.has_goal
+            ? '<i class="fas fa-pen" style="margin-right:6px;"></i>Update Goal'
+            : '<i class="fas fa-pen" style="margin-right:6px;"></i>Set Goal';
     } catch(err) {
         console.error(err);
     }
