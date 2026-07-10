@@ -76,8 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
             `;
 
-            table.appendChild(row);
-
             row.querySelector(".delete-btn")
                 .addEventListener("click", async () => {
                     if(!confirm("Delete this account?")) return;
@@ -91,11 +89,14 @@ document.addEventListener("DOMContentLoaded", () => {
         .addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            const accountName = document.getElementById("accountName").value.trim();
+            const broker       = document.getElementById("broker").value.trim();
+
             const result = await createAccount({
-                account_name:      document.getElementById("accountName").value,
-                broker:            document.getElementById("broker").value,
-                server:            "",
-                account_number:    document.getElementById("accountName").value,
+                account_name: accountName,
+                broker:       broker,
+                server:       "",
+                account_number: accountName,
                 investor_password: ""
             }, token);
 
