@@ -160,7 +160,83 @@ async function loadHighImpactNews(){
     }
 }
 
+// ── Weekly Day Cards ─────────────────────────────────────────────────
 
+let weekOffset = 0;
+
+function getWeekDates(offset){
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sun ... 6 = Sat
+    const diffToMonday = (day === 0 ? -6 : 1) - day;
+
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday + (offset * 7));
+    monday.setHours(0, 0, 0, 0);
+
+    const dates = [];
+    for(let i = 0; i < 7; i++){
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        dates.push(d);
+    }
+    return dates;
+}
+
+async function loadWeekCards(){
+    const heatmap = await getHeatmap(token);
+    const dates   = getWeekDates(weekOffset);
+    const grid    = document.getElementById("weekDaysGrid");
+    const label   = document.getElementById("weekLabel");
+
+    label.textContent = weekOffset === 0
+        ? "Current Week"
+        : `${dates[0].toLocaleDateString("en-GB", { day: "2-digit", month: "short" })} - ${dates[6].toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}`;
+
+    grid.innerHTML = dates.map(d => {
+        const iso     = d.toISOString().slice(0, 10);
+        const dayData = heatmap.find(h => h.date === iso);
+        const profit  = dayData ? dayData.profit : 0;
+        const trades  = dayData ? dayData.trades : 0;
+        const color   = profit > 0 ? "var(--success)" : profit < 0 ? "var(--danger)" : "var(--muted)";
+        const dayName = d.toLocaleDateString("en-GB", { weekday: "short" });
+        const dayNum  = d.getDate().toString().padStart(2, "0");
+
+        return `
+            <div class="metric-card" style="text-align:left;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-weight:700; font-size:14px;">${dayName} ${dayNum}</span>
+                    <span style="font-weight:700; color:${color}; font-size:13px;">
+                        ${profit > 0 ? "+" : ""}$${profit}
+                    </span>
+                </div>
+                <p style="color:var(--muted); font-size:12px;">${trades} trade${trades === 1 ? "" : "s"}</p>
+            </div>
+        `;
+    }).join("");
+}
+
+async function loadAccountBalance(){
+    const heatmap = await getHeatmap(token);
+    const cutoff  = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+
+    const last30 = heatmap.filter(h => new Date(h.date) >= cutoff);
+    const total  = last30.reduce((sum, h) => sum + h.profit, 0);
+
+    const el = document.getElementById("accountBalanceValue");
+    el.textContent  = `${total >= 0 ? "+" : ""}$${total.toFixed(2)}`;
+    el.style.color  = total >= 0 ? "var(--success)" : "var(--danger)";
+}
+
+document.getElementById("prevWeekBtn").addEventListener("click", () => {
+    weekOffset -= 1;
+    loadWeekCards();
+});
+
+document.getElementById("nextWeekBtn").addEventListener("click", () => {
+    weekOffset += 1;
+    loadWeekCards();
+});
 
 
 
