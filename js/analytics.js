@@ -1,5 +1,5 @@
-//const token = localStorage.token;
-//if(!token) window.location.href = "../login.html";
+const token = localStorage.token;
+if(!token) window.location.href = "../login.html";
 
 let currentDate = new Date();
 
