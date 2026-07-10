@@ -1,4 +1,5 @@
-
+const token = localStorage.token;
+if(!token) window.location.href = "../login.html";
 
 // Show user email in topbar
 try {
