@@ -482,15 +482,23 @@ td{
     width:100%;
     height:100%;
 
-    background:var(--bg);
+    background:rgba(0,0,0,0.65);
 
     justify-content:center;
     align-items:center;
+
+    z-index:1000;
+}
+
+.modal.open{
+    display:flex;
 }
 
 .modal-content{
 
     background:var(--bg);
+
+    border:1px solid var(--border);
 
     padding:30px;
 
@@ -498,13 +506,39 @@ td{
 
     width:400px;
 
+    max-width:90vw;
+
+    max-height:85vh;
+
+    overflow-y:auto;
+
     display:flex;
 
     flex-direction:column;
 
     gap:15px;
+
+    position:relative;
 }
-.modal-content input{
+
+.modal-close{
+    position:absolute;
+    top:16px;
+    right:16px;
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:18px;
+    cursor:pointer;
+    padding:4px 8px;
+    border-radius:6px;
+    transition:.2s;
+}
+
+.modal-close:hover{
+    color:white;
+    background:rgba(255,255,255,0.06);
+}.modal-content input{
 
     padding:12px;
 
