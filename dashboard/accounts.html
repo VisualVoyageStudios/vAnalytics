@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounts | Voyager Analytics</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/pgAnime.css">
+</head>
+<body>
+<!--Loader-->
+<div id="loader">
+  <div class="spinner"></div>
+</div>
+
+<!-- Topbar -->
+<header class="topnav">
+    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">Accounts</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<!-- Off-canvas nav drawer -->
+<aside class="nav-drawer" id="navDrawer">
+    <div class="drawer-brand">
+        <i class="fas fa-rocket"></i>
+        <div>
+            <p class="brand-name">Voyager</p>
+            <p class="brand-plan">ANALYTICS</p>
+        </div>
+    </div>
+
+    <div class="drawer-section-label">Journaling</div>
+    <nav class="drawer-nav">
+        <a href="dashboard.html"><i class="fas fa-table-cells-large"></i>Dashboard</a>
+        <a href="accounts.html"><i class="fas fa-briefcase"></i>Accounts</a>
+        <a href="trades.html"><i class="fas fa-chart-line"></i>Trades</a>
+        <a href="analytics.html"><i class="fas fa-chart-simple"></i>Analytics</a>
+        <a href="journal.html"><i class="fas fa-book-open-reader"></i>Journal</a>
+    </nav>
+
+    <div class="drawer-section-label">Market Tools</div>
+    <nav class="drawer-nav">
+        <a href="economicHeatmap.html"><i class="fas fa-globe"></i>Economic Heatmap <span class="nav-premium-badge">Elite</span></a>
+        <a href="edgeFinder.html"><i class="fas fa-crosshairs"></i>Edge Finder <span class="nav-premium-badge">Elite</span></a>
+        <a href="currencyStrength.html"><i class="fas fa-signal"></i>Currency Strength <span class="nav-premium-badge">Elite</span></a>
+        <a href="correlationMatrix.html"><i class="fas fa-table-cells"></i>Correlation Matrix <span class="nav-premium-badge">Elite</span></a>
+    </nav>
+
+    <div class="drawer-section-label">Premium</div>
+    <nav class="drawer-nav">
+        <a href="aiInsights.html"><i class="fas fa-microchip"></i>AI Insights <span class="nav-premium-badge">Pro</span></a>
+        <a href="sessionAnalysis.html"><i class="fas fa-clock"></i>Session Analysis <span class="nav-premium-badge">Starter</span></a>
+        <a href="streaks.html"><i class="fas fa-fire"></i>Streak Tracker <span class="nav-premium-badge">Starter</span></a>
+        <a href="goalTracker.html"><i class="fas fa-bullseye"></i>Goal Tracker <span class="nav-premium-badge">Starter</span></a>
+        <a href="reports.html"><i class="fas fa-file-pdf"></i>Reports <span class="nav-premium-badge">Elite</span></a>
+    </nav>
+
+    <div class="drawer-section-label">Account</div>
+    <nav class="drawer-nav">
+        <a href="settings.html"><i class="fas fa-gears"></i>Settings</a>
+    </nav>
+
+    <div class="drawer-footer">
+        <div class="drawer-user">
+            <div class="drawer-avatar" id="drawerAvatar">V</div>
+            <div>
+                <p class="drawer-user-name">voyager</p>
+                <p class="drawer-user-email" id="drawerEmail">—</p>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<div class="dashboard-container">
+    <main class="main-content">
+
+        <div class="page-header">
+            <h2>Trading Accounts</h2>
+
+            <div style="display:flex; gap:10px;">
+                <button id="syncMt5Btn" class="btn-primary" style="border:none; cursor:pointer;">
+                    Sync MT5
+                </button>
+
+                <button id="connectAccountBtn" class="btn-primary" style="border:none; cursor:pointer;">
+                    + Connect Account
+                </button>
+            </div>
+        </div>
+
+        <div class="table-card">
+
+            <table class="skeleton">
+
+                <thead>
+                    <tr>
+                        <th>Broker</th>
+                        <th>Account</th>
+                        <th>Server</th>
+                        <th>Status</th>
+                        <th>Last Sync</th>
+                    </tr>
+                </thead>
+
+                <tbody id="accountsTable">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+</div>
+
+<div id="accountModal" class="modal">
+
+    <div class="modal-content">
+
+        <h2>Connect MT5 Account</h2>
+
+        <form id="accountForm">
+
+            <input
+                type="text"
+                id="broker"
+                placeholder="Broker"
+                required
+            >
+
+            <input
+                type="text"
+                id="accountNumber"
+                placeholder="Account Number"
+                required
+            >
+
+            <input
+                type="text"
+                id="server"
+                placeholder="Server"
+                required
+            >
+
+            <input
+                type="password"
+                id="investorPassword"
+                placeholder="Investor Password"
+                required
+            >
+
+            <button type="submit">
+                Connect Account
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+<script src="../js/api.js"></script>
+<script src="../js/accounts.js"></script>
+<script src="../js/nav.js"></script>
+<script src="../js/pgAnime.js"></script>
+</body>
+</html>
