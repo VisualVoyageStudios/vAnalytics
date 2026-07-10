@@ -77,18 +77,36 @@
     <main class="main-content">
 
         <!-- Welcome hero -->
-        <section class="welcome-header">
-            <h1 id="welcomeName">Welcome back 👋</h1>
-            <div class="welcome-sub-row">
-                <span class="welcome-date" id="welcomeDate"></span>
-                <div class="week-nav">
-                    <button class="nav-arrow">←</button>
-                    <span class="week-label">Current Week</span>
-                    <button class="nav-arrow">→</button>
-                </div>
+    <section class="welcome-header">
+        <h1 id="welcomeName">Welcome back 👋</h1>
+        <div class="welcome-sub-row">
+            <span class="welcome-date" id="welcomeDate"></span>
+            <div class="week-nav">
+                <button class="nav-arrow" id="prevWeekBtn">←</button>
+                <span class="week-label" id="weekLabel">Current Week</span>
+                <button class="nav-arrow" id="nextWeekBtn">→</button>
             </div>
-        </section>
-
+        </div>
+    </section>
+    
+    <!-- Weekly day cards -->
+    <div id="weekDaysGrid" style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+        gap:12px;
+        margin-bottom:24px;
+    "></div>
+    
+    <!-- Account Balance summary -->
+    <section class="section-card">
+        <div class="section-card-header">
+            <div>
+                <h3>Account Balance</h3>
+                <p>Last 30 Days</p>
+            </div>
+        </div>
+        <p id="accountBalanceValue" style="font-size:2rem; font-weight:800;">$0</p>
+    </section>
         <!-- KPI Cards -->
         <div class="dashboard-grid">
             <div class="metric-card skeleton">
