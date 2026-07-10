@@ -4,20 +4,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!token) window.location.href = "../login.html";
 
     const connectBtn = document.getElementById("connectAccountBtn");
-    const modal      = document.getElementById("accountModal");
+    const modal       = document.getElementById("accountModal");
+    const closeBtn    = document.getElementById("closeAccountModal");
 
     if(!connectBtn || !modal){
         console.error("Accounts page elements missing — check HTML IDs");
         return;
     }
 
-    connectBtn.addEventListener("click", () => {
-        modal.style.display = "flex";
-    });
+    function openModal(){
+        modal.classList.add("open");
+    }
+    function closeModal(){
+        modal.classList.remove("open");
+    }
+
+    connectBtn.addEventListener("click", openModal);
+    closeBtn?.addEventListener("click", closeModal);
 
     modal.addEventListener("click", (e) => {
         if(e.target === modal){
-            modal.style.display = "none";
+            closeModal();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if(e.key === "Escape" && modal.classList.contains("open")){
+            closeModal();
         }
     });
 
