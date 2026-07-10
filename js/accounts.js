@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-
+    const token = localStorage.token;
+    if(!token) window.location.href = "../login.html";
 
     const connectBtn = document.getElementById("connectAccountBtn");
     const modal      = document.getElementById("accountModal");
