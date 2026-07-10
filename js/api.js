@@ -1,5 +1,5 @@
 // switch from local to live host
-const API_URL = "https://voyager-analytics-pro.onrender.com";
+const API_URL = "https://vanalytics.onrender.com";
 
 async function authFetch(url, options = {}){
     const res = await fetch(url, options);
