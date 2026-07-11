@@ -721,40 +721,6 @@ async def get_crypto_fundamentals(current_user=Depends(get_current_user)):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── Currency strength snapshot history (Postgres-backed) ─────────────
-SNAPSHOT_MAX_AGE_HOURS   = 48
-SNAPSHOT_TARGET_LOOKBACK = timedelta(hours=1)
-
-
-def _prune_old_snapshots(db: Session):
-    cutoff = datetime.utcnow() - timedelta(hours=SNAPSHOT_MAX_AGE_HOURS)
-    db.query(CurrencySnapshot).filter(CurrencySnapshot.created_at < cutoff).delete()
-    db.commit()
-
-
-def _closest_snapshot(db: Session, target_lookback: timedelta):
-    target_time = datetime.utcnow() - target_lookback
-
-    older = (
-        db.query(CurrencySnapshot)
-        .filter(CurrencySnapshot.created_at <= target_time)
-        .order_by(CurrencySnapshot.created_at.desc())
-        .first()
-    )
-    newer = (
-        db.query(CurrencySnapshot)
-        .filter(CurrencySnapshot.created_at > target_time)
-        .order_by(CurrencySnapshot.created_at.asc())
-        .first()
-    )
-
-    candidates = [s for s in [older, newer] if s is not None]
-    if not candidates:
-        return None
-
-    return min(candidates, key=lambda s: abs((s.created_at - target_time).total_seconds()))
-
-
 @app.get("/currency/strength")
 async def get_currency_strength(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
@@ -770,7 +736,6 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
             rates = data.get("rates", {})
             rates["USD"] = 1.0
 
-            _prune_old_snapshots(db)
             prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
 
             # store this pull for future comparisons
@@ -818,7 +783,6 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
                 }
                 for code in currencies
             ]
-
         except HTTPException:
             raise
         except Exception as e:
