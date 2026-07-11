@@ -68,7 +68,7 @@ echo   Voyager Sync Agent Setup
 echo ========================================
 echo.
 echo Downloading Sync Agent...
-powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/VisualVoyageStudios/Voyager-Analytics-pro/refs/heads/main/backend/sync_agent.py' -OutFile '%TEMP%\\voyager_sync_agent.py'"
+powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/VisualVoyageStudios/vanalytics/refs/heads/main/backend/sync_agent.py' -OutFile '%TEMP%\\voyager_sync_agent.py'"
 echo.
 echo Installing requirements...
 pip install fastapi uvicorn MetaTrader5 requests -q
