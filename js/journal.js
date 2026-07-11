@@ -1,6 +1,6 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
-
+ 
 async function loadJournals(){
 
     const journals = await getJournals(token);
