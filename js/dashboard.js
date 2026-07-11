@@ -1,6 +1,6 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
-
+ 
 // Show user email in topbar
 try {
     const payload = JSON.parse(atob(token.split(".")[1]));
