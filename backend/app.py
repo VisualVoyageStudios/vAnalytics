@@ -742,7 +742,7 @@ async def ai_insight(payload: dict, current_user=Depends(get_current_user)):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "llama-3.1-8b-instant",
                     "max_tokens": 8000,
                     "messages": [{"role": "user", "content": prompt}]
                 },
@@ -839,7 +839,7 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "llama-3.1-8b-instant",
                     "max_tokens": 5500,
                     "messages": [{"role": "user", "content": prompt}]
                 },
