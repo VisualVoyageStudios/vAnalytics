@@ -1,6 +1,6 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
-
+ 
 // Cache to prevent data changing on every load
 const CACHE_KEY_DATA    = "voyager_heatmap_data";
 const CACHE_KEY_TIME    = "voyager_heatmap_time";
