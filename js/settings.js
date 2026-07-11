@@ -14,8 +14,10 @@ function loadProfile() {
 }
 
 // ── Change Password ──────────────────────────────────────
-document.getElementById("changePasswordBtn")
-    .addEventListener("click", async () => {
+document.getElementById("changePasswordForm")
+    .addEventListener("submit", async (e) => {
+        e.preventDefault();
+
         const newPassword     = document.getElementById("newPassword").value;
         const confirmPassword = document.getElementById("confirmNewPassword").value;
         const msg             = document.getElementById("passwordMsg");
@@ -58,63 +60,6 @@ document.getElementById("changePasswordBtn")
         }
     });
 
-// ── Notifications — persist to localStorage ──────────────
-const NOTIF_KEYS = ["notif-drawdown","notif-sync","notif-weekly","notif-news"];
-
-function loadNotifPrefs() {
-    NOTIF_KEYS.forEach(key => {
-        const saved = localStorage.getItem(key);
-        const el    = document.getElementById(key);
-        if (el && saved !== null) el.checked = saved === "true";
-    });
-}
-
-NOTIF_KEYS.forEach(key => {
-    document.getElementById(key)?.addEventListener("change", e => {
-        localStorage.setItem(key, e.target.checked);
-    });
-});
-
-// ── Appearance ───────────────────────────────────────────
-function loadAppearancePrefs() {
-    const compact = localStorage.getItem("appearance-compact") === "true";
-    const motion  = localStorage.getItem("appearance-motion")  === "true";
-    const accent  = localStorage.getItem("accent-color") || "#3b82f6";
-
-    document.getElementById("appearance-compact").checked = compact;
-    document.getElementById("appearance-motion").checked  = motion;
-
-    applyAccent(accent);
-    document.querySelectorAll(".s-accent-dot").forEach(dot => {
-        dot.classList.toggle("active", dot.dataset.color === accent);
-    });
-}
-
-document.getElementById("appearance-compact").addEventListener("change", e => {
-    localStorage.setItem("appearance-compact", e.target.checked);
-    document.querySelector(".sidebar")?.classList.toggle("compact", e.target.checked);
-});
-
-document.getElementById("appearance-motion").addEventListener("change", e => {
-    localStorage.setItem("appearance-motion", e.target.checked);
-});
-
-document.getElementById("accentPicker").addEventListener("click", e => {
-    const dot = e.target.closest(".s-accent-dot");
-    if (!dot) return;
-
-    document.querySelectorAll(".s-accent-dot").forEach(d => d.classList.remove("active"));
-    dot.classList.add("active");
-
-    const color = dot.dataset.color;
-    localStorage.setItem("accent-color", color);
-    applyAccent(color);
-});
-
-function applyAccent(color) {
-    document.documentElement.style.setProperty("--primary", color);
-}
-
 // ── MT5 Sync Agent ───────────────────────────────────────
 document.getElementById("downloadAgentBtn").addEventListener("click", () => {
     const batContent = `@echo off
@@ -152,11 +97,11 @@ async function checkAgentStatus() {
     const status  = document.getElementById("agentStatus");
 
     if (running) {
-        dot.classList.add("online");
+        dot.style.background  = "var(--success)";
         status.style.color   = "var(--success)";
         status.textContent   = "Sync Agent is running — ready to sync";
     } else {
-        dot.classList.remove("online");
+        dot.style.background  = "var(--danger)";
         status.style.color   = "var(--muted)";
         status.textContent   = "Sync Agent not running — complete Step 1 first";
     }
@@ -229,36 +174,5 @@ document.getElementById("clearDataBtn").addEventListener("click", async () => {
     }
 });
 
-// ── Delete Account ───────────────────────────────────────
-document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
-    const confirmed = confirm(
-        "This will permanently delete your Voyager account and all data. This cannot be undone. Continue?"
-    );
-    if (!confirmed) return;
-
-    const msg = document.getElementById("clearMsg");
-
-    try {
-        const res = await fetch(`${API_URL}/auth/delete-account`, {
-            method:  "DELETE",
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-            localStorage.clear();
-            window.location.href = "../login.html";
-        } else {
-            const data = await res.json();
-            msg.style.color = "var(--danger)";
-            msg.textContent = data.detail || "Failed to delete account.";
-        }
-    } catch {
-        msg.style.color = "var(--danger)";
-        msg.textContent = "Something went wrong. Try again.";
-    }
-});
-
 // ── Init ─────────────────────────────────────────────────
 loadProfile();
-loadNotifPrefs();
-loadAppearancePrefs();
