@@ -2,6 +2,8 @@ window.addEventListener("error", (e) => {
     console.error("Global error:", e.message, "at", e.filename, "line", e.lineno);
 });
 
+const token = localStorage.token;
+if(!token) window.location.href = "../login.html";
 
 const COUNTRIES = [
     { code: "USD", name: "United States", flag: "🇺🇸" },
