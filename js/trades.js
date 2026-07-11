@@ -1,6 +1,6 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
-
+ 
 let allTrades = [];
 
 function formatDate(dateString){
