@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, timedelta
 
 # ── Config ──────────────────────────────
-API_URL  = "https://voyager-analytics-pro.onrender.com"
+API_URL = "https://vanalytics.onrender.com"
 EMAIL    = "villainsPS1@gmail.com"      # your Voyager login
 PASSWORD = "voyager11"         # your Voyager password
 # ────────────────────────────────────────
