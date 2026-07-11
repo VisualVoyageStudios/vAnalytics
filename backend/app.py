@@ -6,9 +6,11 @@ import hashlib
 import time
 import calendar
 import traceback
+import asyncio
 
 from models.goal import Goal
 from schemas.goal import GoalCreate
+from models.currency_snapshot import CurrencySnapshot
 
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -22,12 +24,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
 from models.user import Base, User
 from models.account import Account
 from models.journal import Journal
 from models.trade import Trade
-from models.currency_snapshot import CurrencySnapshot
 
 from schemas.user import UserRegister, UserLogin
 from schemas.trade import TradeCreate
@@ -106,6 +107,56 @@ class TradeImport(BaseModel):
     close_price: float
     profit: float
     time: int
+
+# ── Currency strength snapshot history (Postgres-backed) ─────────────
+
+SNAPSHOT_MAX_AGE_HOURS           = 48
+SNAPSHOT_TARGET_LOOKBACK         = timedelta(hours=1)
+SNAPSHOT_PRUNE_INTERVAL_SECONDS  = 6 * 3600  # run every 6 hours
+
+
+def _closest_snapshot(db: Session, target_lookback: timedelta):
+    target_time = datetime.utcnow() - target_lookback
+
+    older = (
+        db.query(CurrencySnapshot)
+        .filter(CurrencySnapshot.created_at <= target_time)
+        .order_by(CurrencySnapshot.created_at.desc())
+        .first()
+    )
+    newer = (
+        db.query(CurrencySnapshot)
+        .filter(CurrencySnapshot.created_at > target_time)
+        .order_by(CurrencySnapshot.created_at.asc())
+        .first()
+    )
+
+    candidates = [s for s in [older, newer] if s is not None]
+    if not candidates:
+        return None
+
+    return min(candidates, key=lambda s: abs((s.created_at - target_time).total_seconds()))
+
+
+async def _prune_snapshots_loop():
+    while True:
+        try:
+            db = SessionLocal()
+            cutoff = datetime.utcnow() - timedelta(hours=SNAPSHOT_MAX_AGE_HOURS)
+            deleted = db.query(CurrencySnapshot).filter(CurrencySnapshot.created_at < cutoff).delete()
+            db.commit()
+            db.close()
+            if deleted:
+                print(f"Pruned {deleted} old currency snapshots")
+        except Exception as e:
+            print(f"Snapshot prune error: {str(e)}")
+
+        await asyncio.sleep(SNAPSHOT_PRUNE_INTERVAL_SECONDS)
+
+
+@app.on_event("startup")
+async def start_background_tasks():
+    asyncio.create_task(_prune_snapshots_loop())
 
 # ─────────────────────────────────────────
 #  ROOT
@@ -670,40 +721,6 @@ async def get_crypto_fundamentals(current_user=Depends(get_current_user)):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── Currency strength snapshot history (Postgres-backed) ─────────────
-SNAPSHOT_MAX_AGE_HOURS   = 48
-SNAPSHOT_TARGET_LOOKBACK = timedelta(hours=1)
-
-
-def _prune_old_snapshots(db: Session):
-    cutoff = datetime.utcnow() - timedelta(hours=SNAPSHOT_MAX_AGE_HOURS)
-    db.query(CurrencySnapshot).filter(CurrencySnapshot.created_at < cutoff).delete()
-    db.commit()
-
-
-def _closest_snapshot(db: Session, target_lookback: timedelta):
-    target_time = datetime.utcnow() - target_lookback
-
-    older = (
-        db.query(CurrencySnapshot)
-        .filter(CurrencySnapshot.created_at <= target_time)
-        .order_by(CurrencySnapshot.created_at.desc())
-        .first()
-    )
-    newer = (
-        db.query(CurrencySnapshot)
-        .filter(CurrencySnapshot.created_at > target_time)
-        .order_by(CurrencySnapshot.created_at.asc())
-        .first()
-    )
-
-    candidates = [s for s in [older, newer] if s is not None]
-    if not candidates:
-        return None
-
-    return min(candidates, key=lambda s: abs((s.created_at - target_time).total_seconds()))
-
-
 @app.get("/currency/strength")
 async def get_currency_strength(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
@@ -719,7 +736,6 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
             rates = data.get("rates", {})
             rates["USD"] = 1.0
 
-            _prune_old_snapshots(db)
             prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
 
             # store this pull for future comparisons
@@ -767,7 +783,6 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
                 }
                 for code in currencies
             ]
-
         except HTTPException:
             raise
         except Exception as e:
@@ -895,7 +910,7 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
                 },
                 json={
                     "model": "llama-3.1-8b-instant",
-                    "max_tokens": 8000,
+                    "max_tokens": 5500,
                     "messages": [{"role": "user", "content": prompt}]
                 },
                 timeout=30.0
@@ -948,8 +963,8 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
     # combined) — so only fetch what's still supported, once per cycle.
     url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 
-    majors  = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"}
-    events  = []
+    majors = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"}
+    events = []
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
@@ -1016,6 +1031,7 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
     economic_calendar_cache["timestamp"] = now
 
     return cleaned
+
 # ─────────────────────────────────────────
 #  GOALS
 # ─────────────────────────────────────────
