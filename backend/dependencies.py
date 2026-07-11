@@ -4,6 +4,7 @@ from fastapi.security import HTTPBearer
 from fastapi.security import HTTPAuthorizationCredentials
 
 from jose import jwt
+from jose.exceptions import JWTError
 
 from auth_token import SECRET_KEY
 from auth_token import ALGORITHM
@@ -27,7 +28,7 @@ def get_current_user(
 
         return payload
 
-    except:
+    except JWTError:
 
         raise HTTPException(
             status_code=401,
