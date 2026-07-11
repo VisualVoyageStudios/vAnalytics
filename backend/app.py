@@ -876,12 +876,16 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
 
 economic_calendar_cache = {"data": None, "timestamp": 0}
 ECONOMIC_CACHE_TTL = 1800  # 30 minutes
+ECONOMIC_STALE_MAX_AGE = 24 * 3600  # serve stale data for up to 24h if fetch keeps failing
 
 
 @app.get("/economic/calendar")
 async def get_economic_calendar(current_user=Depends(get_current_user)):
 
-    if economic_calendar_cache["data"] and (time.time() - economic_calendar_cache["timestamp"]) < ECONOMIC_CACHE_TTL:
+    now = time.time()
+
+    # Fresh cache — serve immediately
+    if economic_calendar_cache["data"] and (now - economic_calendar_cache["timestamp"]) < ECONOMIC_CACHE_TTL:
         print("Economic calendar cache hit")
         return economic_calendar_cache["data"]
 
@@ -893,30 +897,44 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
 
     majors      = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"}
     all_events  = []
+    any_success = False
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://www.forexfactory.com/calendar",
+    }
 
     async with httpx.AsyncClient() as client:
-    for url in urls:
-        try:
-            res = await client.get(
-                url,
-                timeout=15.0,
-                headers={"User-Agent": "Mozilla/5.0 (Voyager Analytics)"}
-            )
+        for url in urls:
+            try:
+                res = await client.get(url, timeout=15.0, headers=headers)
 
-            if res.status_code != 200:
-                print(f"Calendar fetch non-200 for {url}: status={res.status_code}, body preview={res.text[:200]}")
-                continue
+                if res.status_code != 200:
+                    print(f"Calendar fetch non-200 for {url}: status={res.status_code}, body preview={res.text[:200]}")
+                    continue
 
-            if not res.text.strip():
-                print(f"Calendar fetch empty body for {url}")
-                continue
+                if not res.text.strip():
+                    print(f"Calendar fetch empty body for {url}")
+                    continue
 
-            data = res.json()
-            if isinstance(data, list):
-                all_events.extend(data)
+                data = res.json()
+                if isinstance(data, list):
+                    all_events.extend(data)
+                    any_success = True
+                else:
+                    print(f"Calendar fetch unexpected shape for {url}: {type(data)}")
 
-        except Exception as e:
-            print(f"Calendar fetch failed for {url}: {str(e)}")
+            except Exception as e:
+                print(f"Calendar fetch failed for {url}: {str(e)}")
+
+    # If everything failed this round, fall back to stale cache rather than an empty list
+    if not any_success:
+        if economic_calendar_cache["data"] and (now - economic_calendar_cache["timestamp"]) < ECONOMIC_STALE_MAX_AGE:
+            print("All calendar fetches failed — serving stale cached data")
+            return economic_calendar_cache["data"]
+        print("All calendar fetches failed and no usable cache — returning empty list")
+        return []
 
     cleaned = []
     seen    = set()
@@ -948,10 +966,9 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
     cleaned.sort(key=lambda x: x["date"])
 
     economic_calendar_cache["data"]      = cleaned
-    economic_calendar_cache["timestamp"] = time.time()
+    economic_calendar_cache["timestamp"] = now
 
     return cleaned
-
 # ─────────────────────────────────────────
 #  GOALS
 # ─────────────────────────────────────────
