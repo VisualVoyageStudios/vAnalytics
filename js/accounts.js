@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     await loadAccounts();
                 });
 
-            table.appendChild(row);   // ← the missing line
+            table.appendChild(row);
         });
     }
 
