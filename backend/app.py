@@ -895,18 +895,28 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
     all_events  = []
 
     async with httpx.AsyncClient() as client:
-        for url in urls:
-            try:
-                res = await client.get(
-                    url,
-                    timeout=15.0,
-                    headers={"User-Agent": "Mozilla/5.0 (Voyager Analytics)"}
-                )
-                data = res.json()
-                if isinstance(data, list):
-                    all_events.extend(data)
-            except Exception as e:
-                print(f"Calendar fetch failed for {url}: {str(e)}")
+    for url in urls:
+        try:
+            res = await client.get(
+                url,
+                timeout=15.0,
+                headers={"User-Agent": "Mozilla/5.0 (Voyager Analytics)"}
+            )
+
+            if res.status_code != 200:
+                print(f"Calendar fetch non-200 for {url}: status={res.status_code}, body preview={res.text[:200]}")
+                continue
+
+            if not res.text.strip():
+                print(f"Calendar fetch empty body for {url}")
+                continue
+
+            data = res.json()
+            if isinstance(data, list):
+                all_events.extend(data)
+
+        except Exception as e:
+            print(f"Calendar fetch failed for {url}: {str(e)}")
 
     cleaned = []
     seen    = set()
