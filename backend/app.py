@@ -945,8 +945,28 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
 # ── Economic calendar cache ──────────────────────────────────────────
 
 economic_calendar_cache = {"data": None, "timestamp": 0}
-ECONOMIC_CACHE_TTL = 1800  # 30 minutes
+ECONOMIC_CACHE_TTL = 3 * 3600       # 3 hours — cut request volume to ease shared-IP pressure
 ECONOMIC_STALE_MAX_AGE = 24 * 3600
+
+
+async def _fetch_calendar_once(client, url, headers):
+    res = await client.get(url, timeout=15.0, headers=headers)
+
+    if res.status_code == 429:
+        return None, "rate_limited"
+    if res.status_code != 200:
+        print(f"Calendar fetch non-200: status={res.status_code}, body preview={res.text[:200]}")
+        return None, "bad_status"
+    if not res.text.strip():
+        print("Calendar fetch empty body")
+        return None, "empty_body"
+
+    data = res.json()
+    if not isinstance(data, list):
+        print(f"Calendar fetch unexpected shape: {type(data)}")
+        return None, "bad_shape"
+
+    return data, None
 
 
 @app.get("/economic/calendar")
@@ -958,38 +978,32 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
         print("Economic calendar cache hit")
         return economic_calendar_cache["data"]
 
-    # ForexFactory deprecated lastweek/nextweek and rate-limits weekly
-    # calendar downloads to 2 requests per 5 minutes per IP (all formats
-    # combined) — so only fetch what's still supported, once per cycle.
     url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
-
     majors = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"}
-    events = []
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
         "Accept": "application/json, text/plain, */*",
     }
 
+    events = []
+
     async with httpx.AsyncClient() as client:
         try:
-            res = await client.get(url, timeout=15.0, headers=headers)
+            events, reason = await _fetch_calendar_once(client, url, headers)
 
-            if res.status_code == 429:
-                print("Calendar fetch rate-limited (429) — will retry next cycle")
-            elif res.status_code != 200:
-                print(f"Calendar fetch non-200: status={res.status_code}, body preview={res.text[:200]}")
-            elif not res.text.strip():
-                print("Calendar fetch empty body")
-            else:
-                data = res.json()
-                if isinstance(data, list):
-                    events = data
-                else:
-                    print(f"Calendar fetch unexpected shape: {type(data)}")
+            if events is None and reason == "rate_limited":
+                print("Calendar fetch rate-limited (429) — retrying once after short delay")
+                await asyncio.sleep(5)
+                events, reason = await _fetch_calendar_once(client, url, headers)
+
+            if events is None:
+                print(f"Calendar fetch failed after retry: {reason}")
+                events = []
 
         except Exception as e:
             print(f"Calendar fetch failed: {str(e)}")
+            events = []
 
     if not events:
         if economic_calendar_cache["data"] and (now - economic_calendar_cache["timestamp"]) < ECONOMIC_STALE_MAX_AGE:
