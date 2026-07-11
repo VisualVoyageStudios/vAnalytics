@@ -82,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     await deleteAccount(account.id, token);
                     await loadAccounts();
                 });
+
+            table.appendChild(row);   // ← the missing line
         });
     }
 
