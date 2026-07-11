@@ -57,10 +57,6 @@ async function loadAnalytics() {
 //  calendar heatmap data for the logged-in user(broker account)
 async function loadHeatmap(){
 
-    const token =
-    localStorage.getItem(
-        "token"
-    );
 
     const data =
     await getHeatmap(
@@ -335,10 +331,6 @@ document.getElementById("nextMonth")
 // monthly Review table
 async function loadMonthlyTable(){
     
-    const token =
-    localStorage.getItem(
-        "token"
-    );
 
     const data =
     await getMonthlyPerformance(
