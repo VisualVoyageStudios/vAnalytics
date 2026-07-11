@@ -27,6 +27,7 @@ from models.user import Base, User
 from models.account import Account
 from models.journal import Journal
 from models.trade import Trade
+from models.currency_snapshot import CurrencySnapshot
 
 from schemas.user import UserRegister, UserLogin
 from schemas.trade import TradeCreate
