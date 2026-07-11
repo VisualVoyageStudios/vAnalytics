@@ -510,6 +510,10 @@ td{
 
     max-height:85vh;
 
+    height: auto;
+
+    margin: 0;
+
     overflow-y:auto;
 
     display:flex;
