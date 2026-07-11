@@ -670,49 +670,89 @@ async def get_crypto_fundamentals(current_user=Depends(get_current_user)):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/currency/strength")
-async def get_currency_strength(current_user=Depends(get_current_user)):
-    currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
+# ── Currency strength snapshot history (Postgres-backed) ─────────────
+SNAPSHOT_MAX_AGE_HOURS   = 48
+SNAPSHOT_TARGET_LOOKBACK = timedelta(hours=1)
 
-    today = datetime.utcnow().date()
-    lookback = today - timedelta(days=1)
-    while lookback.weekday() >= 5:   # skip weekends — no ECB data
-        lookback -= timedelta(days=1)
+
+def _prune_old_snapshots(db: Session):
+    cutoff = datetime.utcnow() - timedelta(hours=SNAPSHOT_MAX_AGE_HOURS)
+    db.query(CurrencySnapshot).filter(CurrencySnapshot.created_at < cutoff).delete()
+    db.commit()
+
+
+def _closest_snapshot(db: Session, target_lookback: timedelta):
+    target_time = datetime.utcnow() - target_lookback
+
+    older = (
+        db.query(CurrencySnapshot)
+        .filter(CurrencySnapshot.created_at <= target_time)
+        .order_by(CurrencySnapshot.created_at.desc())
+        .first()
+    )
+    newer = (
+        db.query(CurrencySnapshot)
+        .filter(CurrencySnapshot.created_at > target_time)
+        .order_by(CurrencySnapshot.created_at.asc())
+        .first()
+    )
+
+    candidates = [s for s in [older, newer] if s is not None]
+    if not candidates:
+        return None
+
+    return min(candidates, key=lambda s: abs((s.created_at - target_time).total_seconds()))
+
+
+@app.get("/currency/strength")
+async def get_currency_strength(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
 
     async with httpx.AsyncClient() as client:
         try:
-            now_res  = await client.get("https://api.frankfurter.app/latest", params={"from": "USD"}, timeout=15.0)
-            prev_res = await client.get(f"https://api.frankfurter.app/{lookback.isoformat()}", params={"from": "USD"}, timeout=15.0)
+            res = await client.get("https://open.er-api.com/v6/latest/USD", timeout=10.0)
 
-            now_rates  = now_res.json().get("rates", {})
-            prev_rates = prev_res.json().get("rates", {})
-            now_rates["USD"]  = 1.0
-            prev_rates["USD"] = 1.0
+            if not res.text.strip():
+                raise HTTPException(status_code=500, detail="Empty response")
+
+            data  = res.json()
+            rates = data.get("rates", {})
+            rates["USD"] = 1.0
+
+            _prune_old_snapshots(db)
+            prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
+
+            # store this pull for future comparisons
+            db.add(CurrencySnapshot(id=str(uuid4()), rates=rates))
+            db.commit()
 
             scores     = {c: 0.0 for c in currencies}
             pair_count = {c: 0 for c in currencies}
 
-            for base in currencies:
-                if base not in now_rates or base not in prev_rates:
-                    continue
-                for target in currencies:
-                    if base == target:
-                        continue
-                    if target not in now_rates or target not in prev_rates:
-                        continue
+            if prev_snapshot:
+                prev_rates = prev_snapshot.rates
 
-                    now_cross  = now_rates[target]  / now_rates[base]
-                    prev_cross = prev_rates[target] / prev_rates[base]
-
-                    if prev_cross == 0:
+                for base in currencies:
+                    if base not in rates or base not in prev_rates:
                         continue
+                    for target in currencies:
+                        if base == target:
+                            continue
+                        if target not in rates or target not in prev_rates:
+                            continue
 
-                    pct_change = ((now_cross - prev_cross) / prev_cross) * 100
-                    scores[base] += pct_change
-                    pair_count[base] += 1
+                        now_cross  = rates[target]      / rates[base]
+                        prev_cross = prev_rates[target]  / prev_rates[base]
+
+                        if prev_cross == 0:
+                            continue
+
+                        pct_change = ((now_cross - prev_cross) / prev_cross) * 100
+                        scores[base]     += pct_change
+                        pair_count[base] += 1
 
             avg_scores = {
-                c: round(scores[c] / pair_count[c], 3) if pair_count[c] else 0
+                c: round(scores[c] / pair_count[c], 4) if pair_count[c] else 0
                 for c in currencies
             }
 
@@ -723,7 +763,7 @@ async def get_currency_strength(current_user=Depends(get_current_user)):
                     "code":  code,
                     "score": round((avg_scores[code] / max_abs) * 100, 1),
                     "raw":   avg_scores[code],
-                    "trend": "bullish" if avg_scores[code] > 0.05 else "bearish" if avg_scores[code] < -0.05 else "neutral"
+                    "trend": "bullish" if avg_scores[code] > 0.01 else "bearish" if avg_scores[code] < -0.01 else "neutral"
                 }
                 for code in currencies
             ]
