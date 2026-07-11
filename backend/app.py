@@ -673,46 +673,60 @@ async def get_crypto_fundamentals(current_user=Depends(get_current_user)):
 async def get_currency_strength(current_user=Depends(get_current_user)):
     currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
 
+    today = datetime.utcnow().date()
+    lookback = today - timedelta(days=1)
+    while lookback.weekday() >= 5:   # skip weekends — no ECB data
+        lookback -= timedelta(days=1)
+
     async with httpx.AsyncClient() as client:
         try:
-            res = await client.get("https://open.er-api.com/v6/latest/USD", timeout=10.0)
+            now_res  = await client.get("https://api.frankfurter.app/latest", params={"from": "USD"}, timeout=15.0)
+            prev_res = await client.get(f"https://api.frankfurter.app/{lookback.isoformat()}", params={"from": "USD"}, timeout=15.0)
 
-            if not res.text.strip():
-                raise HTTPException(status_code=500, detail="Empty response")
+            now_rates  = now_res.json().get("rates", {})
+            prev_rates = prev_res.json().get("rates", {})
+            now_rates["USD"]  = 1.0
+            prev_rates["USD"] = 1.0
 
-            data  = res.json()
-            rates = data.get("rates", {})
-            rates["USD"] = 1.0
-
-            scores = {c: 0.0 for c in currencies}
+            scores     = {c: 0.0 for c in currencies}
+            pair_count = {c: 0 for c in currencies}
 
             for base in currencies:
-                base_rate = rates.get(base)
-                if not base_rate:
+                if base not in now_rates or base not in prev_rates:
                     continue
                 for target in currencies:
                     if base == target:
                         continue
-                    target_rate = rates.get(target)
-                    if not target_rate:
+                    if target not in now_rates or target not in prev_rates:
                         continue
-                    cross = target_rate / base_rate
-                    if cross > 1:
-                        scores[base] += 1
-                    else:
-                        scores[base] -= 1
 
-            max_score = max(abs(v) for v in scores.values()) or 1
+                    now_cross  = now_rates[target]  / now_rates[base]
+                    prev_cross = prev_rates[target] / prev_rates[base]
+
+                    if prev_cross == 0:
+                        continue
+
+                    pct_change = ((now_cross - prev_cross) / prev_cross) * 100
+                    scores[base] += pct_change
+                    pair_count[base] += 1
+
+            avg_scores = {
+                c: round(scores[c] / pair_count[c], 3) if pair_count[c] else 0
+                for c in currencies
+            }
+
+            max_abs = max(abs(v) for v in avg_scores.values()) or 1
 
             return [
                 {
                     "code":  code,
-                    "score": round((scores[code] / max_score) * 100, 1),
-                    "raw":   scores[code],
-                    "trend": "bullish" if scores[code] > 2 else "bearish" if scores[code] < -2 else "neutral"
+                    "score": round((avg_scores[code] / max_abs) * 100, 1),
+                    "raw":   avg_scores[code],
+                    "trend": "bullish" if avg_scores[code] > 0.05 else "bearish" if avg_scores[code] < -0.05 else "neutral"
                 }
                 for code in currencies
             ]
+
         except HTTPException:
             raise
         except Exception as e:
