@@ -840,7 +840,7 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
                 },
                 json={
                     "model": "llama-3.1-8b-instant",
-                    "max_tokens": 5500,
+                    "max_tokens": 8000,
                     "messages": [{"role": "user", "content": prompt}]
                 },
                 timeout=30.0
@@ -876,7 +876,7 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
 
 economic_calendar_cache = {"data": None, "timestamp": 0}
 ECONOMIC_CACHE_TTL = 1800  # 30 minutes
-ECONOMIC_STALE_MAX_AGE = 24 * 3600  # serve stale data for up to 24h if fetch keeps failing
+ECONOMIC_STALE_MAX_AGE = 24 * 3600
 
 
 @app.get("/economic/calendar")
@@ -884,62 +884,54 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
 
     now = time.time()
 
-    # Fresh cache — serve immediately
     if economic_calendar_cache["data"] and (now - economic_calendar_cache["timestamp"]) < ECONOMIC_CACHE_TTL:
         print("Economic calendar cache hit")
         return economic_calendar_cache["data"]
 
-    urls = [
-        "https://nfs.faireconomy.media/ff_calendar_lastweek.json",
-        "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-        "https://nfs.faireconomy.media/ff_calendar_nextweek.json"
-    ]
+    # ForexFactory deprecated lastweek/nextweek and rate-limits weekly
+    # calendar downloads to 2 requests per 5 minutes per IP (all formats
+    # combined) — so only fetch what's still supported, once per cycle.
+    url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 
-    majors      = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"}
-    all_events  = []
-    any_success = False
+    majors  = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"}
+    events  = []
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
         "Accept": "application/json, text/plain, */*",
-        "Referer": "https://www.forexfactory.com/calendar",
     }
 
     async with httpx.AsyncClient() as client:
-        for url in urls:
-            try:
-                res = await client.get(url, timeout=15.0, headers=headers)
+        try:
+            res = await client.get(url, timeout=15.0, headers=headers)
 
-                if res.status_code != 200:
-                    print(f"Calendar fetch non-200 for {url}: status={res.status_code}, body preview={res.text[:200]}")
-                    continue
-
-                if not res.text.strip():
-                    print(f"Calendar fetch empty body for {url}")
-                    continue
-
+            if res.status_code == 429:
+                print("Calendar fetch rate-limited (429) — will retry next cycle")
+            elif res.status_code != 200:
+                print(f"Calendar fetch non-200: status={res.status_code}, body preview={res.text[:200]}")
+            elif not res.text.strip():
+                print("Calendar fetch empty body")
+            else:
                 data = res.json()
                 if isinstance(data, list):
-                    all_events.extend(data)
-                    any_success = True
+                    events = data
                 else:
-                    print(f"Calendar fetch unexpected shape for {url}: {type(data)}")
+                    print(f"Calendar fetch unexpected shape: {type(data)}")
 
-            except Exception as e:
-                print(f"Calendar fetch failed for {url}: {str(e)}")
+        except Exception as e:
+            print(f"Calendar fetch failed: {str(e)}")
 
-    # If everything failed this round, fall back to stale cache rather than an empty list
-    if not any_success:
+    if not events:
         if economic_calendar_cache["data"] and (now - economic_calendar_cache["timestamp"]) < ECONOMIC_STALE_MAX_AGE:
-            print("All calendar fetches failed — serving stale cached data")
+            print("Fetch failed — serving stale cached data")
             return economic_calendar_cache["data"]
-        print("All calendar fetches failed and no usable cache — returning empty list")
+        print("Fetch failed and no usable cache — returning empty list")
         return []
 
     cleaned = []
     seen    = set()
 
-    for e in all_events:
+    for e in events:
         country = e.get("country", "")
         impact  = e.get("impact", "")
 
