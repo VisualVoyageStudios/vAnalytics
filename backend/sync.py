@@ -1,21 +1,26 @@
-import MetaTrader5 as mt5
+import os
 import requests
 from datetime import datetime, timedelta
 
 # ── Config ──────────────────────────────
-API_URL = "https://vanalytics.onrender.com"
-EMAIL    = "villainsPS1@gmail.com"      # your Voyager login
-PASSWORD = "voyager11"         # your Voyager password
+API_URL  = os.getenv("VOYAGER_API_URL", "https://vanalytics.onrender.com")
+EMAIL    = os.getenv("VOYAGER_EMAIL")
+PASSWORD = os.getenv("VOYAGER_PASSWORD")
 # ────────────────────────────────────────
+
+if not EMAIL or not PASSWORD:
+    print("Missing VOYAGER_EMAIL / VOYAGER_PASSWORD environment variables.")
+    print("Set them in a local .env file (gitignored) or your shell before running.")
+    quit()
+
 
 def login():
     res = requests.post(f"{API_URL}/login", json={
         "email": EMAIL,
         "password": PASSWORD
     })
-    
+
     print("Status:", res.status_code)
-    print("Response:", res.text)
     data = res.json()
     if "token" not in data:
         print("Login failed:", data)
@@ -25,6 +30,8 @@ def login():
 
 
 def fetch_mt5_trades():
+    import MetaTrader5 as mt5
+
     if not mt5.initialize():
         print("MT5 failed to initialize. Make sure MT5 is open.")
         quit()
@@ -70,10 +77,10 @@ def push_trades(token, trades):
     )
 
     print(f"Status: {res.status_code}")
-    print(f"Response: {res.text}")
 
     data = res.json()
     print(f"Sync complete — {data.get('imported', 0)} new trades imported")
+
 
 if __name__ == "__main__":
     token  = login()
