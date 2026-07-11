@@ -1201,45 +1201,63 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
         print("Correlation cache hit", flush=True)
         return correlation_cache["data"]
 
-    pairs  = ["eurusd","gbpusd","usdjpy","usdchf","audusd","usdcad","nzdusd","eurgbp","eurjpy","gbpjpy"]
-    closes = {}
+    end_date   = datetime.utcnow().date()
+    start_date = end_date - timedelta(days=45)  # buffer for weekends/holidays, want ~30 trading days
+    targets    = "EUR,GBP,JPY,CHF,AUD,CAD,NZD"
 
     try:
         async with httpx.AsyncClient() as client:
-            for pair in pairs:
-                try:
-                    res = await client.get(
-                        f"https://stooq.com/q/d/l/?s={pair}&i=d",
-                        timeout=15.0,
-                        headers={"User-Agent": "Mozilla/5.0"}
-                    )
-                    print(f"Stooq {pair} status: {res.status_code}", flush=True)
-                    print(f"Stooq {pair} body preview: {res.text[:200]}", flush=True)
+            res = await client.get(
+                f"https://api.frankfurter.app/{start_date.isoformat()}..{end_date.isoformat()}",
+                params={"from": "USD", "to": targets},
+                timeout=20.0
+            )
 
-                    lines = res.text.strip().split("\n")
-                    rows  = lines[1:]
-                    series = []
+            if res.status_code != 200:
+                print(f"Frankfurter non-200: status={res.status_code}, body={res.text[:200]}", flush=True)
+                raise HTTPException(status_code=500, detail="Could not fetch historical price data")
 
-                    for row in rows[-31:]:
-                        parts = row.split(",")
-                        if len(parts) >= 5:
-                            try:
-                                series.append(float(parts[4]))
-                            except ValueError:
-                                continue
+            data = res.json()
+            daily_rates = data.get("rates", {})
 
-                    if len(series) >= 10:
-                        closes[pair.upper()] = series
-                    else:
-                        print(f"Not enough data points for {pair}: got {len(series)}", flush=True)
+        if not daily_rates:
+            raise HTTPException(status_code=500, detail="Could not fetch historical price data")
 
-                except Exception as e:
-                    print(f"Stooq fetch failed for {pair}: {type(e).__name__}: {str(e)}", flush=True)
+        sorted_dates = sorted(daily_rates.keys())[-31:]  # last ~31 trading days
 
-        print(f"Total pairs with data: {len(closes)}", flush=True)
+        # Derive the 10 pairs from USD-base cross rates
+        pair_series = {
+            "EURUSD": [], "GBPUSD": [], "USDJPY": [], "USDCHF": [],
+            "AUDUSD": [], "USDCAD": [], "NZDUSD": [], "EURGBP": [],
+            "EURJPY": [], "GBPJPY": []
+        }
+
+        for date in sorted_dates:
+            r = daily_rates[date]
+            if not all(c in r for c in ["EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"]):
+                continue  # skip incomplete days
+
+            eurusd = 1 / r["EUR"]
+            gbpusd = 1 / r["GBP"]
+            usdjpy = r["JPY"]
+            usdchf = r["CHF"]
+            audusd = 1 / r["AUD"]
+            usdcad = r["CAD"]
+            nzdusd = 1 / r["NZD"]
+
+            pair_series["EURUSD"].append(eurusd)
+            pair_series["GBPUSD"].append(gbpusd)
+            pair_series["USDJPY"].append(usdjpy)
+            pair_series["USDCHF"].append(usdchf)
+            pair_series["AUDUSD"].append(audusd)
+            pair_series["USDCAD"].append(usdcad)
+            pair_series["NZDUSD"].append(nzdusd)
+            pair_series["EURGBP"].append(eurusd / gbpusd)
+            pair_series["EURJPY"].append(eurusd * usdjpy)
+            pair_series["GBPJPY"].append(gbpusd * usdjpy)
 
         returns = {}
-        for pair, series in closes.items():
+        for pair, series in pair_series.items():
             rets = []
             for i in range(1, len(series)):
                 if series[i - 1] != 0:
@@ -1249,7 +1267,7 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
         valid_pairs = [p for p in returns if len(returns[p]) >= 10]
 
         if not valid_pairs:
-            print("No valid pairs after processing", flush=True)
+            print("No valid pairs after processing Frankfurter data", flush=True)
             raise HTTPException(status_code=500, detail="Could not fetch historical price data")
 
         min_len = min(len(returns[p]) for p in valid_pairs)
@@ -1275,7 +1293,7 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
         raise
     except Exception as e:
         print(f"FULL TRACEBACK: {traceback.format_exc()}", flush=True)
-        raise HTTPException(status_code=500,detail=f"{type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
 
 ## test endpoint
 @app.get("/test/frankfurter-history")
