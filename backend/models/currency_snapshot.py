@@ -8,6 +8,6 @@ class CurrencySnapshot(Base):
 
     __tablename__ = "currency_snapshots"
 
-    id        = Column(String, primary_key=True)
-    rates     = Column(JSON, nullable=False)
+    id         = Column(String, primary_key=True)
+    rates      = Column(JSON, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
