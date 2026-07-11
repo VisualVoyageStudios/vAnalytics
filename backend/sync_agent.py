@@ -11,15 +11,14 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://voyageranalytics.netlify.app",
-                    "https://visualvoyagestudios.github.io/Voyager-Analytics-pro"
+                    "https://visualvoyagestudios.github.io/vanalytics"
                    "http://127.0.0.1:5500",
                    "http://localhost:5500"],
     allow_methods=["*"],
     allow_headers=["*"]
 )
 
-API_URL = "https://voyager-analytics-pro.onrender.com"
-
+API_URL = "https://vanalytics.onrender.com"
 
 @app.get("/status")
 def status():
