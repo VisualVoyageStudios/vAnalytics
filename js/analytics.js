@@ -54,199 +54,97 @@ async function loadAnalytics() {
 }
 
 
+function profitClassFor(profit){
+    if(profit > 100)  return "profit-strong-pos";
+    if(profit > 0)    return "profit-pos";
+    if(profit < -100) return "profit-strong-neg";
+    if(profit < 0)    return "profit-neg";
+    return "profit-flat";
+}
+
+
+function isSameDay(a, b){
+    return a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth()
+        && a.getDate() === b.getDate();
+}
+
+
 //  calendar heatmap data for the logged-in user(broker account)
 async function loadHeatmap(){
 
+    const data = await getHeatmap(token);
+    const container = document.getElementById("heatmap");
 
-    const data =
-    await getHeatmap(
-        token
-    );
+    const year  = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const today = new Date();
 
-    const container =
-    document.getElementById(
-        "heatmap"
-    );
-
-    const year =
-    currentDate.getFullYear();
-
-    const month =
-    currentDate.getMonth();
-
-    const monthData =
-    data.filter(d => {
-
-        const tradeDate =
-        new Date(d.date);
-
+    const monthData = data.filter(d => {
+        const tradeDate = new Date(d.date);
         return (
             tradeDate.getFullYear() === year &&
             tradeDate.getMonth() === month
         );
-
     });
 
-    const totalProfit =
-    Number(
-    monthData.reduce(
-        (sum, day) =>
-        sum + day.profit,
-        0
-    ));
+    const totalProfit = Number(
+        monthData.reduce((sum, day) => sum + day.profit, 0)
+    );
 
-    const totalTrades =
-    Number(
-    monthData.reduce(
-        (sum, day) =>
-        sum + (day.trades || 0),
-        0
-    ));
+    const totalTrades = Number(
+        monthData.reduce((sum, day) => sum + (day.trades || 0), 0)
+    );
 
-    const tradingDays =
-    monthData.length;
+    const tradingDays = monthData.length;
+    const winningDays = monthData.filter(d => d.profit > 0).length;
+    const winRate = tradingDays > 0 ? (winningDays / tradingDays) * 100 : 0;
 
-    const winningDays =
-    monthData.filter(
-        d => d.profit > 0
-    ).length;
-
-    const winRate =
-    tradingDays > 0
-    ? (
-        winningDays /
-        tradingDays
-    ) * 100
-    : 0;
-  
-    const daysInMonth =
-    new Date(
-        year,
-        month + 1,
-        0
-    ).getDate();
+    const daysInMonth   = new Date(year, month + 1, 0).getDate();
+    const firstWeekday  = new Date(year, month, 1).getDay(); // 0 = Sun
 
     // monthly summary
-    document.getElementById(
-        "monthProfit"
-    ).textContent =
-    `Net Profit: $${totalProfit.toFixed(2)}`;
-
-    document.getElementById(
-        "monthTrades"
-    ).textContent =
-    `Trades: ${totalTrades}`;
-
-    document.getElementById(
-        "monthDays"
-    ).textContent =
-    `Trading Days: ${tradingDays}`;
-
-    document.getElementById(
-        "monthWinRate"
-    ).textContent =
-    `Win Rate: ${winRate.toFixed(1)}%`;
-
+    document.getElementById("monthProfit").textContent =
+        `Net Profit: $${totalProfit.toFixed(2)}`;
+    document.getElementById("monthTrades").textContent =
+        `Trades: ${totalTrades}`;
+    document.getElementById("monthDays").textContent =
+        `Trading Days: ${tradingDays}`;
+    document.getElementById("monthWinRate").textContent =
+        `Win Rate: ${winRate.toFixed(1)}%`;
 
     container.innerHTML = "";
 
-    for(
-        let day = 1;
-        day <= daysInMonth;
-        day++
-    ){
+    // Leading empty cells so day 1 lands on its real weekday
+    for(let i = 0; i < firstWeekday; i++){
+        const empty = document.createElement("div");
+        empty.className = "calendar-day empty";
+        container.appendChild(empty);
+    }
 
-        const cell =
-        document.createElement(
-            "div"
-        );
+    for(let day = 1; day <= daysInMonth; day++){
 
-        cell.className =
-        "calendar-day";
-
-        cell.textContent =
-        day;
+        const cell = document.createElement("div");
+        const cellDate = new Date(year, month, day);
 
         const currentDateString =
-        `${year}-${String(
-            month + 1
-        ).padStart(2,"0")}-${String(
-            day
-        ).padStart(2,"0")}`;
+            `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-        const tradeDay =
-        data.find(
-            d =>
-            d.date === currentDateString
-        );
+        const tradeDay = data.find(d => d.date === currentDateString);
 
-        // Color coding based on profit
+        cell.className = "calendar-day " + (tradeDay ? profitClassFor(tradeDay.profit) : "no-trades");
+        if(isSameDay(cellDate, today)) cell.classList.add("is-today");
+
+        cell.innerHTML = `<span>${day}</span>`;
+
         if(tradeDay){
-
-            if(tradeDay.profit > 100){
-
-                cell.style.background =
-                "#006400";
-
-            }
-            else if(
-                tradeDay.profit > 0
-            ){
-
-                cell.style.background =
-                "#32CD32";
-
-            }
-            else if(
-                tradeDay.profit < -100
-            ){
-
-                cell.style.background =
-                "#8B0000";
-
-            }
-            else if(
-                tradeDay.profit < 0
-            ){
-
-                cell.style.background =
-                "#FF6347";
-
-            }
-            else{
-
-                cell.style.background =
-                "#444";
-
-            }
-
-            // cell text
-            cell.title =
-            `${tradeDay.date}
-
-            Profit: ${tradeDay.profit}
-
-            Trades: ${tradeDay.trades}`;
-
-        }
-        else{
-
-            cell.style.background =
-            "#222";
-
-            //cell text
-            cell.title =
-            `${currentDateString}
-                No trades`;
-
+            cell.title = `${tradeDay.date}\nProfit: ${tradeDay.profit}\nTrades: ${tradeDay.trades}`;
+        } else {
+            cell.title = `${currentDateString}\nNo trades`;
         }
 
-        container.appendChild(
-            cell
-        );
+        container.appendChild(cell);
 
-
-           //daily summary(click calendar day)
         cell.addEventListener("click", async () => {
 
             const trades = await getDayTrades(token, currentDateString);
@@ -273,102 +171,61 @@ async function loadHeatmap(){
                 `).join("");
             }
 
-            document.getElementById("dayModal").classList.add("open");
-
-            document.getElementById("closeModal").onclick = () => {
-                document.getElementById("dayModal").classList.remove("open");
-            };
-
+            document.getElementById("dayModalOverlay").classList.add("open");
         });
     }
 
-// Set month title(e.g. "September 2024")
-document.getElementById("monthTitle").textContent =
-    
-    currentDate.toLocaleString(
-        "default",
-        {
-            month:"long",
-            year:"numeric"
-        }
-    );
-
+    // Set month title(e.g. "September 2024")
+    document.getElementById("monthTitle").textContent =
+        currentDate.toLocaleString("default", { month: "long", year: "numeric" });
 }
+
+
+document.getElementById("closeModal").addEventListener("click", () => {
+    document.getElementById("dayModalOverlay").classList.remove("open");
+});
+
+document.getElementById("dayModalOverlay").addEventListener("click", (e) => {
+    if(e.target.id === "dayModalOverlay"){
+        document.getElementById("dayModalOverlay").classList.remove("open");
+    }
+});
+
 
 // Month navigation
 document.getElementById("prevMonth")
-    .addEventListener(
-        "click",
-        () => {
-            currentDate = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth() - 1,
-                1
-            );
-
-            loadHeatmap();
-
-        }
-    );
+    .addEventListener("click", () => {
+        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+        loadHeatmap();
+    });
 
 document.getElementById("nextMonth")
-    .addEventListener(
-        "click",
-        () => {
-
-            currentDate = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth() + 1,
-                1
-            );
-
-            loadHeatmap();
-
-        }
-    );
+    .addEventListener("click", () => {
+        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+        loadHeatmap();
+    });
 
 
 // monthly Review table
 async function loadMonthlyTable(){
-    
 
-    const data =
-    await getMonthlyPerformance(
-        token
-    );
-
-    const tbody =
-    document.querySelector(
-        "#monthlyTable tbody"
-    );
+    const data = await getMonthlyPerformance(token);
+    const tbody = document.querySelector("#monthlyTable tbody");
 
     tbody.innerHTML = "";
 
     data.forEach(month => {
-
-        const row =
-        document.createElement(
-            "tr"
-        );
-
+        const row = document.createElement("tr");
         row.innerHTML = `
-
             <td>${month.month}</td>
-
             <td>${month.profit}</td>
-
             <td>${month.trades}</td>
-
             <td>${month.win_rate}%</td>
-
         `;
-
-        tbody.appendChild(
-            row
-        );
-
+        tbody.appendChild(row);
     });
 }
+
 
 // Load Yearly Performance Chart
 async function loadYearlyPerformance(){
@@ -419,10 +276,6 @@ async function loadYearlyPerformance(){
 }
 
 
-
-
-
-    
 // Render on Window Load
 window.onload = function() {
     loadAnalytics();
