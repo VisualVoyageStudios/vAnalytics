@@ -57,6 +57,16 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         pass
+    try:
+        conn.execute(text("ALTER TABLE trades ADD COLUMN stop_loss FLOAT"))
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute(text("ALTER TABLE trades ADD COLUMN take_profit FLOAT"))
+        conn.commit()
+    except Exception:
+        pass
 
 app = FastAPI()
 
