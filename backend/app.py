@@ -568,6 +568,58 @@ async def get_streaks(current_user=Depends(get_current_user), db: Session = Depe
         "streak_history":      streak_history[-20:]
     }
 
+@app.get("/analytics/risk-reward")
+def get_risk_reward(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    trades = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+
+    per_trade = []
+    planned_ratios = []
+
+    for t in trades:
+        entry = {
+            "id": t.id,
+            "symbol": t.symbol,
+            "profit": t.profit,
+            "planned_rr": None,
+            "realized_rr": None
+        }
+
+        if t.stop_loss is not None and t.take_profit is not None:
+            risk   = abs(t.open_price - t.stop_loss)
+            reward = abs(t.take_profit - t.open_price)
+            if risk > 0:
+                entry["planned_rr"] = round(reward / risk, 2)
+                planned_ratios.append(entry["planned_rr"])
+
+        if t.stop_loss is not None:
+            risk = abs(t.open_price - t.stop_loss)
+            realized = abs(t.close_price - t.open_price)
+            if risk > 0:
+                entry["realized_rr"] = round(realized / risk, 2)
+
+        per_trade.append(entry)
+
+    trades_with_rr = [t for t in per_trade if t["planned_rr"] is not None]
+    avg_planned    = round(sum(planned_ratios) / len(planned_ratios), 2) if planned_ratios else 0
+
+    wins_with_rr   = [t for t in trades_with_rr if t["profit"] > 0]
+    win_rate_with_rr = round((len(wins_with_rr) / len(trades_with_rr)) * 100, 1) if trades_with_rr else 0
+
+    return {
+        "trades": per_trade,
+        "summary": {
+            "trades_with_rr_set": len(trades_with_rr),
+            "total_trades": len(trades),
+            "average_planned_rr": avg_planned,
+            "win_rate_on_rr_trades": win_rate_with_rr
+        }
+    }
+
+
+
+
+
 # ─────────────────────────────────────────
 #  MT5
 # ─────────────────────────────────────────
