@@ -15,6 +15,7 @@ from models.currency_snapshot import CurrencySnapshot
 from uuid import uuid4
 from datetime import datetime, timedelta
 from typing import List
+from trying import Optional
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -345,6 +346,8 @@ def import_trades(trades: List[TradeImport], current_user=Depends(get_current_us
             close_price=t.close_price,
             profit=t.profit,
             ticket=t.ticket,
+            stop_loss=t.stop_loss,
+            take_profit=t.take_profit,
             created_at=datetime.fromtimestamp(t.time)
         )
         db.add(trade)
