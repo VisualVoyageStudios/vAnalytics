@@ -75,13 +75,13 @@ with engine.connect() as conn:
     try:
         conn.execute(text("ALTER TABLE trades ADD COLUMN stop_loss FLOAT"))
         conn.commit()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"stop_loss migration skipped/failed: {e}")
     try:
         conn.execute(text("ALTER TABLE trades ADD COLUMN take_profit FLOAT"))
         conn.commit()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"take_profit migration skipped/failed: {e}")
 
 app = FastAPI()
 
