@@ -52,6 +52,16 @@ class Trade(Base):
         nullable=False
     )
 
+    stop_loss = Column(
+        Float,
+        nullable=True
+    )
+
+    take_profit = Column(
+        Float,
+        nullable=True
+    )    
+
     created_at = Column(
         DateTime,
         default=datetime.utcnow
