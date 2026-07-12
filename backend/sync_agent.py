@@ -29,6 +29,31 @@ def status():
     return {"status": "running"}
 
 
+def _build_sl_tp_map(from_date, to_date):
+    """
+    Deals don't carry stop loss / take profit — those live on orders.
+    Build a position_id -> (sl, tp) map from order history, keeping the
+    last non-zero value seen per position (handles trailing stops).
+    """
+    orders = mt5.history_orders_get(from_date, to_date)
+    sl_tp_map = {}
+
+    if orders is None:
+        return sl_tp_map
+
+    for order in sorted(orders, key=lambda o: o.time_setup):
+        pos_id = order.position_id
+        if pos_id not in sl_tp_map:
+            sl_tp_map[pos_id] = {"sl": None, "tp": None}
+
+        if order.sl:
+            sl_tp_map[pos_id]["sl"] = order.sl
+        if order.tp:
+            sl_tp_map[pos_id]["tp"] = order.tp
+
+    return sl_tp_map
+
+
 @app.post("/sync")
 def sync(payload: dict):
     token = payload.get("token")
@@ -44,25 +69,34 @@ def sync(payload: dict):
         }
 
     from_date = datetime.now() - timedelta(days=3652)
-    deals = mt5.history_deals_get(from_date, datetime.now())
+    to_date   = datetime.now()
+
+    deals = mt5.history_deals_get(from_date, to_date)
 
     if deals is None:
         mt5.shutdown()
         return {"status": "error", "message": "No trade history found in MT5."}
 
+    sl_tp_map = _build_sl_tp_map(from_date, to_date)
+
     trades = []
     for deal in deals:
         if deal.entry != mt5.DEAL_ENTRY_OUT:
             continue
+
+        sl_tp = sl_tp_map.get(deal.position_id, {"sl": None, "tp": None})
+
         trades.append({
-            "ticket":     str(deal.ticket),
-            "symbol":     deal.symbol,
-            "order_type": str(deal.type),
-            "lot_size":   deal.volume,
-            "open_price": deal.price,
-            "close_price":deal.price,
-            "profit":     deal.profit,
-            "time":       deal.time
+            "ticket":      str(deal.ticket),
+            "symbol":      deal.symbol,
+            "order_type":  str(deal.type),
+            "lot_size":    deal.volume,
+            "open_price":  deal.price,
+            "close_price": deal.price,
+            "profit":      deal.profit,
+            "time":        deal.time,
+            "stop_loss":   sl_tp["sl"],
+            "take_profit": sl_tp["tp"]
         })
 
     mt5.shutdown()
