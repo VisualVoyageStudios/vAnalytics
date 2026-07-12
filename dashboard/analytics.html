@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="../css/global.css">
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/calendarHeatmap.css">
 
 </head>
 
@@ -42,9 +43,8 @@
         <a href="dashboard.html"><i class="fas fa-table-cells-large"></i>Dashboard</a>
         <a href="accounts.html"><i class="fas fa-briefcase"></i>Accounts</a>
         <a href="trades.html"><i class="fas fa-chart-line"></i>Trades</a>
-        <a href="analytics.html"><i class="fas fa-chart-simple"></i>Analytics</a>
+        <a href="analytics.html" class="active"><i class="fas fa-chart-simple"></i>Analytics</a>
         <a href="journal.html"><i class="fas fa-book-open-reader"></i>Journal</a>
-        <a href="riskReward.html"><i class="fas fa-scale-balanced"></i>Risk / Reward</a>
     </nav>
 
     <div class="drawer-section-label">Market Tools</div>
@@ -178,48 +178,55 @@
         </section>
 
         <!-- Calendar heatmap -->
-        <div class="chart-container">
-            <div id="monthlySummary" class="summary-card skeleton">
+        <div id="monthlySummary" class="summary-card skeleton">
 
-                <h3>Monthly Summary</h3>
+            <h3>Monthly Summary</h3>
 
-                <p id="monthProfit">$0</p>
+            <p id="monthProfit">$0</p>
 
-                <p id="monthTrades">0</p>
+            <p id="monthTrades">0</p>
 
-                <p id="monthDays">0</p>
+            <p id="monthDays">0</p>
 
-                <p id="monthWinRate">0%</p>
+            <p id="monthWinRate">0%</p>
 
+        </div>
+
+        <div class="heatmap-card">
+
+            <div class="heatmap-card-header">
+                <h3><i class="fas fa-fire" style="color:var(--primary); margin-right:8px;"></i>Trading Heatmap</h3>
+                <div class="heatmap-legend">
+                    <span><span class="heatmap-legend-dot" style="background:#16a34a;"></span>Big win day</span>
+                    <span><span class="heatmap-legend-dot" style="background:rgba(34,197,94,0.35);"></span>Profit</span>
+                    <span><span class="heatmap-legend-dot" style="background:rgba(239,68,68,0.35);"></span>Loss</span>
+                    <span><span class="heatmap-legend-dot" style="background:#b91c1c;"></span>Big loss day</span>
+                    <span><span class="heatmap-legend-dot" style="background:rgba(148,163,184,0.15);"></span>No trades</span>
+                </div>
             </div>
-            <h3>Trading Heatmap</h3>
-            <div class="calendar-header">
-                <button id="prevMonth">
-                    ←
-                </button>
 
+            <div class="heatmap-nav">
+                <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
                 <h3 id="monthTitle"></h3>
-
-                <button id="nextMonth">
-                    →
-                </button>
+                <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
             </div>
-            <!-- Calendar heatmap -->
-                <div class="calendar-wrapper">
-                <div id="heatmap" class="skeleton"></div>
-                </div>
 
-            <!--monthly review (click date)-->
-            <div id="dayModal" class="modal">
-                <div class="modal-content" class="skeleton">
-                    <span id="closeModal">
-                        <i class="fas fa-x"></i>
-                    </span>
+            <div class="heatmap-weekdays">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
 
+            <div id="heatmap" class="skeleton"></div>
+
+        </div>
+
+        <!-- Day click modal — uses the dedicated day-modal classes, separate from the shared .modal used elsewhere -->
+        <div id="dayModalOverlay" class="day-modal-overlay">
+            <div class="day-modal-content">
+                <div class="day-modal-header">
                     <h3 id="modalDate"></h3>
-
-                    <div id="modalTrades"></div>
+                    <button id="closeModal"><i class="fas fa-xmark"></i></button>
                 </div>
+                <div id="modalTrades"></div>
             </div>
         </div>
 
