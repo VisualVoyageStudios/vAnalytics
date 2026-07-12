@@ -71,16 +71,18 @@ with engine.connect() as conn:
         conn.execute(text("ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT FALSE"))
         conn.commit()
     except Exception:
-        pass
+        conn.rollback()
     try:
         conn.execute(text("ALTER TABLE trades ADD COLUMN stop_loss FLOAT"))
         conn.commit()
     except Exception as e:
+        conn.rollback()
         print(f"stop_loss migration skipped/failed: {e}")
     try:
         conn.execute(text("ALTER TABLE trades ADD COLUMN take_profit FLOAT"))
         conn.commit()
     except Exception as e:
+        conn.rollback()
         print(f"take_profit migration skipped/failed: {e}")
 
 app = FastAPI()
