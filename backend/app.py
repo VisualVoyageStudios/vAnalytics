@@ -285,7 +285,9 @@ def create_trade(trade: TradeCreate, current_user=Depends(get_current_user), db:
         lot_size=trade.lot_size,
         open_price=trade.open_price,
         close_price=trade.close_price,
-        profit=trade.profit
+        profit=trade.profit,
+        stop_loss=trade.stop_loss,
+        take_profit=trade.take_profit
     )
     db.add(new_trade)
     db.commit()
