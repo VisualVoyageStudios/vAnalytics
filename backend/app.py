@@ -15,7 +15,7 @@ from models.currency_snapshot import CurrencySnapshot
 from uuid import uuid4
 from datetime import datetime, timedelta
 from typing import List
-from trying import Optional
+from typing import Optional
 
 from dotenv import load_dotenv
 load_dotenv()
