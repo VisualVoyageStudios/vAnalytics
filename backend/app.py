@@ -127,6 +127,9 @@ class TradeImport(BaseModel):
 
 # ── Currency strength snapshot history (Postgres-backed) ─────────────
 
+economic_calendar_cache = {"data": None, "timestamp": 0}
+ECONOMIC_CACHE_TTL = 3 * 3600       # 3 hours — cut request volume to ease shared-IP pressure
+ECONOMIC_STALE_MAX_AGE = 24 * 3600
 SNAPSHOT_MIN_COMPARISON_AGE = timedelta(minutes=15)  # ignore snapshots newer than this
 currency_strength_last_good = {"data": None}
 
