@@ -59,7 +59,7 @@ class TradeImport(BaseModel):
     time: int
     stop_loss: Optional[float] = None
     take_profit: Optional[float] = None
-
+    
 
 
 Base.metadata.create_all(bind=engine)
