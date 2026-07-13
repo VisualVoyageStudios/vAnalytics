@@ -127,13 +127,13 @@ class TradeImport(BaseModel):
 
 # ── Currency strength snapshot history (Postgres-backed) ─────────────
 
-SNAPSHOT_MAX_AGE_HOURS           = 48
-SNAPSHOT_TARGET_LOOKBACK         = timedelta(hours=1)
-SNAPSHOT_PRUNE_INTERVAL_SECONDS  = 6 * 3600  # run every 6 hours
+SNAPSHOT_MIN_COMPARISON_AGE = timedelta(minutes=15)  # ignore snapshots newer than this
+currency_strength_last_good = {"data": None}
 
 
 def _closest_snapshot(db: Session, target_lookback: timedelta):
     target_time = datetime.utcnow() - target_lookback
+    min_age_cutoff = datetime.utcnow() - SNAPSHOT_MIN_COMPARISON_AGE
 
     older = (
         db.query(CurrencySnapshot)
@@ -144,6 +144,7 @@ def _closest_snapshot(db: Session, target_lookback: timedelta):
     newer = (
         db.query(CurrencySnapshot)
         .filter(CurrencySnapshot.created_at > target_time)
+        .filter(CurrencySnapshot.created_at <= min_age_cutoff)  # must still be "old enough"
         .order_by(CurrencySnapshot.created_at.asc())
         .first()
     )
@@ -811,34 +812,41 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
 
             prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
 
-            # store this pull for future comparisons
             db.add(CurrencySnapshot(id=str(uuid4()), rates=rates))
             db.commit()
 
+            if not prev_snapshot:
+                # No comparison point old enough yet — serve last good result
+                # instead of a misleading all-zero response
+                if currency_strength_last_good["data"]:
+                    return currency_strength_last_good["data"]
+                return [
+                    {"code": c, "score": 0, "raw": 0, "trend": "neutral"}
+                    for c in currencies
+                ]
+
             scores     = {c: 0.0 for c in currencies}
             pair_count = {c: 0 for c in currencies}
+            prev_rates = prev_snapshot.rates
 
-            if prev_snapshot:
-                prev_rates = prev_snapshot.rates
-
-                for base in currencies:
-                    if base not in rates or base not in prev_rates:
+            for base in currencies:
+                if base not in rates or base not in prev_rates:
+                    continue
+                for target in currencies:
+                    if base == target:
                         continue
-                    for target in currencies:
-                        if base == target:
-                            continue
-                        if target not in rates or target not in prev_rates:
-                            continue
+                    if target not in rates or target not in prev_rates:
+                        continue
 
-                        now_cross  = rates[target]      / rates[base]
-                        prev_cross = prev_rates[target]  / prev_rates[base]
+                    now_cross  = rates[target]      / rates[base]
+                    prev_cross = prev_rates[target]  / prev_rates[base]
 
-                        if prev_cross == 0:
-                            continue
+                    if prev_cross == 0:
+                        continue
 
-                        pct_change = ((now_cross - prev_cross) / prev_cross) * 100
-                        scores[base]     += pct_change
-                        pair_count[base] += 1
+                    pct_change = ((now_cross - prev_cross) / prev_cross) * 100
+                    scores[base]     += pct_change
+                    pair_count[base] += 1
 
             avg_scores = {
                 c: round(scores[c] / pair_count[c], 4) if pair_count[c] else 0
@@ -847,7 +855,7 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
 
             max_abs = max(abs(v) for v in avg_scores.values()) or 1
 
-            return [
+            result = [
                 {
                     "code":  code,
                     "score": round((avg_scores[code] / max_abs) * 100, 1),
@@ -856,6 +864,10 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
                 }
                 for code in currencies
             ]
+
+            currency_strength_last_good["data"] = result
+            return result
+
         except HTTPException:
             raise
         except Exception as e:
