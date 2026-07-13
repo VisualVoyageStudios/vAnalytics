@@ -47,19 +47,7 @@ try:
 except ImportError:
     mt5 = None
     MT5_AVAILABLE = False
-
-class TradeImport(BaseModel):
-    ticket: str
-    symbol: str
-    order_type: str
-    lot_size: float
-    open_price: float
-    close_price: float
-    profit: float
-    time: int
-    stop_loss: Optional[float] = None
-    take_profit: Optional[float] = None
-    
+  
 
 
 Base.metadata.create_all(bind=engine)
@@ -134,6 +122,8 @@ class TradeImport(BaseModel):
     close_price: float
     profit: float
     time: int
+    stop_loss: Optional[float] = None
+    take_profit: Optional[float] = None
 
 # ── Currency strength snapshot history (Postgres-backed) ─────────────
 
