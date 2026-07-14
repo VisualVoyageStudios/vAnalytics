@@ -814,17 +814,25 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
             rates = data.get("rates", {})
             rates["USD"] = 1.0
 
+            print(f"[currency-strength] fetched rates keys: {list(rates.keys())}", flush=True)
+
             prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
+
+            print(f"[currency-strength] prev_snapshot found: {prev_snapshot is not None}", flush=True)
+            if prev_snapshot:
+                print(f"[currency-strength] prev_snapshot age: {datetime.utcnow() - prev_snapshot.created_at}", flush=True)
+                print(f"[currency-strength] prev_snapshot rates keys: {list(prev_snapshot.rates.keys())}", flush=True)
 
             # store this pull for future comparisons
             db.add(CurrencySnapshot(id=str(uuid4()), rates=rates))
             db.commit()
 
             if not prev_snapshot:
-                # No comparison point old enough yet — serve last good
-                # result instead of a misleading all-zero response
+                print("[currency-strength] no prev_snapshot — falling back", flush=True)
                 if currency_strength_last_good["data"]:
+                    print("[currency-strength] returning last_good cache", flush=True)
                     return currency_strength_last_good["data"]
+                print("[currency-strength] no last_good either — returning neutral zeros", flush=True)
                 return [
                     {"code": c, "score": 0, "raw": 0, "trend": "neutral"}
                     for c in currencies
@@ -853,10 +861,15 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
                     scores[base]     += pct_change
                     pair_count[base] += 1
 
+            print(f"[currency-strength] pair_count: {pair_count}", flush=True)
+            print(f"[currency-strength] raw scores: {scores}", flush=True)
+
             avg_scores = {
                 c: round(scores[c] / pair_count[c], 4) if pair_count[c] else 0
                 for c in currencies
             }
+
+            print(f"[currency-strength] avg_scores: {avg_scores}", flush=True)
 
             max_abs = max(abs(v) for v in avg_scores.values()) or 1
 
