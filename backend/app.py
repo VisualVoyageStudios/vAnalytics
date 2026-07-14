@@ -127,10 +127,10 @@ class TradeImport(BaseModel):
 # function that references them (including the background task below),
 # or the pruning loop will crash on startup with a NameError.
 
-SNAPSHOT_MAX_AGE_HOURS           = 48
-SNAPSHOT_TARGET_LOOKBACK         = timedelta(hours=1)
-SNAPSHOT_MIN_COMPARISON_AGE      = timedelta(minutes=15)
-SNAPSHOT_PRUNE_INTERVAL_SECONDS  = 6 * 3600  # run every 6 hours
+SNAPSHOT_MAX_AGE_HOURS           = 72
+SNAPSHOT_TARGET_LOOKBACK         = timedelta(hours=24)
+SNAPSHOT_MIN_COMPARISON_AGE      = timedelta(hours=20)
+SNAPSHOT_PRUNE_INTERVAL_SECONDS  = 6 * 3600
 
 currency_strength_last_good = {"data": None}
 
