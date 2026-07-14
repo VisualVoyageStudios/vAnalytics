@@ -7,15 +7,14 @@ import time
 import calendar
 import traceback
 import asyncio
- 
+
 from models.goal import Goal
 from schemas.goal import GoalCreate
 from models.currency_snapshot import CurrencySnapshot
 
 from uuid import uuid4
 from datetime import datetime, timedelta
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -47,8 +46,6 @@ try:
 except ImportError:
     mt5 = None
     MT5_AVAILABLE = False
-  
-
 
 Base.metadata.create_all(bind=engine)
 
@@ -126,16 +123,20 @@ class TradeImport(BaseModel):
     take_profit: Optional[float] = None
 
 # ── Currency strength snapshot history (Postgres-backed) ─────────────
+# NOTE: these constants must stay at module scope, defined before any
+# function that references them (including the background task below),
+# or the pruning loop will crash on startup with a NameError.
 
-economic_calendar_cache = {"data": None, "timestamp": 0}
-ECONOMIC_CACHE_TTL = 3 * 3600       # 3 hours — cut request volume to ease shared-IP pressure
-ECONOMIC_STALE_MAX_AGE = 24 * 3600
-SNAPSHOT_MIN_COMPARISON_AGE = timedelta(minutes=15)  # ignore snapshots newer than this
+SNAPSHOT_MAX_AGE_HOURS           = 48
+SNAPSHOT_TARGET_LOOKBACK         = timedelta(hours=1)
+SNAPSHOT_MIN_COMPARISON_AGE      = timedelta(minutes=15)
+SNAPSHOT_PRUNE_INTERVAL_SECONDS  = 6 * 3600  # run every 6 hours
+
 currency_strength_last_good = {"data": None}
 
 
 def _closest_snapshot(db: Session, target_lookback: timedelta):
-    target_time = datetime.utcnow() - target_lookback
+    target_time    = datetime.utcnow() - target_lookback
     min_age_cutoff = datetime.utcnow() - SNAPSHOT_MIN_COMPARISON_AGE
 
     older = (
@@ -147,7 +148,7 @@ def _closest_snapshot(db: Session, target_lookback: timedelta):
     newer = (
         db.query(CurrencySnapshot)
         .filter(CurrencySnapshot.created_at > target_time)
-        .filter(CurrencySnapshot.created_at <= min_age_cutoff)  # must still be "old enough"
+        .filter(CurrencySnapshot.created_at <= min_age_cutoff)
         .order_by(CurrencySnapshot.created_at.asc())
         .first()
     )
@@ -581,6 +582,10 @@ async def get_streaks(current_user=Depends(get_current_user), db: Session = Depe
         "streak_history":      streak_history[-20:]
     }
 
+# ─────────────────────────────────────────
+#  RISK / REWARD
+# ─────────────────────────────────────────
+
 @app.get("/analytics/risk-reward")
 def get_risk_reward(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
@@ -628,10 +633,6 @@ def get_risk_reward(current_user=Depends(get_current_user), db: Session = Depend
             "win_rate_on_rr_trades": win_rate_with_rr
         }
     }
-
-
-
-
 
 # ─────────────────────────────────────────
 #  MT5
@@ -815,12 +816,13 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
 
             prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
 
+            # store this pull for future comparisons
             db.add(CurrencySnapshot(id=str(uuid4()), rates=rates))
             db.commit()
 
             if not prev_snapshot:
-                # No comparison point old enough yet — serve last good result
-                # instead of a misleading all-zero response
+                # No comparison point old enough yet — serve last good
+                # result instead of a misleading all-zero response
                 if currency_strength_last_good["data"]:
                     return currency_strength_last_good["data"]
                 return [
@@ -900,8 +902,8 @@ async def ai_insight(payload: dict, current_user=Depends(get_current_user)):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "llama-3.3-70b-versatile",
-                    "max_tokens": 11500,
+                    "model": "llama-3.1-8b-instant",
+                    "max_tokens": 600,
                     "messages": [{"role": "user", "content": prompt}]
                 },
                 timeout=30.0
@@ -997,8 +999,8 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "llama-3.3-70b-versatile",
-                    "max_tokens": 11500,
+                    "model": "llama-3.1-8b-instant",
+                    "max_tokens": 1500,
                     "messages": [{"role": "user", "content": prompt}]
                 },
                 timeout=30.0
@@ -1033,7 +1035,7 @@ async def ai_trade_insights(current_user=Depends(get_current_user), db: Session 
 # ── Economic calendar cache ──────────────────────────────────────────
 
 economic_calendar_cache = {"data": None, "timestamp": 0}
-ECONOMIC_CACHE_TTL = 3 * 3600       # 3 hours — cut request volume to ease shared-IP pressure
+ECONOMIC_CACHE_TTL = 3 * 3600       # 3 hours — reduces shared-IP rate-limit pressure
 ECONOMIC_STALE_MAX_AGE = 24 * 3600
 
 
@@ -1066,6 +1068,9 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
         print("Economic calendar cache hit")
         return economic_calendar_cache["data"]
 
+    # ForexFactory deprecated lastweek/nextweek and rate-limits weekly
+    # calendar downloads per IP — only fetch what's still supported,
+    # once per cycle, with a single short retry on 429.
     url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
     majors = {"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"}
 
@@ -1262,7 +1267,7 @@ def get_goal_history(
     return results
 
 #__--
-#Correlation cache
+#Correlation cache — Frankfurter-based (Stooq blocked Render's IP)
 #_____
 correlation_cache    = {"data": None, "timestamp": 0}
 CORRELATION_CACHE_TTL = 21600  # 6 hours — daily data doesn't need refreshing often
@@ -1294,7 +1299,9 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
     targets    = "EUR,GBP,JPY,CHF,AUD,CAD,NZD"
 
     try:
-        async with httpx.AsyncClient() as client:
+        # follow_redirects=True is required — Frankfurter/Cloudflare now
+        # 301-redirects this endpoint, and httpx does not follow by default.
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             res = await client.get(
                 f"https://api.frankfurter.app/{start_date.isoformat()}..{end_date.isoformat()}",
                 params={"from": "USD", "to": targets},
@@ -1382,20 +1389,3 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
     except Exception as e:
         print(f"FULL TRACEBACK: {traceback.format_exc()}", flush=True)
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
-
-## test endpoint
-@app.get("/test/frankfurter-history")
-async def test_frankfurter_history(current_user=Depends(get_current_user)):
-    async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get(
-                "https://api.frankfurter.app/2026-05-19..2026-06-18",
-                params={"from": "EUR", "to": "USD"},
-                timeout=15.0
-            )
-            print(f"Frankfurter history status: {res.status_code}", flush=True)
-            print(f"Frankfurter history body: {res.text[:300]}", flush=True)
-            return {"status": res.status_code, "preview": res.text[:300]}
-        except Exception as e:
-            print(f"Frankfurter history error: {str(e)}", flush=True)
-            return {"error": str(e)}
