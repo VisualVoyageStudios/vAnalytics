@@ -87,6 +87,21 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"journals created_at migration skipped/failed: {e}")
 
+try:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS journal_templates (
+                id VARCHAR PRIMARY KEY,
+                user_id VARCHAR NOT NULL,
+                field VARCHAR NOT NULL,
+                text VARCHAR NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"journal_templates migration skipped/failed: {e}")
+
 
 app = FastAPI()
 
