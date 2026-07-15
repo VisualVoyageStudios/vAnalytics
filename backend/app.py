@@ -11,6 +11,7 @@ import asyncio
 from models.goal import Goal
 from schemas.goal import GoalCreate
 from models.currency_snapshot import CurrencySnapshot
+from models.challenge import UserChallenge
 
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -57,18 +58,27 @@ with engine.connect() as conn:
         conn.commit()
     except Exception:
         conn.rollback()
+        
     try:
         conn.execute(text("ALTER TABLE trades ADD COLUMN stop_loss FLOAT"))
         conn.commit()
     except Exception as e:
         conn.rollback()
         print(f"stop_loss migration skipped/failed: {e}")
+        
     try:
         conn.execute(text("ALTER TABLE trades ADD COLUMN take_profit FLOAT"))
         conn.commit()
     except Exception as e:
         conn.rollback()
         print(f"take_profit migration skipped/failed: {e}")
+
+    try:
+        conn.execute(text("CREATE TABLE IF NOT EXISTS user_challenges (id VARCHAR PRIMARY KEY, user_id VARCHAR NOT NULL, week VARCHAR NOT NULL, rule_type VARCHAR NOT NULL, rule_value FLOAT NOT NULL, description VARCHAR NOT NULL, achieved BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT NOW())"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"user_challenges migration skipped/failed: {e}")
 
 app = FastAPI()
 
@@ -1390,3 +1400,164 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
     except Exception as e:
         print(f"FULL TRACEBACK: {traceback.format_exc()}", flush=True)
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
+
+# ─────────────────────────────────────────
+#  WEEKLY CHALLENGES
+# ─────────────────────────────────────────
+
+WEEKLY_CHALLENGES = [
+    {"rule_type": "no_loss_streak",    "rule_value": 3,    "description": "Don't have a loss streak longer than 3 trades this week."},
+    {"rule_type": "journal_every_trade","rule_value": 1.0, "description": "Journal every trade you take this week."},
+    {"rule_type": "win_rate",          "rule_value": 55.0, "description": "Finish the week with a win rate above 55%."},
+    {"rule_type": "trade_limit",       "rule_value": 10.0, "description": "Take no more than 10 trades this week — quality over quantity."},
+    {"rule_type": "profit_target",     "rule_value": 50.0, "description": "Hit at least $50 profit this week."},
+]
+
+
+def _current_week_key():
+    now = datetime.utcnow()
+    week_num = now.isocalendar()[1]
+    return f"{now.year}-W{week_num:02d}"
+
+
+def _get_or_create_challenge(db: Session, user_id: str) -> UserChallenge:
+    week = _current_week_key()
+    existing = db.query(UserChallenge).filter(
+        UserChallenge.user_id == user_id,
+        UserChallenge.week == week
+    ).first()
+
+    if existing:
+        return existing
+
+    # rotate based on week number so everyone gets the same challenge
+    week_num = datetime.utcnow().isocalendar()[1]
+    challenge_def = WEEKLY_CHALLENGES[week_num % len(WEEKLY_CHALLENGES)]
+
+    new = UserChallenge(
+        id=str(uuid4()),
+        user_id=user_id,
+        week=week,
+        rule_type=challenge_def["rule_type"],
+        rule_value=challenge_def["rule_value"],
+        description=challenge_def["description"],
+        achieved=False
+    )
+    db.add(new)
+    db.commit()
+    db.refresh(new)
+    return new
+
+
+def _evaluate_challenge(challenge: UserChallenge, trades, journals) -> bool:
+    now    = datetime.utcnow()
+    monday = now - timedelta(days=now.weekday())
+    monday = monday.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    week_trades  = [t for t in trades  if t.created_at >= monday]
+    week_journals = [j for j in journals if hasattr(j, 'created_at') and j.created_at and j.created_at >= monday]
+
+    rule  = challenge.rule_type
+    value = challenge.rule_value
+
+    if rule == "no_loss_streak":
+        # check max consecutive losses this week
+        max_loss = current_loss = 0
+        for t in sorted(week_trades, key=lambda x: x.created_at):
+            if t.profit < 0:
+                current_loss += 1
+                max_loss = max(max_loss, current_loss)
+            else:
+                current_loss = 0
+        return max_loss < value
+
+    elif rule == "journal_every_trade":
+        if not week_trades:
+            return False
+        return len(week_journals) >= len(week_trades)
+
+    elif rule == "win_rate":
+        if not week_trades:
+            return False
+        wins = len([t for t in week_trades if t.profit > 0])
+        return (wins / len(week_trades)) * 100 >= value
+
+    elif rule == "trade_limit":
+        return len(week_trades) <= value
+
+    elif rule == "profit_target":
+        return sum(t.profit for t in week_trades) >= value
+
+    return False
+
+
+@app.get("/challenges/current")
+def get_current_challenge(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    user_id = current_user["user_id"]
+
+    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == user_id).all()]
+    trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+    journals    = db.query(Journal).filter(Journal.user_id == user_id).all()
+
+    challenge = _get_or_create_challenge(db, user_id)
+    achieved  = _evaluate_challenge(challenge, trades, journals)
+
+    if achieved and not challenge.achieved:
+        challenge.achieved = True
+        db.commit()
+
+    now    = datetime.utcnow()
+    monday = now - timedelta(days=now.weekday())
+    monday = monday.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_trades = [t for t in trades if t.created_at >= monday]
+
+    # build progress context
+    progress = None
+    if challenge.rule_type == "win_rate" and week_trades:
+        wins = len([t for t in week_trades if t.profit > 0])
+        progress = round((wins / len(week_trades)) * 100, 1)
+    elif challenge.rule_type == "profit_target":
+        progress = round(sum(t.profit for t in week_trades), 2)
+    elif challenge.rule_type == "trade_limit":
+        progress = len(week_trades)
+    elif challenge.rule_type == "journal_every_trade":
+        week_journals = [j for j in journals if hasattr(j, 'created_at') and j.created_at and j.created_at >= monday]
+        progress = f"{len(week_journals)}/{len(week_trades)}"
+    elif challenge.rule_type == "no_loss_streak":
+        max_loss = current_loss = 0
+        for t in sorted(week_trades, key=lambda x: x.created_at):
+            if t.profit < 0:
+                current_loss += 1
+                max_loss = max(max_loss, current_loss)
+            else:
+                current_loss = 0
+        progress = max_loss
+
+    days_until_reset = 7 - datetime.utcnow().weekday()
+
+    return {
+        "week":             challenge.week,
+        "rule_type":        challenge.rule_type,
+        "rule_value":       challenge.rule_value,
+        "description":      challenge.description,
+        "achieved":         achieved,
+        "progress":         progress,
+        "days_until_reset": days_until_reset,
+        "week_trades":      len(week_trades)
+    }
+
+
+@app.get("/challenges/history")
+def get_challenge_history(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    challenges = db.query(UserChallenge).filter(
+        UserChallenge.user_id == current_user["user_id"]
+    ).order_by(UserChallenge.week.desc()).all()
+
+    return [
+        {
+            "week":        c.week,
+            "description": c.description,
+            "achieved":    c.achieved
+        }
+        for c in challenges
+    ]
