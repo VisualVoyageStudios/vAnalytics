@@ -1,6 +1,9 @@
 from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy import Text
+from sqlalchemy import DateTime
+
+from datetime import datetime
 
 from models.user import Base
 
@@ -37,12 +40,17 @@ class Journal(Base):
         String
     )
 
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
     def __init__(self, id, user_id, trade_id, emotion, lesson, mistake, rating):
-        self.id = id
-        self.user_id = user_id
-        self.trade_id = trade_id
-        self.emotion = emotion
-        self.lesson = lesson
-        self.mistake = mistake
-        self.rating = rating
-    
+        self.id         = id
+        self.user_id    = user_id
+        self.trade_id   = trade_id
+        self.emotion    = emotion
+        self.lesson     = lesson
+        self.mistake    = mistake
+        self.rating     = rating
+        self.created_at = datetime.utcnow()
