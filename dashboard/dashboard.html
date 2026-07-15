@@ -135,6 +135,33 @@
             </div>
         </div>
 
+        <!-- Weekly Challenge Card -->
+        <section class="section-card" id="challengeCard" style="margin-bottom:24px;">
+            <div class="section-card-header">
+                <div>
+                    <h3>⚡ Weekly Challenge</h3>
+                    <p id="challengeDesc" style="color:var(--muted); font-size:13px;">Loading…</p>
+                </div>
+                <span id="challengeBadge" style="
+                    padding: 6px 14px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    background: rgba(148,163,184,0.1);
+                    color: var(--muted);
+                ">—</span>
+            </div>
+        
+            <div style="margin-top:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; color:var(--muted);" id="challengeProgress">—</span>
+                    <span style="font-size:12px; color:var(--muted);" id="challengeReset">—</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.05); border-radius:6px; height:6px; overflow:hidden;">
+                    <div id="challengeBar" style="height:100%; border-radius:6px; width:0%; background:var(--primary); transition:width 0.5s ease;"></div>
+                </div>
+            </div>
+        </section>
         
         <!-- Equity Curve -->
         <div class="chart-container">
