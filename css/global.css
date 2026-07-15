@@ -244,6 +244,108 @@ body{
 .main-content{
     padding:24px;
 }
+/* new side style*/
+/* ── Persistent icon rail (always visible) ── */
+.nav-rail{
+    position:fixed;
+    top:0;
+    left:0;
+    width:64px;
+    height:100vh;
+    background:#05070a;
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:16px 0;
+    gap:6px;
+    z-index:900;
+    overflow-y:auto;
+}
+.nav-rail::-webkit-scrollbar{ display:none; }
+
+.nav-rail-logo{
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    background:rgba(0,212,255,0.1);
+    border:1px solid rgba(0,212,255,0.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#00d4ff;
+    font-size:16px;
+    margin-bottom:10px;
+    flex-shrink:0;
+}
+
+.nav-rail-icon{
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    text-decoration:none;
+    font-size:16px;
+    transition:.2s;
+    flex-shrink:0;
+    position:relative;
+}
+.nav-rail-icon:hover,
+.nav-rail-icon.active{
+    background:rgba(59,130,246,.15);
+    color:white;
+}
+
+.nav-rail-divider{
+    width:28px;
+    height:1px;
+    background:var(--border);
+    margin:6px 0;
+    flex-shrink:0;
+}
+
+.nav-rail-spacer{ flex:1; }
+
+.nav-rail-avatar{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:var(--primary);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:13px;
+    flex-shrink:0;
+    margin-bottom:8px;
+    cursor:pointer;
+}
+
+/* Push main content + topbar right of the rail */
+.topnav{
+    margin-left:64px;
+}
+.main-content{
+    margin-left:64px;
+}
+
+/* ── Expanded drawer now overlays ON TOP of the rail ── */
+.nav-drawer{
+    z-index:1000; /* stays above .nav-rail (900) */
+}
+
+@media (max-width:480px){
+    /* On very narrow phones, shrink the rail slightly */
+    .nav-rail{ width:56px; }
+    .topnav, .main-content{ margin-left:56px; }
+    .nav-rail-icon{ width:40px; height:40px; font-size:14px; }
+}
+
+
+
 /** */
 
 .hero{
