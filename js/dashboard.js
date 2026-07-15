@@ -240,6 +240,63 @@ document.getElementById("nextWeekBtn").addEventListener("click", () => {
 });
 
 
+// weekly challange
+async function loadChallenge(){
+    try {
+        const res  = await fetch(`${API_URL}/challenges/current`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        document.getElementById("challengeDesc").textContent = data.description;
+
+        const badge = document.getElementById("challengeBadge");
+        if(data.achieved){
+            badge.textContent  = "✅ Completed!";
+            badge.style.background = "rgba(34,197,94,0.12)";
+            badge.style.color      = "var(--success)";
+        } else {
+            badge.textContent  = `${data.days_until_reset}d left`;
+            badge.style.background = "rgba(59,130,246,0.1)";
+            badge.style.color      = "var(--primary)";
+        }
+
+        const progressEl = document.getElementById("challengeProgress");
+        const barEl      = document.getElementById("challengeBar");
+        let   barPct     = 0;
+
+        if(data.rule_type === "win_rate"){
+            progressEl.textContent = `Win rate: ${data.progress}% (target: ${data.rule_value}%)`;
+            barPct = Math.min(100, (data.progress / data.rule_value) * 100);
+        } else if(data.rule_type === "profit_target"){
+            progressEl.textContent = `Profit: $${data.progress} (target: $${data.rule_value})`;
+            barPct = Math.min(100, (data.progress / data.rule_value) * 100);
+        } else if(data.rule_type === "trade_limit"){
+            progressEl.textContent = `Trades taken: ${data.progress} / ${data.rule_value} max`;
+            barPct = Math.min(100, (data.progress / data.rule_value) * 100);
+        } else if(data.rule_type === "journal_every_trade"){
+            progressEl.textContent = `Journals: ${data.progress}`;
+            const parts = String(data.progress).split("/");
+            barPct = parts[1] && parts[1] > 0
+                ? Math.min(100, (parseInt(parts[0]) / parseInt(parts[1])) * 100)
+                : 0;
+        } else if(data.rule_type === "no_loss_streak"){
+            progressEl.textContent = `Longest loss streak this week: ${data.progress} (limit: ${data.rule_value})`;
+            barPct = data.achieved ? 100 : Math.min(100, (data.progress / data.rule_value) * 100);
+        }
+
+        barEl.style.width      = `${barPct}%`;
+        barEl.style.background = data.achieved ? "var(--success)" : "var(--primary)";
+
+        document.getElementById("challengeReset").textContent =
+            `Resets in ${data.days_until_reset} day${data.days_until_reset === 1 ? "" : "s"}`;
+
+    } catch(err) {
+        console.error("Challenge load failed:", err);
+    }
+}
+
+
 
 
 // Logout
@@ -254,5 +311,6 @@ window.onload = () => {
     loadHighImpactNews();
     loadWeekCards();
     loadAccountBalance();
+    loadChallenge();
 };
 
