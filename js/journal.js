@@ -201,6 +201,115 @@ async function loadTradeOptions(){
 
 }
 
+
+
+let templates = { defaults: { lesson: [], mistake: [] }, custom: { lesson: [], mistake: [] } };
+
+async function loadTemplates(){
+    try {
+        const res  = await fetch(`${API_URL}/journals/templates`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        templates = await res.json();
+        renderChips("lesson");
+        renderChips("mistake");
+    } catch(err) {
+        console.error("Templates load failed:", err);
+    }
+}
+
+function renderChips(field){
+    const container = document.getElementById(`${field}Chips`);
+    container.innerHTML = "";
+
+    const allChips = [
+        ...templates.defaults[field].map(text => ({ text, custom: false, id: null })),
+        ...templates.custom[field].map(t   => ({ text: t.text, custom: true, id: t.id }))
+    ];
+
+    allChips.forEach(chip => {
+        const btn = document.createElement("button");
+        btn.type  = "button";
+        btn.style.cssText = `
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid ${chip.custom ? "rgba(59,130,246,0.4)" : "var(--border)"};
+            background: ${chip.custom ? "rgba(59,130,246,0.1)" : "rgba(255,255,255,0.04)"};
+            color: ${chip.custom ? "#3b82f6" : "var(--muted)"};
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        `;
+
+        btn.innerHTML = chip.custom
+            ? `${chip.text} <span data-id="${chip.id}" data-field="${field}" style="opacity:0.6; font-size:10px;">✕</span>`
+            : chip.text;
+
+        // click chip → append to textarea
+        btn.addEventListener("click", (e) => {
+            if(e.target.tagName === "SPAN") return; // let delete handle it
+            const ta  = document.getElementById(field);
+            const sep = ta.value.trim() ? ". " : "";
+            ta.value += sep + chip.text;
+            ta.focus();
+        });
+
+        // delete custom chip
+        const deleteSpan = btn.querySelector("span[data-id]");
+        if(deleteSpan){
+            deleteSpan.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const id = deleteSpan.dataset.id;
+                try {
+                    await fetch(`${API_URL}/journals/templates/${id}`, {
+                        method: "DELETE",
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    await loadTemplates();
+                } catch(err) {
+                    console.error("Delete template failed:", err);
+                }
+            });
+        }
+
+        container.appendChild(btn);
+    });
+}
+
+async function saveCustomTemplate(field){
+    const input = document.getElementById(`custom${field.charAt(0).toUpperCase() + field.slice(1)}Input`);
+    const text  = input.value.trim();
+    if(!text) return;
+
+    try {
+        await fetch(`${API_URL}/journals/templates`, {
+            method: "POST",
+            headers: {
+                "Content-Type":  "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ field, text })
+        });
+        input.value = "";
+        await loadTemplates();
+    } catch(err) {
+        console.error("Save template failed:", err);
+    }
+}
+
+document.getElementById("addLessonBtn")
+    .addEventListener("click", () => saveCustomTemplate("lesson"));
+
+document.getElementById("addMistakeBtn")
+    .addEventListener("click", () => saveCustomTemplate("mistake"));
+
+
+
+
 window.onload =
 async()=>{
 
