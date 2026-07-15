@@ -80,6 +80,14 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"user_challenges migration skipped/failed: {e}")
 
+    try:
+        conn.execute(text("ALTER TABLE journals ADD COLUMN created_at TIMESTAMP DEFAULT NOW()"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"journals created_at migration skipped/failed: {e}")
+
+
 app = FastAPI()
 
 CORS_ORIGINS = [
