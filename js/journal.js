@@ -312,9 +312,8 @@ document.getElementById("addMistakeBtn")
 
 window.onload =
 async()=>{
-
     await loadTradeOptions();
-
     await loadJournals();
-
+    await loadTemplates();
+ 
 };
