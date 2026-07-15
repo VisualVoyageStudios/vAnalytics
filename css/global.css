@@ -322,6 +322,8 @@ body{
     flex-shrink:0;
     margin-bottom:8px;
     cursor:pointer;
+    
+    position: relative;
 }
 
 /* Push main content + topbar right of the rail */
@@ -345,6 +347,36 @@ body{
 }
 
 
+.nav-rail-icon{
+    position:relative;
+}
+
+.nav-rail-icon::after{
+    content:attr(title);
+    position:absolute;
+    left:56px;
+    top:50%;
+    transform:translateY(-50%);
+    background:#0d1420;
+    border:1px solid var(--border);
+    padding:6px 12px;
+    border-radius:8px;
+    font-size:12px;
+    white-space:nowrap;
+    color:white;
+    opacity:0;
+    pointer-events:none;
+    transition:.15s;
+    z-index:950;
+}
+
+.nav-rail-icon:hover::after{
+    opacity:1;
+}
+
+.nav-rail-avatar{
+    position:relative;
+}
 
 /** */
 
