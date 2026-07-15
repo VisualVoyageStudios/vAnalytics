@@ -91,14 +91,14 @@ with engine.connect() as conn:
     try:
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS journal_templates (
-            id VARCHAR PRIMARY KEY,
-            user_id VARCHAR NOT NULL,
-            field VARCHAR NOT NULL,
-            text VARCHAR NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW()
+                id VARCHAR PRIMARY KEY,
+                user_id VARCHAR NOT NULL,
+                field VARCHAR NOT NULL,
+                text VARCHAR NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
             )
-            """))
-            conn.commit()
+        """))
+        conn.commit()
     except Exception as e:
         conn.rollback()
         print(f"journal_templates migration skipped/failed: {e}")
