@@ -12,6 +12,7 @@ from models.goal import Goal
 from schemas.goal import GoalCreate
 from models.currency_snapshot import CurrencySnapshot
 from models.challenge import UserChallenge
+from models.journal_template import JournalTemplate
 
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -420,6 +421,88 @@ def create_journal(journal: JournalCreate, current_user=Depends(get_current_user
 @app.get("/journals")
 def get_journals(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     return db.query(Journal).filter(Journal.user_id == current_user["user_id"]).all()
+
+
+# ─────────────────────────────────────────
+#  JOURNAL TEMPLATES
+# ─────────────────────────────────────────
+
+DEFAULT_TEMPLATES = {
+    "lesson": [
+        "Wait for confirmation before entering",
+        "Stick to the trading plan",
+        "Let winners run longer",
+        "Cut losses faster",
+        "Trade with the trend",
+        "Avoid trading during high-impact news",
+        "Risk management saved me here",
+        "Patience paid off on this one",
+    ],
+    "mistake": [
+        "Entered too early without confirmation",
+        "Moved stop loss under pressure",
+        "Overtraded after a loss",
+        "Ignored the higher timeframe",
+        "FOMO entry — chased the move",
+        "Took revenge trade after loss",
+        "Sized too large for the setup",
+        "Closed too early out of fear",
+    ]
+}
+
+
+@app.get("/journals/templates")
+def get_templates(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    user_templates = db.query(JournalTemplate).filter(
+        JournalTemplate.user_id == current_user["user_id"]
+    ).all()
+
+    custom = {"lesson": [], "mistake": []}
+    for t in user_templates:
+        if t.field in custom:
+            custom[t.field].append({"id": t.id, "text": t.text})
+
+    return {
+        "defaults": DEFAULT_TEMPLATES,
+        "custom":   custom
+    }
+
+
+@app.post("/journals/templates")
+def add_template(payload: dict, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    field = payload.get("field")
+    text  = payload.get("text", "").strip()
+
+    if field not in ("lesson", "mistake"):
+        raise HTTPException(status_code=400, detail="field must be 'lesson' or 'mistake'")
+    if not text:
+        raise HTTPException(status_code=400, detail="text cannot be empty")
+    if len(text) > 200:
+        raise HTTPException(status_code=400, detail="text too long (max 200 chars)")
+
+    template = JournalTemplate(
+        id=str(uuid4()),
+        user_id=current_user["user_id"],
+        field=field,
+        text=text
+    )
+    db.add(template)
+    db.commit()
+    return {"message": "Template saved", "id": template.id}
+
+
+@app.delete("/journals/templates/{template_id}")
+def delete_template(template_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    template = db.query(JournalTemplate).filter(
+        JournalTemplate.id == template_id,
+        JournalTemplate.user_id == current_user["user_id"]
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    db.delete(template)
+    db.commit()
+    return {"message": "Template deleted"}
+
 
 # ─────────────────────────────────────────
 #  ANALYTICS
