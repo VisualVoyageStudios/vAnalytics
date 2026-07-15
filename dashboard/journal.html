@@ -100,16 +100,49 @@
                     <option value="Frustrated">Frustrated</option>
                 </select>
 
+                <!-- Replace the lesson textarea block with this -->
+                <div style="margin-bottom:4px;">
+                    <p style="font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                        Quick Lesson Tags
+                    </p>
+                    <div id="lessonChips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;"></div>
+                </div>
                 <textarea
                     id="lesson"
                     placeholder="What did you learn from this trade?"
                 ></textarea>
-
+                <div style="display:flex; gap:8px; margin-top:6px; margin-bottom:12px;">
+                    <input type="text" id="customLessonInput" placeholder="Add custom lesson tag…" style="
+                        flex:1; padding:8px 12px; border-radius:8px;
+                        border:1px solid var(--border); background:var(--bg); color:white; font-size:12px;
+                    ">
+                    <button type="button" id="addLessonBtn" style="
+                        background:var(--card); border:1px solid var(--border);
+                        color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:12px;
+                    ">+ Save</button>
+                </div>
+                
+                <!-- Replace the mistake textarea block with this -->
+                <div style="margin-bottom:4px;">
+                    <p style="font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                        Quick Mistake Tags
+                    </p>
+                    <div id="mistakeChips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;"></div>
+                </div>
                 <textarea
                     id="mistake"
                     placeholder="Any mistakes made?"
                 ></textarea>
-
+                <div style="display:flex; gap:8px; margin-top:6px; margin-bottom:12px;">
+                    <input type="text" id="customMistakeInput" placeholder="Add custom mistake tag…" style="
+                        flex:1; padding:8px 12px; border-radius:8px;
+                        border:1px solid var(--border); background:var(--bg); color:white; font-size:12px;
+                    ">
+                    <button type="button" id="addMistakeBtn" style="
+                        background:var(--card); border:1px solid var(--border);
+                        color:white; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:12px;
+                    ">+ Save</button>
+                </div>
                 <input
                     type="number"
                     id="rating"
