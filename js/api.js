@@ -15,6 +15,26 @@ async function authFetch(url, options = {}){
     return res;
 }
 
+// ── Active account management ──────────
+function getActiveAccountId(){
+    return localStorage.getItem("voyager_active_account") || null;
+}
+
+function setActiveAccountId(id){
+    if(id){
+        localStorage.setItem("voyager_active_account", id);
+    } else {
+        localStorage.removeItem("voyager_active_account");
+    }
+}
+
+function activeAccountParam(){
+    const id = getActiveAccountId();
+    return id ? `?account_id=${id}` : "";
+}
+
+
+
 // API functions
 // Register a new user
 async function registerUser(userData) {
@@ -211,23 +231,20 @@ async function createTrade(
 }
 
 // Get all trades for the logged-in user(broker account)
-async function getTrades(
-    token
-){
-
-    const response =
-    await fetch(
-
-        `${API_URL}/trades`,
-
-        {
-            headers:{
-                "Authorization":
-                `Bearer ${token}`
-            }
-        }
+async function getTrades(token){
+    const response = await fetch(
+        `${API_URL}/trades${activeAccountParam()}`,
+        { headers: { "Authorization": `Bearer ${token}` } }
     );
+    return response.json();
+}
 
+
+async function getAnalytics(token){
+    const response = await fetch(
+        `${API_URL}/analytics${activeAccountParam()}`,
+        { headers: { "Authorization": `Bearer ${token}` } }
+    );
     return response.json();
 }
 
@@ -394,6 +411,15 @@ async function getMT5Account(token){
 
 // calendar heatmap data for the logged-in user(broker account)
 async function getHeatmap(token){
+    const response = await fetch(
+        `${API_URL}/analytics/heatmap${activeAccountParam()}`,
+        { headers: { "Authorization": `Bearer ${token}` } }
+    );
+    return response.json();
+}
+
+
+async function getHeatmap(token){
 
     const response =
     await fetch(
@@ -435,6 +461,15 @@ async function getDayTrades(token,date){
 }
 
 // Monthly Review
+async function getMonthlyPerformance(token){
+    const response = await fetch(
+        `${API_URL}/analytics/monthly${activeAccountParam()}`,
+        { headers: { "Authorization": `Bearer ${token}` } }
+    );
+    return response.json();
+}
+
+
 async function getMonthlyPerformance(token){
     const response =
     await fetch(
