@@ -162,6 +162,35 @@
 
         <div id="journalList"></div>
 
+
+        <!-- Mistake Pattern Detection -->
+        <div style="margin-top:40px;">
+            <div class="section-card-header" style="margin-bottom:16px;">
+                <div>
+                    <h3 style="display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-brain" style="color:var(--primary); font-size:16px;"></i>
+                        Mistake Pattern Analysis
+                    </h3>
+                    <p style="color:var(--muted); font-size:13px; margin-top:4px;">
+                        AI-powered analysis of recurring behavioural patterns in your journal
+                    </p>
+                </div>
+                <button id="refreshPatternsBtn" style="
+                    background: var(--card);
+                    border: 1px solid var(--border);
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 13px;
+                ">
+                    <i class="fas fa-rotate" style="margin-right:6px;"></i>Refresh
+                </button>
+            </div>
+        
+            <div id="patternsList"></div>
+        </div>
+        
     </main>
 </div>
 
