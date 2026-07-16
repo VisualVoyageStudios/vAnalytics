@@ -8,85 +8,448 @@
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/pgAnime.css">
-    
 
-    
+    <style>
+        /* ── Settings scoped styles ── */
+        .settings-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 720px;
+            padding-bottom: 48px;
+        }
 
+        /* Section card */
+        .s-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
 
-    
+        .s-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .s-card-header i {
+            color: var(--primary);
+            font-size: 0.9rem;
+            width: 18px;
+            text-align: center;
+        }
+
+        .s-card-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            margin: 0;
+            letter-spacing: 0.01em;
+        }
+
+        .s-card-body {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Profile row */
+        .s-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .s-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+            letter-spacing: -1px;
+        }
+
+        .s-profile-info p { margin: 0; }
+        .s-profile-email { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+        .s-profile-sub   { font-size: 0.78rem; color: var(--muted); margin-top: 3px !important; }
+
+        /* Form fields */
+        .s-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .s-field label {
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .s-input {
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .s-input:focus { border-color: var(--primary); }
+
+        .s-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .s-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .s-btn:hover   { opacity: 0.88; }
+        .s-btn:active  { transform: scale(0.98); }
+
+        .s-btn-primary { background: var(--primary); color: #fff; }
+        .s-btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .s-btn-danger  { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+
+        /* Status message */
+        .s-msg {
+            font-size: 0.8rem;
+            min-height: 18px;
+            margin: 0;
+        }
+
+        /* Toggle row */
+        .s-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .s-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .s-toggle-row:first-child { padding-top: 0; }
+
+        .s-toggle-label strong {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .s-toggle-label span {
+            font-size: 0.76rem;
+            color: var(--muted);
+        }
+
+        /* Toggle switch */
+        .s-toggle {
+            position: relative;
+            width: 42px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .s-toggle input { opacity: 0; width: 0; height: 0; }
+
+        .s-toggle-track {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background 0.25s;
+        }
+
+        .s-toggle-track::after {
+            content: '';
+            position: absolute;
+            width: 18px; height: 18px;
+            left: 3px; top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.25s;
+        }
+
+        .s-toggle input:checked + .s-toggle-track { background: var(--primary); }
+        .s-toggle input:checked + .s-toggle-track::after { transform: translateX(18px); }
+
+        /* Plan cards */
+        .s-plan-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .s-plan-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .s-plan-card.current {
+            border-color: var(--primary);
+            background: rgba(59,130,246,0.05);
+        }
+
+        .s-plan-card.current::before {
+            content: 'Current';
+            position: absolute;
+            top: 10px; right: 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: var(--primary);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .s-plan-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+        }
+
+        .s-plan-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .s-plan-price span {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .s-plan-desc {
+            font-size: 0.76rem;
+            color: var(--muted);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        /* Accent colour picker */
+        .s-accent-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .s-accent-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+
+        .s-accent-dot:hover   { transform: scale(1.15); }
+        .s-accent-dot.active  { border-color: #fff; transform: scale(1.1); }
+
+        /* Agent status */
+        .s-agent-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+        }
+
+        .s-agent-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--danger);
+            flex-shrink: 0;
+        }
+
+        .s-agent-dot.online { background: var(--success); box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+
+        .s-agent-text {
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        /* Step boxes */
+        .s-step {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .s-step-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .s-step-desc {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .s-step-desc strong { color: #4e8fda; }
+
+        /* Danger zone */
+        .s-card.danger { border-color: rgba(239,68,68,0.3); }
+        .s-card.danger .s-card-header { border-color: rgba(239,68,68,0.2); }
+        .s-card.danger .s-card-header i { color: #ef4444; }
+        .s-card.danger .s-card-header h3 { color: #ef4444; }
+
+        /* About */
+        .s-about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 24px;
+        }
+
+        .s-about-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .s-about-item span {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .s-about-item p {
+            font-size: 0.88rem;
+            color: var(--text);
+            font-weight: 500;
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            .s-plan-grid { grid-template-columns: 1fr 1fr; }
+            .s-row-2     { grid-template-columns: 1fr; }
+            .s-about-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
-<div id="loader">
-    <div class="spinner"></div>
-</div>
-
-<!-- Topbar -->
-<header class="topnav">
-    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
-    <h2 class="topnav-title">Settings</h2>
-    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
-</header>
-
-<!-- Drawer overlay -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-
-<!-- Off-canvas nav drawer -->
-<aside class="nav-drawer" id="navDrawer">
-    <div class="drawer-brand">
-        <i class="fas fa-rocket"></i>
-        <div>
-            <p class="brand-name">Voyager</p>
-            <p class="brand-plan">ANALYTICS</p>
-        </div>
-    </div>
-
-    <div class="drawer-section-label">Journaling</div>
-    <nav class="drawer-nav">
-        <a href="dashboard.html"><i class="fas fa-table-cells-large"></i>Dashboard</a>
-        <a href="accounts.html"><i class="fas fa-briefcase"></i>Accounts</a>
-        <a href="trades.html"><i class="fas fa-chart-line"></i>Trades</a>
-        <a href="analytics.html"><i class="fas fa-chart-simple"></i>Analytics</a>
-        <a href="journal.html"><i class="fas fa-book-open-reader"></i>Journal</a>
-        <a href="riskReward.html"><i class="fas fa-scale-balanced"></i>Risk / Reward</a>
-    </nav>
-
-    <div class="drawer-section-label">Market Tools</div>
-    <nav class="drawer-nav">
-        <a href="economicHeatmap.html"><i class="fas fa-globe"></i>Economic Heatmap <span class="nav-premium-badge">Elite</span></a>
-        <a href="edgeFinder.html"><i class="fas fa-crosshairs"></i>Edge Finder <span class="nav-premium-badge">Elite</span></a>
-        <a href="currencyStrength.html"><i class="fas fa-signal"></i>Currency Strength <span class="nav-premium-badge">Elite</span></a>
-        <a href="correlationMatrix.html"><i class="fas fa-table-cells"></i>Correlation Matrix <span class="nav-premium-badge">Elite</span></a>
-    </nav>
-
-    <div class="drawer-section-label">Premium</div>
-    <nav class="drawer-nav">
-        <a href="aiInsights.html"><i class="fas fa-microchip"></i>AI Insights <span class="nav-premium-badge">Pro</span></a>
-        <a href="sessionAnalysis.html"><i class="fas fa-clock"></i>Session Analysis <span class="nav-premium-badge">Starter</span></a>
-        <a href="streaks.html"><i class="fas fa-fire"></i>Streak Tracker <span class="nav-premium-badge">Starter</span></a>
-        <a href="goalTracker.html"><i class="fas fa-bullseye"></i>Goal Tracker <span class="nav-premium-badge">Starter</span></a>
-        <a href="reports.html"><i class="fas fa-file-pdf"></i>Reports <span class="nav-premium-badge">Elite</span></a>
-    </nav>
-
-    <div class="drawer-section-label">Account</div>
-    <nav class="drawer-nav">
-        <a href="settings.html"><i class="fas fa-gears"></i>Settings</a>
-    </nav>
-
-    <div class="drawer-footer">
-        <div class="drawer-user">
-            <div class="drawer-avatar" id="drawerAvatar">V</div>
-            <div>
-                <p class="drawer-user-name">voyager</p>
-                <p class="drawer-user-email" id="drawerEmail">—</p>
-            </div>
-        </div>
-    </div>
-</aside>
+<div id="loader"><div class="spinner"></div></div>
 
 <div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="fas fa-rocket">Voyager</i>
+            <p>ANALYTICS</p>
+        </div>
+        <nav>
+            <a href="dashboard.html">
+                <i class="fas fa-tachograph-digital"></i> Dashboard
+            </a>
+            <a href="accounts.html">
+                <i class="fas fa-briefcase"></i> Accounts
+            </a>
+            <a href="trades.html">
+                <i class="fas fa-chart-line"></i> Trades
+            </a>
+            <a href="analytics.html">
+                <i class="fas fa-eye"></i> Analytics
+            </a>
+            <a href="journal.html">
+                <i class="fas fa-book-open-reader"></i> Journal
+            </a>
+        
+            <!-- Divider -->
+            <div class="nav-divider"><span>Market Tools</span></div>
 
-        <main class="main-content">
+            <a href="economicHeatmap.html">
+                <i class="fas fa-globe"></i> Economic Heatmap
+                <span class="nav-premium-badge">Elite</span>
+            </a>
+            <a href="edgeFinder.html">
+                <i class="fas fa-crosshairs"></i> Edge Finder
+                <span class="nav-premium-badge">Elite</span>
+            </a>
+            <a href="currencyStrength.html">
+                <i class="fas fa-signal"></i> Currency Strength
+                <span class="nav-premium-badge">Elite</span>
+            </a>
+            <a href="correlationMatrix.html"><i class="fas fa-table-cells"></i> Correlation Matrix <span class="nav-premium-badge">Elite</span></a>
+
+            <!-- Divider -->
+            <div class="nav-divider"><span>Account</span></div>
+
+            <a href="streaks.html"><i class="fas fa-fire"></i> Streak Tracker <span class="nav-premium-badge">Starter</span></a>
+            
+            <a href="aiInsights.html">
+                <i class="fas fa-microchip"></i> AI Insights
+                <span class="nav-premium-badge">Pro</span>
+            </a>
+            <a href="sessionAnalysis.html">
+                <i class="fas fa-clock"></i> Session Analysis
+                <span class="nav-premium-badge">Starter</span>
+            </a>
+                        <a href="goalTracker.html"><i class="fas fa-bullseye"></i> Goal Tracker <span class="nav-premium-badge">Starter</span></a>
+            <a href="reports.html">
+                <i class="fas fa-file-pdf"></i> Reports
+                <span class="nav-premium-badge">Elite</span>
+            </a>
+
+            <!-- Divider-->
+            <div class="nav-divider"><span>Settings</span></div>
+
+            <a href="settings.html">
+                <i class="fas fa-gears"></i> Settings
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
         <header class="page-header">
             <h2>Settings</h2>
         </header>
@@ -226,152 +589,4 @@
             <div class="s-card">
                 <div class="s-card-header">
                     <i class="fas fa-palette"></i>
-                    <h3>Appearance</h3>
-                </div>
-                <div class="s-card-body">
-                    <div class="s-toggle-row" style="padding-top:0;">
-                        <div class="s-toggle-label">
-                            <strong>Compact sidebar</strong>
-                            <span>Show icons only, hide labels</span>
-                        </div>
-                        <label class="s-toggle">
-                            <input type="checkbox" id="appearance-compact">
-                            <span class="s-toggle-track"></span>
-                        </label>
-                    </div>
-                    <div class="s-toggle-row" style="border-bottom:none;padding-bottom:0;">
-                        <div class="s-toggle-label">
-                            <strong>Reduce motion</strong>
-                            <span>Disable page transition animations</span>
-                        </div>
-                        <label class="s-toggle">
-                            <input type="checkbox" id="appearance-motion">
-                            <span class="s-toggle-track"></span>
-                        </label>
-                    </div>
-                    <div class="s-field" style="margin-top:4px;">
-                        <label>Accent Colour</label>
-                        <div class="s-accent-row" id="accentPicker">
-                            <div class="s-accent-dot active" style="background:#3b82f6;" data-color="#3b82f6" title="Blue"></div>
-                            <div class="s-accent-dot" style="background:#8b5cf6;" data-color="#8b5cf6" title="Purple"></div>
-                            <div class="s-accent-dot" style="background:#22c55e;" data-color="#22c55e" title="Green"></div>
-                            <div class="s-accent-dot" style="background:#f59e0b;" data-color="#f59e0b" title="Amber"></div>
-                            <div class="s-accent-dot" style="background:#ef4444;" data-color="#ef4444" title="Red"></div>
-                            <div class="s-accent-dot" style="background:#06b6d4;" data-color="#06b6d4" title="Cyan"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ── MT5 Sync ── -->
-            <div class="s-card">
-                <div class="s-card-header">
-                    <i class="fas fa-rotate"></i>
-                    <h3>Sync Trades</h3>
-                </div>
-                <div class="s-card-body">
-                    <p style="font-size:0.82rem;color:var(--muted);margin:0;">
-                        Import your full MT5 trade history into Voyager in two steps.
-                    </p>
-
-                    <!-- Agent status -->
-                    <div class="s-agent-status">
-                        <div class="s-agent-dot" id="agentDot"></div>
-                        <span class="s-agent-text" id="agentStatus">Sync Agent not running</span>
-                    </div>
-
-                    <!-- Step 1 -->
-                    <div class="s-step">
-                        <div class="s-step-title">Step 1 — Download &amp; run the Sync Agent</div>
-                        <div class="s-step-desc">
-                            Download the Sync Agent, double-click the file to run it, and keep the window open in the background.
-                            You only need to do this once per session.
-                        </div>
-                        <button class="s-btn s-btn-ghost" id="downloadAgentBtn">
-                            <i class="fas fa-download"></i> Download Voyager Sync Agent
-                        </button>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="s-step">
-                        <div class="s-step-title">Step 2 — Open MetaTrader 5</div>
-                        <div class="s-step-desc" style="margin-bottom:0;">
-                            Make sure <strong>MetaTrader 5</strong> is open and logged into your trading account before syncing.
-                        </div>
-                    </div>
-
-                    <!-- Sync button -->
-                    <button class="s-btn s-btn-primary" id="syncNowBtn" style="width:100%;justify-content:center;padding:13px;">
-                        <i class="fas fa-rotate"></i> Sync Now
-                    </button>
-                    <p class="s-msg" id="syncMsg" style="text-align:center;"></p>
-                </div>
-            </div>
-
-            <!-- ── Danger Zone ── -->
-            <div class="s-card danger">
-                <div class="s-card-header">
-                    <i class="fas fa-triangle-exclamation"></i>
-                    <h3>Danger Zone</h3>
-                </div>
-                <div class="s-card-body">
-                    <div class="s-toggle-row" style="padding-top:0;">
-                        <div class="s-toggle-label">
-                            <strong>Clear all trade data</strong>
-                            <span>Permanently delete every trade and journal entry. Cannot be undone.</span>
-                        </div>
-                        <button class="s-btn s-btn-danger" id="clearDataBtn">
-                            <i class="fas fa-trash"></i> Clear
-                        </button>
-                    </div>
-                    <div class="s-toggle-row">
-                        <div class="s-toggle-label">
-                            <strong>Delete account</strong>
-                            <span>Remove your Voyager account and all associated data permanently.</span>
-                        </div>
-                        <button class="s-btn s-btn-danger" id="deleteAccountBtn">
-                            <i class="fas fa-user-xmark"></i> Delete
-                        </button>
-                    </div>
-                    <p class="s-msg" id="clearMsg"></p>
-                </div>
-            </div>
-
-            <!-- ── About ── -->
-            <div class="s-card">
-                <div class="s-card-header">
-                    <i class="fas fa-circle-info"></i>
-                    <h3>About</h3>
-                </div>
-                <div class="s-card-body">
-                    <div class="s-about-grid">
-                        <div class="s-about-item">
-                            <span>Product</span>
-                            <p>Voyager Analytics</p>
-                        </div>
-                        <div class="s-about-item">
-                            <span>Version</span>
-                            <p>1.0.0</p>
-                        </div>
-                        <div class="s-about-item">
-                            <span>Built for</span>
-                            <p>Active Traders</p>
-                        </div>
-                        <div class="s-about-item">
-                            <span>Support</span>
-                            <p><a href="https://voyageranalytics.netlify.app" style="color:var(--primary);text-decoration:none;">voyageranalytics.netlify.app</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div><!-- /settings-wrapper -->
-    </main>
-</div>
-
-<script src="../js/api.js"></script>
-<script src="../js/settings.js"></script>
-<script src="../js/nav.js"></script>
-<script src="../js/pgAnime.js"></script>
-</body>
-</html>
+                    <h3>A
