@@ -419,26 +419,6 @@ async function getHeatmap(token){
 }
 
 
-async function getHeatmap(token){
-
-    const response =
-    await fetch(
-
-        `${API_URL}/analytics/heatmap`,
-
-        {
-            headers:{
-                Authorization:
-                `Bearer ${token}`
-            }
-        }
-
-    );
-
-    return response.json();
-
-}
-
 // monthly Summary(above calendar)
 async function getDayTrades(token,date){
 
@@ -469,22 +449,6 @@ async function getMonthlyPerformance(token){
     return response.json();
 }
 
-
-async function getMonthlyPerformance(token){
-    const response =
-    await fetch(
-        
-        `${API_URL}/analytics/monthly`,
-        {
-            headers:{
-                Authorization:
-                `Bearer ${token}`
-            }
-        }
-    );
-
-    return await response.json();
-}
 
 
 // Local sync agent
