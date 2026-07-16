@@ -21,7 +21,7 @@ from typing import List, Optional
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -341,9 +341,18 @@ def create_trade(trade: TradeCreate, current_user=Depends(get_current_user), db:
 
 
 @app.get("/trades")
-def get_trades(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
-    return db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+def get_trades(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
+    all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    if account_id and account_id in all_account_ids:
+        filter_ids = [account_id]
+    else:
+        filter_ids = all_account_ids
+    return db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
+
 
 
 @app.delete("/trades/{trade_id}")
@@ -602,9 +611,14 @@ async def get_mistake_patterns(current_user=Depends(get_current_user), db: Sessi
 # ─────────────────────────────────────────
 
 @app.get("/analytics")
-def get_analytics(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
-    trades = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+def get_analytics(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
+    all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
+    trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
 
     if not trades:
         return {
@@ -614,17 +628,17 @@ def get_analytics(current_user=Depends(get_current_user), db: Session = Depends(
             "largest_win": 0, "largest_loss": 0, "average_trade": 0, "max_drawdown": 0
         }
 
-    profits      = [t.profit for t in trades]
-    wins         = [p for p in profits if p > 0]
-    losses       = [p for p in profits if p < 0]
-    gross_profit = sum(wins)
-    gross_loss   = abs(sum(losses))
-    win_rate     = round((len(wins) / len(profits)) * 100, 2) if profits else 0
-    loss_rate    = 100 - win_rate
-    average_win  = round(sum(wins) / len(wins), 2) if wins else 0
-    average_loss = round(sum(losses) / len(losses), 2) if losses else 0
+    profits       = [t.profit for t in trades]
+    wins          = [p for p in profits if p > 0]
+    losses        = [p for p in profits if p < 0]
+    gross_profit  = sum(wins)
+    gross_loss    = abs(sum(losses))
+    win_rate      = round((len(wins) / len(profits)) * 100, 2) if profits else 0
+    loss_rate     = 100 - win_rate
+    average_win   = round(sum(wins) / len(wins), 2) if wins else 0
+    average_loss  = round(sum(losses) / len(losses), 2) if losses else 0
     profit_factor = round(gross_profit / gross_loss, 2) if gross_loss > 0 else 0
-    expectancy   = round(((win_rate / 100) * average_win) + ((loss_rate / 100) * average_loss), 2)
+    expectancy    = round(((win_rate / 100) * average_win) + ((loss_rate / 100) * average_loss), 2)
 
     equity = peak = max_drawdown = 0
     for p in profits:
@@ -652,10 +666,16 @@ def get_analytics(current_user=Depends(get_current_user), db: Session = Depends(
     }
 
 
+
 @app.get("/analytics/heatmap")
-def get_heatmap(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    account_ids  = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
-    trades       = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+def get_heatmap(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
+    all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
+    trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
     daily_results = {}
 
     for trade in trades:
@@ -683,9 +703,14 @@ def get_day_details(date: str, current_user=Depends(get_current_user), db: Sessi
 
 
 @app.get("/analytics/monthly")
-def get_monthly_performance(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    account_ids  = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
-    trades       = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+def get_monthly_performance(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
+    all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
+    trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
     monthly_data = {}
 
     for trade in trades:
@@ -709,9 +734,14 @@ def get_monthly_performance(current_user=Depends(get_current_user), db: Session 
 
 
 @app.get("/analytics/sessions")
-async def get_session_analysis(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
-    trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+async def get_session_analysis(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
+    all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
+    trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
 
     sessions = {
         "Asian":    {"start": 0,  "end": 9,  "trades": 0, "wins": 0, "profit": 0.0},
@@ -744,9 +774,14 @@ async def get_session_analysis(current_user=Depends(get_current_user), db: Sessi
 
 
 @app.get("/analytics/streaks")
-async def get_streaks(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
-    trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).order_by(Trade.created_at.asc()).all()
+async def get_streaks(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
+    all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
+    trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).order_by(Trade.created_at.asc()).all()
 
     if not trades:
         return {
@@ -796,20 +831,22 @@ async def get_streaks(current_user=Depends(get_current_user), db: Session = Depe
 # ─────────────────────────────────────────
 
 @app.get("/analytics/risk-reward")
-def get_risk_reward(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
-    trades = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+def get_risk_reward(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
+    all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
+    trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
 
-    per_trade = []
+    per_trade      = []
     planned_ratios = []
 
     for t in trades:
         entry = {
-            "id": t.id,
-            "symbol": t.symbol,
-            "profit": t.profit,
-            "planned_rr": None,
-            "realized_rr": None
+            "id": t.id, "symbol": t.symbol,
+            "profit": t.profit, "planned_rr": None, "realized_rr": None
         }
 
         if t.stop_loss is not None and t.take_profit is not None:
@@ -820,25 +857,24 @@ def get_risk_reward(current_user=Depends(get_current_user), db: Session = Depend
                 planned_ratios.append(entry["planned_rr"])
 
         if t.stop_loss is not None:
-            risk = abs(t.open_price - t.stop_loss)
+            risk     = abs(t.open_price - t.stop_loss)
             realized = abs(t.close_price - t.open_price)
             if risk > 0:
                 entry["realized_rr"] = round(realized / risk, 2)
 
         per_trade.append(entry)
 
-    trades_with_rr = [t for t in per_trade if t["planned_rr"] is not None]
-    avg_planned    = round(sum(planned_ratios) / len(planned_ratios), 2) if planned_ratios else 0
-
-    wins_with_rr   = [t for t in trades_with_rr if t["profit"] > 0]
+    trades_with_rr   = [t for t in per_trade if t["planned_rr"] is not None]
+    avg_planned      = round(sum(planned_ratios) / len(planned_ratios), 2) if planned_ratios else 0
+    wins_with_rr     = [t for t in trades_with_rr if t["profit"] > 0]
     win_rate_with_rr = round((len(wins_with_rr) / len(trades_with_rr)) * 100, 1) if trades_with_rr else 0
 
     return {
         "trades": per_trade,
         "summary": {
-            "trades_with_rr_set": len(trades_with_rr),
-            "total_trades": len(trades),
-            "average_planned_rr": avg_planned,
+            "trades_with_rr_set":   len(trades_with_rr),
+            "total_trades":         len(trades),
+            "average_planned_rr":   avg_planned,
             "win_rate_on_rr_trades": win_rate_with_rr
         }
     }
