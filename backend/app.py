@@ -505,6 +505,99 @@ def delete_template(template_id: str, current_user=Depends(get_current_user), db
 
 
 # ─────────────────────────────────────────
+#  MISTAKE PATTERN DETECTION
+# ─────────────────────────────────────────
+
+mistake_pattern_cache = {}  # keyed by user_id
+MISTAKE_CACHE_TTL = 3600    # 1 hour
+
+
+@app.get("/journals/mistake-patterns")
+async def get_mistake_patterns(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    user_id = current_user["user_id"]
+
+    # serve from cache if fresh
+    cached = mistake_pattern_cache.get(user_id)
+    if cached and (time.time() - cached["timestamp"]) < MISTAKE_CACHE_TTL:
+        return cached["data"]
+
+    journals = db.query(Journal).filter(
+        Journal.user_id == user_id
+    ).all()
+
+    mistakes = [j.mistake for j in journals if j.mistake and j.mistake.strip()]
+
+    if len(mistakes) < 3:
+        return {
+            "patterns": [],
+            "insufficient_data": True,
+            "entries_needed": 3 - len(mistakes)
+        }
+
+    mistakes_text = "\n".join(f"- {m}" for m in mistakes)
+
+    prompt = (
+        "You are an expert trading psychology coach. "
+        "Analyse these trading mistake journal entries and identify recurring behavioural patterns. "
+        "Return ONLY a valid JSON array with no markdown, no preamble:\n"
+        '[{"pattern": "Short pattern name", "description": "2 sentences explaining the pattern and its impact", '
+        '"frequency": "how often it appears (e.g. frequent/occasional/rare)", '
+        '"advice": "One actionable sentence to address this pattern", '
+        '"severity": "high/medium/low"}]\n\n'
+        f"Journal entries:\n{mistakes_text}\n\n"
+        "Identify 3-5 patterns maximum. Return ONLY the JSON array."
+    )
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}",
+                    "Content-Type":  "application/json"
+                },
+                json={
+                    "model":    "llama-3.1-8b-instant",
+                    "max_tokens": 1000,
+                    "messages": [{"role": "user", "content": prompt}]
+                },
+                timeout=30.0
+            )
+
+        data = res.json()
+
+        if "choices" not in data:
+            raise HTTPException(status_code=500, detail=f"Groq error: {data}")
+
+        text     = data["choices"][0]["message"]["content"]
+        clean    = text.replace("```json", "").replace("```", "").strip()
+        patterns = json.loads(clean)
+
+        result = {
+            "patterns":          patterns,
+            "insufficient_data": False,
+            "entries_analysed":  len(mistakes)
+        }
+
+        mistake_pattern_cache[user_id] = {
+            "data":      result,
+            "timestamp": time.time()
+        }
+
+        return result
+
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"Could not parse AI response: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Mistake pattern error: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+# ─────────────────────────────────────────
 #  ANALYTICS
 # ─────────────────────────────────────────
 
