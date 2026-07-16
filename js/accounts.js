@@ -111,6 +111,38 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
+
+    const activeId = getActiveAccountId();
+    row.innerHTML = `
+        <td>${account.account_number}</td>
+        <td>${account.broker}</td>
+        <td><span class="status-badge">${account.status}</span></td>
+        <td>${formatDate(account.created_at)}</td>
+        <td style="display:flex; gap:8px; align-items:center;">
+            <button class="set-active-btn" data-id="${account.id}" style="
+                background: ${account.id === activeId ? 'rgba(34,197,94,0.12)' : 'var(--card)'};
+                border: 1px solid ${account.id === activeId ? 'rgba(34,197,94,0.3)' : 'var(--border)'};
+                color: ${account.id === activeId ? 'var(--success)' : 'var(--muted)'};
+                padding: 6px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+            ">
+                ${account.id === activeId ? '✓ Active' : 'Set Active'}
+            </button>
+            <button class="delete-btn" data-id="${account.id}">Delete</button>
+        </td>
+    `;
+    
+    row.querySelector(".set-active-btn")
+        .addEventListener("click", () => {
+            const isAlready = account.id === getActiveAccountId();
+            setActiveAccountId(isAlready ? null : account.id);
+            loadAccounts(); // re-render to update button states
+        });
+
+    
     loadAccounts();
 
 });
