@@ -1,10 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const hamburgerBtn = document.getElementById("hamburgerBtn");
-    const railToggle    = document.getElementById("railToggle");
-    const railAvatar     = document.getElementById("railAvatar");
-    const drawer = document.getElementById("navDrawer");
-    const overlay = document.getElementById("drawerOverlay");
+    const drawer       = document.getElementById("navDrawer");
+    const overlay      = document.getElementById("drawerOverlay");
 
     function openDrawer(){
         drawer.classList.add("open");
@@ -16,24 +14,83 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     hamburgerBtn?.addEventListener("click", openDrawer);
-    railToggle?.addEventListener("click", openDrawer);
-    railAvatar?.addEventListener("click", openDrawer);
     overlay?.addEventListener("click", closeDrawer);
 
-    // populate drawer + rail avatar with logged-in user
+    // populate drawer footer with logged-in user
     const token = localStorage.token;
     if(token){
         try{
             const payload = JSON.parse(atob(token.split(".")[1]));
-            const email = payload.email || "";
-            const emailEl = document.getElementById("drawerEmail");
+            const email   = payload.email || "";
+            const emailEl  = document.getElementById("drawerEmail");
             const avatarEl = document.getElementById("drawerAvatar");
-            const railAvatarEl = document.getElementById("railAvatar");
-            if(emailEl) emailEl.textContent = email;
+            if(emailEl)  emailEl.textContent  = email;
             if(avatarEl && email) avatarEl.textContent = email[0].toUpperCase();
-            if(railAvatarEl && email) railAvatarEl.textContent = email[0].toUpperCase();
         }catch(e){}
     }
+
+    // ── Account switcher in topnav ────────────────────────────────────
+    async function loadAccountSwitcher(){
+        if(!token) return;
+
+        try {
+            const accounts = await getAccounts(token);
+            if(!accounts || accounts.length <= 1) return; // no switcher needed for 0 or 1 account
+
+            const topnav    = document.querySelector(".topnav");
+            const titleEl   = document.querySelector(".topnav-title");
+            if(!topnav || !titleEl) return;
+
+            const activeId  = getActiveAccountId();
+
+            const switcher = document.createElement("div");
+            switcher.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-left: 12px;
+            `;
+
+            const select = document.createElement("select");
+            select.style.cssText = `
+                background: var(--card);
+                border: 1px solid var(--border);
+                color: white;
+                padding: 6px 12px;
+                border-radius: 8px;
+                font-size: 12px;
+                cursor: pointer;
+                outline: none;
+            `;
+
+            const allOption = document.createElement("option");
+            allOption.value       = "";
+            allOption.textContent = "All Accounts";
+            if(!activeId) allOption.selected = true;
+            select.appendChild(allOption);
+
+            accounts.forEach(account => {
+                const opt = document.createElement("option");
+                opt.value       = account.id;
+                opt.textContent = account.account_number || account.broker;
+                if(account.id === activeId) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            select.addEventListener("change", () => {
+                setActiveAccountId(select.value || null);
+                window.location.reload();
+            });
+
+            switcher.appendChild(select);
+            titleEl.after(switcher);
+
+        } catch(err) {
+            console.error("Account switcher failed:", err);
+        }
+    }
+
+    loadAccountSwitcher();
 
     // fallback logout
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
