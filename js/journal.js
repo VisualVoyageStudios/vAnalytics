@@ -308,6 +308,151 @@ document.getElementById("addMistakeBtn")
     .addEventListener("click", () => saveCustomTemplate("mistake"));
 
 
+// Load mistakes
+const SEVERITY_CONFIG = {
+    high:   { color: "#ef4444", bg: "rgba(239,68,68,0.08)",   border: "rgba(239,68,68,0.2)",   label: "High"   },
+    medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.2)",  label: "Medium" },
+    low:    { color: "#3b82f6", bg: "rgba(59,130,246,0.08)",  border: "rgba(59,130,246,0.2)",  label: "Low"    }
+};
+
+const FREQUENCY_ICONS = {
+    frequent:   "🔴",
+    occasional: "🟡",
+    rare:       "🟢"
+};
+
+async function loadMistakePatterns(){
+    const container = document.getElementById("patternsList");
+
+    container.innerHTML = `
+        <div style="color:var(--muted); padding:40px 20px; text-align:center;">
+            <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; display:block; margin-bottom:12px; opacity:0.3;"></i>
+            Analysing your journal entries…
+        </div>
+    `;
+
+    try {
+        const res  = await fetch(`${API_URL}/journals/mistake-patterns`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if(data.insufficient_data){
+            container.innerHTML = `
+                <div style="
+                    background: rgba(59,130,246,0.06);
+                    border: 1px solid rgba(59,130,246,0.15);
+                    border-radius: 14px;
+                    padding: 28px;
+                    text-align: center;
+                    color: var(--muted);
+                ">
+                    <i class="fas fa-brain" style="font-size:2rem; opacity:0.2; display:block; margin-bottom:12px;"></i>
+                    <p style="margin-bottom:6px; color:white; font-weight:600;">Not enough data yet</p>
+                    <p style="font-size:13px;">
+                        Add ${data.entries_needed} more journal ${data.entries_needed === 1 ? "entry" : "entries"} with mistake notes to unlock pattern analysis.
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        if(!data.patterns || data.patterns.length === 0){
+            container.innerHTML = `
+                <div style="text-align:center; color:var(--muted); padding:40px 20px;">
+                    <i class="fas fa-check-circle" style="font-size:2rem; color:var(--success); display:block; margin-bottom:12px; opacity:0.6;"></i>
+                    <p>No clear recurring patterns found — great discipline!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">
+                Based on ${data.entries_analysed} journal entries
+            </p>
+            ${data.patterns.map(p => {
+                const cfg  = SEVERITY_CONFIG[p.severity] || SEVERITY_CONFIG.medium;
+                const freq = FREQUENCY_ICONS[p.frequency] || "🟡";
+
+                return `
+                    <div style="
+                        background: ${cfg.bg};
+                        border: 1px solid ${cfg.border};
+                        border-radius: 14px;
+                        padding: 20px 24px;
+                        margin-bottom: 12px;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            position: absolute;
+                            top: 0; left: 0; bottom: 0;
+                            width: 3px;
+                            background: ${cfg.color};
+                            border-radius: 14px 0 0 14px;
+                        "></div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                            <div>
+                                <span style="font-size:12px; margin-right:6px;">${freq}</span>
+                                <strong style="font-size:15px;">${p.pattern}</strong>
+                            </div>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <span style="
+                                    font-size:11px; font-weight:700;
+                                    color:${cfg.color};
+                                    background:${cfg.bg};
+                                    padding: 3px 10px;
+                                    border-radius: 20px;
+                                    border: 1px solid ${cfg.border};
+                                ">${cfg.label} severity</span>
+                                <span style="font-size:11px; color:var(--muted); text-transform:capitalize;">${p.frequency}</span>
+                            </div>
+                        </div>
+
+                        <p style="font-size:13px; color:var(--muted); line-height:1.7; margin-bottom:12px;">
+                            ${p.description}
+                        </p>
+
+                        <div style="
+                            background: rgba(255,255,255,0.03);
+                            border-radius: 8px;
+                            padding: 10px 14px;
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 8px;
+                        ">
+                            <i class="fas fa-lightbulb" style="color:#f59e0b; margin-top:2px; font-size:12px; flex-shrink:0;"></i>
+                            <p style="font-size:12px; color:white; line-height:1.6; margin:0;">${p.advice}</p>
+                        </div>
+                    </div>
+                `;
+            }).join("")}
+        `;
+
+    } catch(err) {
+        console.error(err);
+        container.innerHTML = `
+            <div style="text-align:center; color:var(--muted); padding:40px 20px;">
+                <i class="fas fa-triangle-exclamation" style="font-size:1.5rem; opacity:0.3; display:block; margin-bottom:12px;"></i>
+                Could not load pattern analysis. Try again.
+            </div>
+        `;
+    }
+}
+
+document.getElementById("refreshPatternsBtn")
+    .addEventListener("click", async () => {
+        // bust the server-side cache by waiting — or just re-request
+        // (cache will serve existing result for 1hr unless server restarts)
+        await loadMistakePatterns();
+    });
+
+
+
+
+
 
 
 window.onload =
@@ -315,5 +460,6 @@ async()=>{
     await loadTradeOptions();
     await loadJournals();
     await loadTemplates();
+    await loadMistakePatterns();
  
 };
