@@ -52,7 +52,7 @@ def fetch_mt5_trades():
         trades.append({
             "ticket":     str(deal.ticket),
             "symbol":     deal.symbol,
-            "order_type": str(deal.type),
+            "order_type": "BUY" if deal.type == 0 else "SELL",
             "lot_size":   deal.volume,
             "open_price": deal.price,
             "close_price":deal.price,
