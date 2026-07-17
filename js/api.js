@@ -7,6 +7,12 @@ if(_savedAccent){
     document.documentElement.style.setProperty("--primary", _savedAccent);
 }
 
+// ── Restore light/dark mode preference ───────────────────
+const _savedMode = localStorage.getItem("voyager_theme");
+if(_savedMode === "light"){
+    document.documentElement.classList.add("light");
+}
+
 async function authFetch(url, options = {}){
     const res = await fetch(url, options);
 
