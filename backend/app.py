@@ -246,7 +246,8 @@ def home():
 # ─────────────────────────────────────────
 
 @app.post("/register")
-def register_user(user: UserRegister, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register_user(request: Request, user: UserRegister, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
@@ -261,7 +262,8 @@ def register_user(user: UserRegister, db: Session = Depends(get_db)):
 
 
 @app.post("/login")
-def login_user(user: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login_user(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if not db_user or not verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
