@@ -41,6 +41,15 @@ from dependencies import get_current_user
 from security import hash_password, verify_password
 from auth_token import create_access_token
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # MT5 is Windows-only
 try:
     import MetaTrader5 as mt5
