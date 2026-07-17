@@ -6,17 +6,22 @@ function loadProfile() {
     try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         const email   = payload.email || "—";
+
         document.getElementById("profileEmail").textContent  = email;
         document.getElementById("avatarInitial").textContent = email[0].toUpperCase();
+
+        // rail avatar
+        const railAvatar = document.getElementById("railAvatar");
+        if(railAvatar) railAvatar.textContent = email[0].toUpperCase();
+
     } catch(e) {
         console.error("Could not decode token", e);
     }
 }
 
 // ── Change Password ──────────────────────────────────────
-document.getElementById("changePasswordForm")
-    .addEventListener("submit", async (e) => {
-        e.preventDefault();
+document.getElementById("changePasswordBtn")
+    .addEventListener("click", async () => {
 
         const newPassword     = document.getElementById("newPassword").value;
         const confirmPassword = document.getElementById("confirmNewPassword").value;
@@ -60,6 +65,27 @@ document.getElementById("changePasswordForm")
         }
     });
 
+// ── Rail toggle (expand drawer) ──────────────────────────
+document.getElementById("railToggle")?.addEventListener("click", () => {
+    const drawer  = document.getElementById("navDrawer");
+    const overlay = document.getElementById("drawerOverlay");
+    if(!drawer) return;
+    drawer.classList.toggle("open");
+    if(overlay) overlay.classList.toggle("show");
+});
+
+document.getElementById("drawerOverlay")?.addEventListener("click", () => {
+    document.getElementById("navDrawer")?.classList.remove("open");
+    document.getElementById("drawerOverlay")?.classList.remove("show");
+});
+
+// ── Logout ───────────────────────────────────────────────
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("voyager_active_account");
+    window.location.href = "../login.html";
+});
+
 // ── MT5 Sync Agent ───────────────────────────────────────
 document.getElementById("downloadAgentBtn").addEventListener("click", () => {
     const batContent = `@echo off
@@ -97,19 +123,19 @@ async function checkAgentStatus() {
     const status  = document.getElementById("agentStatus");
 
     if (running) {
-        dot.style.background  = "var(--success)";
-        status.style.color   = "var(--success)";
-        status.textContent   = "Sync Agent is running — ready to sync";
+        dot.classList.add("online");
+        status.style.color = "var(--success)";
+        status.textContent = "Sync Agent is running — ready to sync";
     } else {
-        dot.style.background  = "var(--danger)";
-        status.style.color   = "var(--muted)";
-        status.textContent   = "Sync Agent not running — complete Step 1 first";
+        dot.classList.remove("online");
+        status.style.color = "var(--muted)";
+        status.textContent = "Sync Agent not running — complete Step 1 first";
     }
 }
 
 document.getElementById("syncNowBtn").addEventListener("click", async () => {
-    const msg = document.getElementById("syncMsg");
-    const btn = document.getElementById("syncNowBtn");
+    const msg     = document.getElementById("syncMsg");
+    const btn     = document.getElementById("syncNowBtn");
     const running = await checkAgent();
 
     if (!running) {
@@ -173,6 +199,55 @@ document.getElementById("clearDataBtn").addEventListener("click", async () => {
         msg.textContent = "Something went wrong. Try again.";
     }
 });
+
+// ── Delete Account ───────────────────────────────────────
+document.getElementById("deleteAccountBtn")?.addEventListener("click", async () => {
+    const confirmed = confirm(
+        "This will permanently delete your Voyager account and ALL data. This cannot be undone. Are you sure?"
+    );
+    if (!confirmed) return;
+
+    const msg = document.getElementById("clearMsg");
+
+    try {
+        const res  = await fetch(`${API_URL}/auth/delete-account`, {
+            method:  "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            localStorage.clear();
+            window.location.href = "../login.html";
+        } else {
+            msg.style.color = "var(--danger)";
+            msg.textContent = data.detail || "Failed to delete account.";
+        }
+    } catch {
+        msg.style.color = "var(--danger)";
+        msg.textContent = "Something went wrong. Try again.";
+    }
+});
+
+// ── Accent colour picker ─────────────────────────────────
+document.querySelectorAll(".s-accent-dot").forEach(dot => {
+    dot.addEventListener("click", () => {
+        document.querySelectorAll(".s-accent-dot").forEach(d => d.classList.remove("active"));
+        dot.classList.add("active");
+        const color = dot.dataset.color;
+        document.documentElement.style.setProperty("--primary", color);
+        localStorage.setItem("voyager_accent", color);
+    });
+});
+
+// restore saved accent on load
+const savedAccent = localStorage.getItem("voyager_accent");
+if(savedAccent){
+    document.documentElement.style.setProperty("--primary", savedAccent);
+    document.querySelectorAll(".s-accent-dot").forEach(d => {
+        d.classList.toggle("active", d.dataset.color === savedAccent);
+    });
+}
 
 // ── Init ─────────────────────────────────────────────────
 loadProfile();
