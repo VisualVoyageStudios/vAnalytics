@@ -1,0 +1,46 @@
+{
+    "name": "Voyager Analytics",
+    "short_name": "Voyager",
+    "description": "Professional trading journal and analytics dashboard",
+    "start_url": "/vAnalytics/dashboard/dashboard.html",
+    "scope": "/vAnalytics/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#070b14",
+    "theme_color": "#070b14",
+    "icons": [
+        {
+            "src": "/vAnalytics/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/vAnalytics/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["finance", "productivity"],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "url": "/vAnalytics/dashboard/dashboard.html",
+            "icons": [{ "src": "/vAnalytics/icons/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Journal",
+            "short_name": "Journal",
+            "url": "/vAnalytics/dashboard/journal.html",
+            "icons": [{ "src": "/vAnalytics/icons/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Trades",
+            "short_name": "Trades",
+            "url": "/vAnalytics/dashboard/trades.html",
+            "icons": [{ "src": "/vAnalytics/icons/icon-192.png", "sizes": "192x192" }]
+        }
+    ]
+}
