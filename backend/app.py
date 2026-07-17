@@ -1515,7 +1515,7 @@ def get_goal_history(
 #__--
 #Correlation cache — Frankfurter-based (Stooq blocked Render's IP)
 #_____
-correlation_cache    = {"data": None, "timestamp": 0}
+correlation_cache    = {}
 CORRELATION_CACHE_TTL = 21600  # 6 hours — daily data doesn't need refreshing often
 
 def pearson_correlation(x, y):
@@ -1532,21 +1532,24 @@ def pearson_correlation(x, y):
     return cov / (std_x * std_y)
 
 @app.get("/correlation/matrix")
-async def get_correlation_matrix(current_user=Depends(get_current_user)):
+async def get_correlation_matrix(
+    current_user=Depends(get_current_user),
+    days: int = Query(30, ge=10, le=90)
+):
+    print(f"=== Correlation matrix endpoint hit, days={days} ===", flush=True)
 
-    print("=== Correlation matrix endpoint hit ===", flush=True)
-
-    if correlation_cache["data"] and (time.time() - correlation_cache["timestamp"]) < CORRELATION_CACHE_TTL:
+    cached = correlation_cache.get(days)
+    if cached and (time.time() - cached["timestamp"]) < CORRELATION_CACHE_TTL:
         print("Correlation cache hit", flush=True)
-        return correlation_cache["data"]
+        return cached["data"]
 
     end_date   = datetime.utcnow().date()
-    start_date = end_date - timedelta(days=45)  # buffer for weekends/holidays, want ~30 trading days
+    # buffer for weekends/holidays — fetch extra days to guarantee enough trading days
+    fetch_days = days + 20
+    start_date = end_date - timedelta(days=fetch_days)
     targets    = "EUR,GBP,JPY,CHF,AUD,CAD,NZD"
 
     try:
-        # follow_redirects=True is required — Frankfurter/Cloudflare now
-        # 301-redirects this endpoint, and httpx does not follow by default.
         async with httpx.AsyncClient(follow_redirects=True) as client:
             res = await client.get(
                 f"https://api.frankfurter.app/{start_date.isoformat()}..{end_date.isoformat()}",
@@ -1558,15 +1561,15 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
                 print(f"Frankfurter non-200: status={res.status_code}, body={res.text[:200]}", flush=True)
                 raise HTTPException(status_code=500, detail="Could not fetch historical price data")
 
-            data = res.json()
+            data        = res.json()
             daily_rates = data.get("rates", {})
 
         if not daily_rates:
             raise HTTPException(status_code=500, detail="Could not fetch historical price data")
 
-        sorted_dates = sorted(daily_rates.keys())[-31:]  # last ~31 trading days
+        # take last `days` trading days worth of data
+        sorted_dates = sorted(daily_rates.keys())[-days:]
 
-        # Derive the 10 pairs from USD-base cross rates
         pair_series = {
             "EURUSD": [], "GBPUSD": [], "USDJPY": [], "USDCHF": [],
             "AUDUSD": [], "USDCAD": [], "NZDUSD": [], "EURGBP": [],
@@ -1576,7 +1579,7 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
         for date in sorted_dates:
             r = daily_rates[date]
             if not all(c in r for c in ["EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"]):
-                continue  # skip incomplete days
+                continue
 
             eurusd = 1 / r["EUR"]
             gbpusd = 1 / r["GBP"]
@@ -1608,7 +1611,7 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
         valid_pairs = [p for p in returns if len(returns[p]) >= 10]
 
         if not valid_pairs:
-            print("No valid pairs after processing Frankfurter data", flush=True)
+            print("No valid pairs after processing", flush=True)
             raise HTTPException(status_code=500, detail="Could not fetch historical price data")
 
         min_len = min(len(returns[p]) for p in valid_pairs)
@@ -1623,10 +1626,64 @@ async def get_correlation_matrix(current_user=Depends(get_current_user)):
                 row.append(round(corr, 2))
             matrix.append(row)
 
-        result = {"pairs": valid_pairs, "matrix": matrix}
+        # ── Single currency correlations ──────────────────────────────
+        # For each base currency, compute its correlation with every other
+        # major currency using the direct USD-base rates from Frankfurter.
 
-        correlation_cache["data"]      = result
-        correlation_cache["timestamp"] = time.time()
+        currency_series = {
+            "USD": [], "EUR": [], "GBP": [], "JPY": [],
+            "CHF": [], "AUD": [], "CAD": [], "NZD": []
+        }
+
+        for date in sorted_dates:
+            r = daily_rates[date]
+            if not all(c in r for c in ["EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"]):
+                continue
+            # express each currency vs USD
+            currency_series["USD"].append(1.0)
+            currency_series["EUR"].append(1 / r["EUR"])
+            currency_series["GBP"].append(1 / r["GBP"])
+            currency_series["JPY"].append(1 / r["JPY"])
+            currency_series["CHF"].append(1 / r["CHF"])
+            currency_series["AUD"].append(1 / r["AUD"])
+            currency_series["CAD"].append(1 / r["CAD"])
+            currency_series["NZD"].append(1 / r["NZD"])
+
+        # compute daily returns per currency
+        currency_returns = {}
+        for ccy, series in currency_series.items():
+            rets = []
+            for i in range(1, len(series)):
+                if series[i - 1] != 0:
+                    rets.append((series[i] - series[i - 1]) / series[i - 1])
+            currency_returns[ccy] = rets
+
+        currencies = [c for c in currency_returns if len(currency_returns[c]) >= 10]
+        ccy_min    = min(len(currency_returns[c]) for c in currencies)
+
+        single_corr = {}
+        for base in currencies:
+            single_corr[base] = {}
+            r1 = currency_returns[base][-ccy_min:]
+            for target in currencies:
+                if base == target:
+                    single_corr[base][target] = 1.0
+                    continue
+                r2   = currency_returns[target][-ccy_min:]
+                corr = pearson_correlation(r1, r2)
+                single_corr[base][target] = round(corr, 2)
+
+        result = {
+            "pairs":       valid_pairs,
+            "matrix":      matrix,
+            "single_corr": single_corr,
+            "days":        days
+        }
+
+        correlation_cache[days] = {
+            "data":      result,
+            "timestamp": time.time()
+        }
 
         return result
 
