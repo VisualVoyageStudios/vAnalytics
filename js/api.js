@@ -283,30 +283,17 @@ async function getAnalytics(token){
 }
 
 // Delete a trade for the logged-in user(broker account)
-async function deleteTrade(
-    tradeId,
-    token
-){
-
-    const response =
-    await fetch(
-
+async function deleteTrade(tradeId, token){
+    const response = await fetch(
         `${API_URL}/trades/${tradeId}`,
-
         {
-            method:"DELETE",
-
-            headers:{
-                "Authorization":
-                `Bearer ${token}`
-            }
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
         }
     );
-
+    _cacheInvalidate(); // trades changed — bust cache
     return response.json();
 }
-
-
 
 // Create a new journal entry
 async function createJournal(token, journalData){
@@ -448,15 +435,18 @@ async function getMonthlyPerformance(token){
 
 
 // Local sync agent
-async function syncFromAgent(token) {
+async function syncFromAgent(token){
     const response = await fetch("http://127.0.0.1:5001/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token })
     });
+    _cacheInvalidate(); // new trades imported — bust cache
     return response.json();
 }
 
+
+    //sync agent status check
 async function checkAgent() {
     try {
         const response = await fetch("http://127.0.0.1:5001/status");
