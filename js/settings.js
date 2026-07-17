@@ -1,6 +1,23 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
 
+// ── Light mode toggle ────────────────────────────────────
+const lightToggle = document.getElementById("appearance-lightmode");
+if(lightToggle){
+    // restore saved state
+    lightToggle.checked = localStorage.getItem("voyager_theme") === "light";
+
+    lightToggle.addEventListener("change", () => {
+        if(lightToggle.checked){
+            document.documentElement.classList.add("light");
+            localStorage.setItem("voyager_theme", "light");
+        } else {
+            document.documentElement.classList.remove("light");
+            localStorage.setItem("voyager_theme", "dark");
+        }
+    });
+}
+
 // ── Profile ─────────────────────────────────────────────
 function loadProfile() {
     try {
