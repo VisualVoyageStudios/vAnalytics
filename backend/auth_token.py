@@ -6,7 +6,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "voyager-analytics")
 
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+ACCESS_TOKEN_EXPIRE_MINUTES = 10080 # 7 Days 
 
 
 def create_access_token(data: dict):
