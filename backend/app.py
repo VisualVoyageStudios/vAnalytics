@@ -46,10 +46,6 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi import Request
 
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
 # MT5 is Windows-only
 try:
     import MetaTrader5 as mt5
@@ -122,8 +118,11 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"order_type migration skipped/failed: {e}")
 
-
 app = FastAPI()
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 CORS_ORIGINS = [
     "https://voyageranalytics.netlify.app",
