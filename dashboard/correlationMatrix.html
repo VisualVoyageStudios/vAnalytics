@@ -130,6 +130,44 @@
             margin-top: 14px;
         "></div>
 
+
+        <!-- Single Currency Correlation -->
+        <div class="section-heading" style="margin-top:32px;">
+            <i class="fas fa-circle-nodes"></i> Single Currency Correlation
+        </div>
+        
+        <p style="color:var(--muted); font-size:13px; margin-bottom:16px; max-width:700px;">
+            How strongly each currency's daily price movement correlates with the selected base currency.
+            Values near <strong style="color:white;">+1</strong> move together,
+            near <strong style="color:white;">-1</strong> move in opposite directions.
+        </p>
+        
+        <div style="margin-bottom:20px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;" id="currencyTabs">
+                <button class="currency-tab active" data-ccy="USD">🇺🇸 USD</button>
+                <button class="currency-tab" data-ccy="EUR">🇪🇺 EUR</button>
+                <button class="currency-tab" data-ccy="GBP">🇬🇧 GBP</button>
+                <button class="currency-tab" data-ccy="JPY">🇯🇵 JPY</button>
+                <button class="currency-tab" data-ccy="AUD">🇦🇺 AUD</button>
+                <button class="currency-tab" data-ccy="CAD">🇨🇦 CAD</button>
+                <button class="currency-tab" data-ccy="NZD">🇳🇿 NZD</button>
+                <button class="currency-tab" data-ccy="CHF">🇨🇭 CHF</button>
+            </div>
+        </div>
+        
+        <div id="singleCorrSection" style="
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 28px;
+        ">
+            <div style="color:var(--muted); text-align:center; padding:40px;">
+                <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; display:block; margin-bottom:12px; opacity:0.3;"></i>
+                Loading…
+            </div>
+        </div>
+        
     </main>
 </div>
 
