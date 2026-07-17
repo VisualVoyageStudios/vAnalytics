@@ -104,6 +104,16 @@ with engine.connect() as conn:
         print(f"journal_templates migration skipped/failed: {e}")
 
 
+    try:
+        conn.execute(text("UPDATE trades SET order_type = 'BUY' WHERE order_type = '0'"))
+        conn.execute(text("UPDATE trades SET order_type = 'SELL' WHERE order_type = '1'"))
+        conn.commit()
+        print("order_type migration complete")
+    except Exception as e:
+        conn.rollback()
+        print(f"order_type migration skipped/failed: {e}")
+
+
 app = FastAPI()
 
 CORS_ORIGINS = [
