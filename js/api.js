@@ -1,6 +1,32 @@
 // switch from local to live host
 const API_URL = "https://vanalytics.onrender.com";
 
+// ── Client-side response cache 
+// Prevents redundant API calls when navigating between pages.
+// TTL: 60 seconds for most endpoints, invalidated on sync.
+
+const _cache = {};
+const _CACHE_TTL = 60 * 1000; // 60 seconds
+
+function _cacheGet(key){
+    const item = _cache[key];
+    if(!item) return null;
+    if(Date.now() - item.ts > _CACHE_TTL){
+        delete _cache[key];
+        return null;
+    }
+    return item.data;
+}
+
+function _cacheSet(key, data){
+    _cache[key] = { data, ts: Date.now() };
+}
+
+function _cacheInvalidate(){
+    Object.keys(_cache).forEach(k => delete _cache[k]);
+}
+
+
 // ── Restore accent colour preference ─────────────────────
 const _savedAccent = localStorage.getItem("voyager_accent");
 if(_savedAccent){
@@ -87,7 +113,7 @@ async function loginUser(userData) {
 }
 
 
-// ── Premium check ────────────────────────────────────────────────────
+// ── Premium check 
 
 async function checkPremium(){
     try {
@@ -155,12 +181,10 @@ async function createAccount(accountData, token) {
         `${API_URL}/accounts`,
         {
             method: "POST",
-
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-
             body: JSON.stringify(accountData)
         }
     );
@@ -168,43 +192,34 @@ async function createAccount(accountData, token) {
     return response.json();
 }
 
-
-async function getAccounts(token) {
+// Get Accounts
+async function getAccounts(token){
+    const key    = "accounts";
+    const cached = _cacheGet(key);
+    if(cached) return cached;
 
     const response = await fetch(
         `${API_URL}/accounts`,
-        {
-            method: "GET",
-
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        }
+        { headers: { "Authorization": `Bearer ${token}` } }
     );
-
-    return response.json();
+    const data = await response.json();
+    _cacheSet(key, data);
+    return data;
 }
 
 
 // Delete an account for the logged-in user(broker account)
-async function deleteAccount(
-    accountId,
-    token
-){
+async function deleteAccount(accountId, token){
 
     const response = await fetch(
-
         `${API_URL}/accounts/${accountId}`,
-
         {
             method:"DELETE",
-
             headers:{
                 "Authorization":
                 `Bearer ${token}`
             }
         }
-
     );
 
     return response.json();
@@ -212,19 +227,14 @@ async function deleteAccount(
 
 
 // Create a new trade for the logged-in user(broker account)
-async function createTrade(
-    tradeData,
-    token
-){
+async function createTrade(tradeData, token){
 
     const response =
     await fetch(
 
         `${API_URL}/trades`,
-
         {
             method:"POST",
-
             headers:{
                 "Content-Type":
                 "application/json",
@@ -244,20 +254,32 @@ async function createTrade(
 
 // Get all trades for the logged-in user(broker account)
 async function getTrades(token){
+    const key    = `trades${activeAccountParam()}`;
+    const cached = _cacheGet(key);
+    if(cached) return cached;
+
     const response = await fetch(
         `${API_URL}/trades${activeAccountParam()}`,
         { headers: { "Authorization": `Bearer ${token}` } }
     );
-    return response.json();
+    const data = await response.json();
+    _cacheSet(key, data);
+    return data;
 }
 
-
+// Analytics fro logged-in account
 async function getAnalytics(token){
+    const key    = `analytics${activeAccountParam()}`;
+    const cached = _cacheGet(key);
+    if(cached) return cached;
+
     const response = await fetch(
         `${API_URL}/analytics${activeAccountParam()}`,
         { headers: { "Authorization": `Bearer ${token}` } }
     );
-    return response.json();
+    const data = await response.json();
+    _cacheSet(key, data);
+    return data;
 }
 
 // Delete a trade for the logged-in user(broker account)
@@ -284,68 +306,27 @@ async function deleteTrade(
     return response.json();
 }
 
-// Get analytics data for the logged-in user(broker account)
-async function getAnalytics(
-    token
-){
 
-    const response =
-    await fetch(
 
-        `${API_URL}/analytics`,
-
-        {
-            headers:{
-                "Authorization":
-                `Bearer ${token}`
-            }
-        }
-
-    );
-
-    return response.json();
-
-}
-
-// Get journal
-async function getJournals(){
-
-    const response =
-    await fetch(
-        `${API_URL}/journals`
-    );
-
-    return response.json();
-
-}
-
-    // Create a new journal entry
-async function createJournal(
-    token,
-    journalData
-){
+// Create a new journal entry
+async function createJournal(token, journalData){
 
     const response =
     await fetch(
         `${API_URL}/journals`,
         {
-
             method:"POST",
-
             headers:{
-
                 "Content-Type":
                 "application/json",
 
                 "Authorization":
                 `Bearer ${token}`
-
             },
 
             body:JSON.stringify(
                 journalData
             )
-
         }
     );
 
@@ -353,27 +334,19 @@ async function createJournal(
 
 }
 
-async function getJournals(
-    token
-){
+// Get joutnal entries
+async function getJournals(token){
+    const key    = "journals";
+    const cached = _cacheGet(key);
+    if(cached) return cached;
 
-    const response =
-    await fetch(
+    const response = await fetch(
         `${API_URL}/journals`,
-        {
-
-            headers:{
-
-                "Authorization":
-                `Bearer ${token}`
-
-            }
-
-        }
+        { headers: { "Authorization": `Bearer ${token}` } }
     );
-
-    return response.json();
-
+    const data = await response.json();
+    _cacheSet(key, data);
+    return data;
 }
 
 // mt5 account sync
@@ -423,11 +396,17 @@ async function getMT5Account(token){
 
 // calendar heatmap data for the logged-in user(broker account)
 async function getHeatmap(token){
+    const key    = `heatmap${activeAccountParam()}`;
+    const cached = _cacheGet(key);
+    if(cached) return cached;
+
     const response = await fetch(
         `${API_URL}/analytics/heatmap${activeAccountParam()}`,
         { headers: { "Authorization": `Bearer ${token}` } }
     );
-    return response.json();
+    const data = await response.json();
+    _cacheSet(key, data);
+    return data;
 }
 
 
@@ -454,11 +433,17 @@ async function getDayTrades(token,date){
 
 // Monthly Review
 async function getMonthlyPerformance(token){
+    const key    = `monthly${activeAccountParam()}`;
+    const cached = _cacheGet(key);
+    if(cached) return cached;
+
     const response = await fetch(
         `${API_URL}/analytics/monthly${activeAccountParam()}`,
         { headers: { "Authorization": `Bearer ${token}` } }
     );
-    return response.json();
+    const data = await response.json();
+    _cacheSet(key, data);
+    return data;
 }
 
 
