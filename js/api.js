@@ -1,6 +1,12 @@
 // switch from local to live host
 const API_URL = "https://vanalytics.onrender.com";
 
+// ── Restore accent colour preference ─────────────────────
+const _savedAccent = localStorage.getItem("voyager_accent");
+if(_savedAccent){
+    document.documentElement.style.setProperty("--primary", _savedAccent);
+}
+
 async function authFetch(url, options = {}){
     const res = await fetch(url, options);
 
