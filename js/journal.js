@@ -113,11 +113,8 @@ async function loadJournals(){
     });
 }
 
-document
-.getElementById(
-    "journalForm"
-)
-.addEventListener(
+// Journal forms
+document.getElementById("journalForm").addEventListener(
     "submit",
     async(e)=>{e.preventDefault();
         
@@ -155,11 +152,36 @@ document
 
         loadJournals();
 
-        document
-        .getElementById(
-            "journalForm"
-        )
-        .reset();
+        document.getElementById("journalForm")
+          .addEventListener("submit", async(e) => {
+              e.preventDefault();
+      
+              const selectedTradeId = document.getElementById("tradeId").value;
+      
+              await createJournal(
+                  token,
+                  {
+                      trade_id: selectedTradeId,
+                      emotion:  document.getElementById("emotion").value,
+                      lesson:   document.getElementById("lesson").value,
+                      mistake:  document.getElementById("mistake").value,
+                      rating:   document.getElementById("rating").value
+                  }
+              );
+      
+              // invalidate journal cache so the list refreshes
+              _cacheInvalidate();
+      
+              await loadJournals();
+      
+              // reset form but preserve the trade selection
+              document.getElementById("emotion").value = "";
+              document.getElementById("lesson").value  = "";
+              document.getElementById("mistake").value = "";
+              document.getElementById("rating").value  = "";
+              // deliberately not resetting tradeId — user likely wants to log
+              // another entry for the same trade or the next one in sequence
+          });
 
     }
 );
