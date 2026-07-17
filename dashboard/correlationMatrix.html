@@ -8,6 +8,25 @@
 <link rel="stylesheet" href="../css/global.css">
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
+<style>
+.currency-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.currency-tab:hover,
+.currency-tab.active {
+    border-color: var(--primary);
+    background: rgba(59,130,246,0.12);
+    color: white;
+}
+</style>
 </head>
 <body>
 
@@ -178,14 +197,16 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
 
-let matrixData = null;
+let matrixData    = null;
+let activeCcy     = "USD";
+let selectedDays  = 30;
 
 function getCorrColor(value){
     const abs = Math.abs(value);
     if(value >= 0.7)  return { bg: `rgba(59,130,246,${0.15 + abs*0.4})`,  text: "#3b82f6" };
     if(value <= -0.7) return { bg: `rgba(239,68,68,${0.15 + abs*0.4})`,   text: "#ef4444" };
     if(value > 0)     return { bg: `rgba(59,130,246,${abs*0.3})`,         text: "#94a3b8" };
-    if(value < 0)     return { bg: `rgba(239,68,68,${abs*0.3})`,         text: "#94a3b8" };
+    if(value < 0)     return { bg: `rgba(239,68,68,${abs*0.3})`,          text: "#94a3b8" };
     return { bg: "rgba(148,163,184,0.05)", text: "#94a3b8" };
 }
 
@@ -199,13 +220,20 @@ async function loadMatrix(){
     wrapper.innerHTML = `
         <div style="color:var(--muted); padding:60px 20px; text-align:center;">
             <i class="fas fa-spinner fa-spin" style="font-size:2rem; display:block; margin-bottom:16px; opacity:0.3;"></i>
-            Calculating correlations from real price history…
+            Calculating correlations…
+        </div>
+    `;
+
+    document.getElementById("singleCorrSection").innerHTML = `
+        <div style="color:var(--muted); text-align:center; padding:40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; display:block; margin-bottom:12px; opacity:0.3;"></i>
+            Loading…
         </div>
     `;
 
     try {
         const [matrixRes, trades] = await Promise.all([
-            fetch(`${API_URL}/correlation/matrix`, {
+            fetch(`${API_URL}/correlation/matrix?days=${selectedDays}`, {
                 headers: { "Authorization": `Bearer ${token}` }
             }).then(r => r.json()),
             getTrades(token)
@@ -215,6 +243,7 @@ async function loadMatrix(){
         renderMatrix(matrixData);
         renderTopCorrelations(matrixData);
         renderExposureWarning(matrixData, trades);
+        renderSingleCorr(matrixData.single_corr, activeCcy);
 
     } catch(err) {
         console.error(err);
@@ -233,7 +262,6 @@ function renderMatrix(data){
     const wrapper = document.getElementById("matrixWrapper");
 
     let html = `<table style="border-collapse:collapse; width:100%; font-size:12px;">`;
-
     html += `<tr><td></td>`;
     pairs.forEach(p => {
         html += `<td style="padding:8px; text-align:center; font-weight:700; color:var(--muted);">${p}</td>`;
@@ -260,6 +288,82 @@ function renderMatrix(data){
 }
 
 
+function renderSingleCorr(singleCorr, base){
+    const container = document.getElementById("singleCorrSection");
+    const corrMap   = singleCorr[base];
+
+    if(!corrMap){
+        container.innerHTML = `<p style="color:var(--muted); text-align:center; padding:20px;">No data for ${base}</p>`;
+        return;
+    }
+
+    const FLAGS = {
+        USD: "🇺🇸", EUR: "🇪🇺", GBP: "🇬🇧", JPY: "🇯🇵",
+        AUD: "🇦🇺", CAD: "🇨🇦", NZD: "🇳🇿", CHF: "🇨🇭"
+    };
+
+    const others = Object.entries(corrMap)
+        .filter(([ccy]) => ccy !== base)
+        .sort((a, b) => b[1] - a[1]);
+
+    container.innerHTML = `
+        <h3 style="font-size:14px; font-weight:700; margin-bottom:20px; color:white;">
+            ${FLAGS[base] || ""} ${base} vs other major currencies
+            <span style="font-size:12px; font-weight:400; color:var(--muted); margin-left:8px;">
+                (${selectedDays}-day window)
+            </span>
+        </h3>
+        ${others.map(([ccy, corr]) => {
+            const { text } = getCorrColor(corr);
+            const barW     = Math.abs(corr) * 100;
+            const barColor = corr >= 0 ? "#3b82f6" : "#ef4444";
+            const label    = corr >= 0.7 ? "Strong positive"
+                           : corr <= -0.7 ? "Strong negative"
+                           : corr >= 0.4 ? "Moderate positive"
+                           : corr <= -0.4 ? "Moderate negative"
+                           : "Weak";
+
+            return `
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-weight:700; font-size:14px;">${FLAGS[ccy] || ""} ${ccy}</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:12px; color:var(--muted);">${label}</span>
+                            <span style="font-weight:800; font-size:15px; color:${text}; min-width:48px; text-align:right;">
+                                ${corr >= 0 ? "+" : ""}${corr.toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                    <div style="
+                        background: rgba(255,255,255,0.05);
+                        border-radius: 4px;
+                        height: 8px;
+                        overflow: hidden;
+                        position: relative;
+                    ">
+                        <div style="
+                            position: absolute;
+                            ${corr >= 0 ? "left: 50%" : `left: calc(50% - ${barW/2}%)`};
+                            width: ${barW / 2}%;
+                            height: 100%;
+                            background: ${barColor};
+                            border-radius: 4px;
+                            transition: width 0.5s ease;
+                        "></div>
+                        <div style="
+                            position: absolute;
+                            left: 50%; top: 0;
+                            width: 1px; height: 100%;
+                            background: rgba(255,255,255,0.2);
+                        "></div>
+                    </div>
+                </div>
+            `;
+        }).join("")}
+    `;
+}
+
+
 function renderTopCorrelations(data){
     const { pairs, matrix } = data;
     const pairsList = [];
@@ -276,7 +380,6 @@ function renderTopCorrelations(data){
     document.getElementById("topCorrelations").innerHTML = top.map(p => {
         const { text } = getCorrColor(p.corr);
         const label = p.corr >= 0.7 ? "Moves Together" : p.corr <= -0.7 ? "Moves Opposite" : "Weak Relationship";
-
         return `
             <div class="metric-card" style="text-align:center;">
                 <div style="font-weight:700; font-size:14px; margin-bottom:6px;">${p.a} ↔ ${p.b}</div>
@@ -290,7 +393,6 @@ function renderTopCorrelations(data){
 
 function renderExposureWarning(data, trades){
     const { pairs, matrix } = data;
-
     const tradedSymbols = [...new Set(trades.map(t => normalizeSymbol(t.symbol)))]
         .filter(s => pairs.includes(s));
 
@@ -300,13 +402,11 @@ function renderExposureWarning(data, trades){
     }
 
     const warnings = [];
-
     for(let i = 0; i < tradedSymbols.length; i++){
         for(let j = i + 1; j < tradedSymbols.length; j++){
             const idxA = pairs.indexOf(tradedSymbols[i]);
             const idxB = pairs.indexOf(tradedSymbols[j]);
             const corr = matrix[idxA][idxB];
-
             if(Math.abs(corr) >= 0.7){
                 warnings.push({ a: tradedSymbols[i], b: tradedSymbols[j], corr });
             }
@@ -333,8 +433,7 @@ function renderExposureWarning(data, trades){
                 <p style="font-size:13px; color:var(--muted); margin-bottom:4px;">
                     You've traded both <strong style="color:white;">${w.a}</strong> and
                     <strong style="color:white;">${w.b}</strong> —
-                    they move together ${(Math.abs(w.corr)*100).toFixed(0)}% of the time,
-                    so holding both at once may not give the diversification you'd expect.
+                    they move together ${(Math.abs(w.corr)*100).toFixed(0)}% of the time.
                 </p>
             `).join("")}
         </div>
@@ -342,7 +441,25 @@ function renderExposureWarning(data, trades){
 }
 
 
+// ── Event listeners ───────────────────────────────────────────────────
+
+document.getElementById("timeframeSelect").addEventListener("change", (e) => {
+    selectedDays = parseInt(e.target.value);
+    loadMatrix();
+});
+
 document.getElementById("refreshBtn").addEventListener("click", loadMatrix);
+
+document.querySelectorAll(".currency-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+        document.querySelectorAll(".currency-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        activeCcy = tab.dataset.ccy;
+        if(matrixData?.single_corr){
+            renderSingleCorr(matrixData.single_corr, activeCcy);
+        }
+    });
+});
 
 window.onload = loadMatrix;
 </script>
