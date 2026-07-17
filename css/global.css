@@ -15,6 +15,30 @@
 
 
 }
+/* ── Light mode ── */
+html.light {
+    --bg:     #f1f5f9;
+    --card:   #ffffff;
+    --sidebar:#f8fafc;
+    --border: #e2e8f0;
+    --text:   #0f172a;
+    --muted:  #64748b;
+}
+
+html.light body {
+    background: #f1f5f9;
+}
+
+html.light .nav-rail,
+html.light .nav-drawer {
+    background: #ffffff;
+}
+
+html.light .topnav {
+    background: #ffffff;
+}
+
+
 
 *{
     margin:0;
