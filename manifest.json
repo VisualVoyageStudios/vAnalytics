@@ -1,8 +1,8 @@
 {
     "name": "Voyager Analytics",
     "short_name": "Voyager",
-    "description": "Professional trading journal and analytics dashboard",
-    "start_url": "/vAnalytics/dashboard/dashboard.html",
+    "description": "Professional journaling and analytics dashboard",
+    "start_url": "/vAnalytics/login.html",
     "scope": "/vAnalytics/",
     "display": "standalone",
     "orientation": "portrait-primary",
