@@ -462,7 +462,6 @@ async function getMonthlyPerformance(token){
 }
 
 
-
 // Local sync agent
 async function syncFromAgent(token) {
     const response = await fetch("http://127.0.0.1:5001/sync", {
@@ -480,4 +479,13 @@ async function checkAgent() {
     } catch(e) {
         return false;
     }
+}
+
+// ── PWA service worker registration ──────────────────────
+if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/vAnalytics/sw.js")
+            .then(reg => console.log("SW registered:", reg.scope))
+            .catch(err => console.log("SW registration failed:", err));
+    });
 }
