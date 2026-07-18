@@ -433,6 +433,49 @@ async function getMonthlyPerformance(token){
     return data;
 }
 
+// ── Toast notification system 
+function _ensureToastContainer(){
+    let container = document.getElementById("toast-container");
+    if(!container){
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+function showToast(message, type = "info", duration = 3000){
+    const container = _ensureToastContainer();
+
+    const ICONS = {
+        success: "fa-circle-check",
+        error:   "fa-circle-exclamation",
+        warning: "fa-triangle-exclamation",
+        info:    "fa-circle-info"
+    };
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="fas ${ICONS[type] || ICONS.info} toast-icon"></i>
+        <span class="toast-msg">${message}</span>
+        <button class="toast-close"><i class="fas fa-xmark"></i></button>
+    `;
+
+    container.appendChild(toast);
+
+    // manual close
+    toast.querySelector(".toast-close").addEventListener("click", () => dismiss(toast));
+
+    // auto dismiss
+    const timer = setTimeout(() => dismiss(toast), duration);
+
+    function dismiss(el){
+        clearTimeout(timer);
+        el.style.animation = "toast-out 0.3s ease forwards";
+        setTimeout(() => el.remove(), 300);
+    }
+}
 
 // Local sync agent
 async function syncFromAgent(token){
