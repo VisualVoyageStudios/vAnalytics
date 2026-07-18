@@ -1995,7 +1995,7 @@ def get_challenge_history(current_user=Depends(get_current_user), db: Session = 
 #  MACRO MATRIX
 # ─────────────────────────────────────────
 
-# Policy rates — updated manually when CBs change rates
+# Policy rates — updated manually when CBs change rates (Change to auto update)
 # Source: central bank websites (reliable, rarely changes)
 POLICY_RATES = {
     "USD": {"rate": 4.50, "stance": "hold",    "trend": "cutting"},
