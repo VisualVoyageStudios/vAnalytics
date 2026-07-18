@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central Banks | Voyager Analytics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="manifest" href="/vAnalytics/manifest.json">
+<meta name="theme-color" content="#070b14">
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div></div>
+
+<header class="topnav">
+    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">Central Banks</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"        class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"         class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"           class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"        class="nav-rail-icon" title="Analytics"><i class="fas fa-chart-simple"></i></a>
+    <a href="journal.html"          class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"       class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="macroMatrix.html"      class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"     class="nav-rail-icon active" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="economicHeatmap.html"  class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"       class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="currencyStrength.html" class="nav-rail-icon" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html" class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"       class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"  class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"          class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"      class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"        class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"          class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"         class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <button class="nav-rail-icon" id="railToggle" title="Menu"><i class="fas fa-bars"></i></button>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+    <button class="nav-rail-icon" id="logoutBtn" title="Logout" style="color:var(--danger);"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</aside>
+
+<div class="dashboard-container">
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <h2>Central Banks</h2>
+                <p style="color:var(--muted); font-size:13px; margin-top:4px;">
+                    Policy rates, stances and upcoming meetings for major central banks
+                </p>
+            </div>
+        </header>
+
+        <!-- Rate landscape strip -->
+        <div class="section-heading" style="margin-bottom:16px;">
+            <i class="fas fa-percent"></i> Policy Rate Landscape
+        </div>
+
+        <div id="rateStrip" style="
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 32px;
+        "></div>
+
+        <!-- CB cards -->
+        <div class="section-heading" style="margin-bottom:16px;">
+            <i class="fas fa-landmark"></i> Central Bank Detail
+        </div>
+
+        <div id="cbGrid" style="
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        "></div>
+
+        <p style="font-size:11px; color:var(--muted);">
+            <i class="fas fa-circle-info" style="margin-right:4px;"></i>
+            Policy rates and meeting dates maintained manually. Next meeting dates are approximate — always verify with official CB calendars.
+        </p>
+
+    </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/pgAnime.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+const token = localStorage.token;
+if(!token) window.location.href = "../login.html";
+
+const CENTRAL_BANKS = [
+    {
+        ccy:         "USD",
+        flag:        "🇺🇸",
+        name:        "Federal Reserve",
+        abbr:        "Fed",
+        rate:        4.50,
+        prev_rate:   4.75,
+        stance:      "hold",
+        bias:        "The Fed is in a data-dependent hold, monitoring inflation progress before resuming cuts.",
+        next_meeting:"2025-07-30",
+        last_change: "Cut 25bp — Dec 2024",
+        dot_plot:    "2 cuts projected for 2025",
+        chair:       "Jerome Powell",
+        mandate:     "Dual mandate — price stability + maximum employment"
+    },
+    {
+        ccy:         "EUR",
+        flag:        "🇪🇺",
+        name:        "European Central Bank",
+        abbr:        "ECB",
+        rate:        2.15,
+        prev_rate:   2.40,
+        stance:      "cutting",
+        bias:        "The ECB is in an active cutting cycle as eurozone inflation approaches target.",
+        next_meeting:"2025-07-24",
+        last_change: "Cut 25bp — Jun 2025",
+        dot_plot:    "Further cuts expected if disinflation continues",
+        chair:       "Christine Lagarde",
+        mandate:     "Price stability — inflation close to 2%"
+    },
+    {
+        ccy:         "GBP",
+        flag:        "🇬🇧",
+        name:        "Bank of England",
+        abbr:        "BoE",
+        rate:        4.25,
+        prev_rate:   4.50,
+        stance:      "cutting",
+        bias:        "The BoE has begun a gradual easing cycle but remains cautious given sticky services inflation.",
+        next_meeting:"2025-08-07",
+        last_change: "Cut 25bp — May 2025",
+        dot_plot:    "Gradual pace — one cut per quarter expected",
+        chair:       "Andrew Bailey",
+        mandate:     "Price stability — 2% CPI target"
+    },
+    {
+        ccy:         "JPY",
+        flag:        "🇯🇵",
+        name:        "Bank of Japan",
+        abbr:        "BoJ",
+        rate:        0.50,
+        prev_rate:   0.25,
+        stance:      "hiking",
+        bias:        "The BoJ is cautiously normalising policy after decades of ultra-loose settings. Further hikes expected if wage growth sustains.",
+        next_meeting:"2025-07-31",
+        last_change: "Hiked 25bp — Jan 2025",
+        dot_plot:    "Gradual hiking path — terminal rate uncertain",
+        chair:       "Kazuo Ueda",
+        mandate:     "Price stability — 2% inflation target"
+    },
+    {
+        ccy:         "AUD",
+        flag:        "🇦🇺",
+        name:        "Reserve Bank of Australia",
+        abbr:        "RBA",
+        rate:        3.85,
+        prev_rate:   4.10,
+        stance:      "cutting",
+        bias:        "The RBA has begun easing as inflation moderates, but remains cautious given a tight labour market.",
+        next_meeting:"2025-08-05",
+        last_change: "Cut 25bp — May 2025",
+        dot_plot:    "2-3 cuts expected through 2025",
+        chair:       "Michele Bullock",
+        mandate:     "Price stability + full employment — 2-3% inflation"
+    },
+    {
+        ccy:         "CAD",
+        flag:        "🇨🇦",
+        name:        "Bank of Canada",
+        abbr:        "BoC",
+        rate:        2.75,
+        prev_rate:   3.00,
+        stance:      "hold",
+        bias:        "The BoC has paused its cutting cycle to assess the impact of US tariff uncertainty on the Canadian economy.",
+        next_meeting:"2025-07-30",
+        last_change: "Cut 25bp — Mar 2025",
+        dot_plot:    "On hold — tariff impact assessment ongoing",
+        chair:       "Tiff Macklem",
+        mandate:     "Price stability — 1-3% inflation target band"
+    },
+    {
+        ccy:         "NZD",
+        flag:        "🇳🇿",
+        name:        "Reserve Bank of New Zealand",
+        abbr:        "RBNZ",
+        rate:        3.25,
+        prev_rate:   3.50,
+        stance:      "cutting",
+        bias:        "The RBNZ is actively cutting as the NZ economy slows and inflation falls toward the 1-3% band.",
+        next_meeting:"2025-07-09",
+        last_change: "Cut 25bp — Apr 2025",
+        dot_plot:    "Further cuts likely into late 2025",
+        chair:       "Adrian Orr",
+        mandate:     "Price stability — 1-3% CPI target"
+    },
+    {
+        ccy:         "CHF",
+        flag:        "🇨🇭",
+        name:        "Swiss National Bank",
+        abbr:        "SNB",
+        rate:        0.00,
+        prev_rate:   0.25,
+        stance:      "hold",
+        bias:        "The SNB has cut to near-zero and is on hold, monitoring franc appreciation and global inflation trends.",
+        next_meeting:"2025-09-18",
+        last_change: "Cut 25bp — Mar 2025",
+        dot_plot:    "Near lower bound — negative rates possible if needed",
+        chair:       "Martin Schlegel",
+        mandate:     "Price stability — CPI below 2%"
+    },
+    {
+        ccy:         "ZAR",
+        flag:        "🇿🇦",
+        name:        "South African Reserve Bank",
+        abbr:        "SARB",
+        rate:        7.50,
+        prev_rate:   7.75,
+        stance:      "cutting",
+        bias:        "The SARB has begun a cautious easing cycle as inflation eases, but rand volatility and fiscal risks keep cuts measured.",
+        next_meeting:"2025-07-17",
+        last_change: "Cut 25bp — May 2025",
+        dot_plot:    "Gradual cuts — watching rand and fiscal trajectory",
+        chair:       "Lesetja Kganyago",
+        mandate:     "Price stability — 3-6% inflation target"
+    }
+];
+
+
+function daysUntil(dateStr){
+    const diff = new Date(dateStr) - new Date();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function stanceColor(stance){
+    if(stance === "hiking")  return "#22c55e";
+    if(stance === "cutting") return "#ef4444";
+    return "#94a3b8";
+}
+
+function stanceIcon(stance){
+    if(stance === "hiking")  return "fa-arrow-trend-up";
+    if(stance === "cutting") return "fa-arrow-trend-down";
+    return "fa-minus";
+}
+
+
+function renderRateStrip(){
+    const strip = document.getElementById("rateStrip");
+
+    // sort by rate descending
+    const sorted = [...CENTRAL_BANKS].sort((a, b) => b.rate - a.rate);
+
+    strip.innerHTML = sorted.map(cb => {
+        const col     = stanceColor(cb.stance);
+        const change  = cb.rate - cb.prev_rate;
+        const sign    = change > 0 ? "+" : "";
+
+        return `
+            <div style="
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 14px;
+                text-align: center;
+                border-top: 3px solid ${col};
+            ">
+                <div style="font-size:18px; margin-bottom:4px;">${cb.flag}</div>
+                <div style="font-weight:700; font-size:11px; color:var(--muted); margin-bottom:6px;">${cb.abbr}</div>
+                <div style="font-size:1.3rem; font-weight:800; color:white;">${cb.rate}%</div>
+                <div style="font-size:10px; margin-top:4px; color:${col}; font-weight:600;">
+                    <i class="fas ${stanceIcon(cb.stance)}" style="font-size:9px;"></i>
+                    ${sign}${change.toFixed(2)}%
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+
+function renderCBCards(){
+    const grid = document.getElementById("cbGrid");
+
+    grid.innerHTML = CENTRAL_BANKS.map(cb => {
+        const col      = stanceColor(cb.stance);
+        const days     = daysUntil(cb.next_meeting);
+        const urgency  = days <= 7  ? "#ef4444"
+                       : days <= 21 ? "#f59e0b"
+                       : "var(--muted)";
+
+        const meetingLabel = days < 0
+            ? "Meeting passed"
+            : days === 0
+            ? "Meeting today"
+            : `${days} day${days === 1 ? "" : "s"} until next meeting`;
+
+        return `
+            <div style="
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                padding: 22px;
+                position: relative;
+                overflow: hidden;
+            ">
+                <!-- accent bar -->
+                <div style="
+                    position:absolute; top:0; left:0; right:0;
+                    height:3px; background:${col};
+                "></div>
+
+                <!-- header -->
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:24px;">${cb.flag}</span>
+                        <div>
+                            <div style="font-weight:700; font-size:14px;">${cb.name}</div>
+                            <div style="font-size:11px; color:var(--muted); margin-top:2px;">${cb.chair}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.5rem; font-weight:800;">${cb.rate}%</div>
+                        <span style="
+                            font-size:10px; font-weight:700;
+                            color:${col};
+                            background:${col}15;
+                            padding:2px 8px; border-radius:10px;
+                        ">
+                            <i class="fas ${stanceIcon(cb.stance)}" style="font-size:9px;"></i>
+                            ${cb.stance.charAt(0).toUpperCase() + cb.stance.slice(1)}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- bias -->
+                <p style="font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:14px;">
+                    ${cb.bias}
+                </p>
+
+                <!-- stats grid -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+                    <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
+                        <div style="font-size:10px; color:var(--muted); margin-bottom:3px;">Last change</div>
+                        <div style="font-size:12px; font-weight:600;">${cb.last_change}</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
+                        <div style="font-size:10px; color:var(--muted); margin-bottom:3px;">Forward guidance</div>
+                        <div style="font-size:12px; font-weight:600; line-height:1.4;">${cb.dot_plot}</div>
+                    </div>
+                </div>
+
+                <!-- mandate -->
+                <div style="
+                    font-size:11px; color:var(--muted);
+                    background:rgba(255,255,255,0.02);
+                    border-radius:8px; padding:8px 12px;
+                    margin-bottom:12px;
+                    border-left:2px solid ${col};
+                ">
+                    <i class="fas fa-scale-balanced" style="margin-right:4px; font-size:10px;"></i>
+                    ${cb.mandate}
+                </div>
+
+                <!-- next meeting -->
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:10px; color:var(--muted); margin-bottom:2px;">Next meeting</div>
+                        <div style="font-size:12px; font-weight:600;">
+                            ${new Date(cb.next_meeting).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" })}
+                        </div>
+                    </div>
+                    <span style="
+                        font-size:11px; font-weight:700;
+                        color:${urgency};
+                        background:${urgency}15;
+                        padding:4px 10px; border-radius:10px;
+                    ">
+                        ${meetingLabel}
+                    </span>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+
+window.onload = () => {
+    renderRateStrip();
+    renderCBCards();
+};
+</script>
+</body>
+</html>
