@@ -14,49 +14,56 @@ document.getElementById("welcomeDate").textContent =
     });
 
 async function loadDashboard(){
+    // skeletons already present in HTML via .skeleton class
+    // just clear them once data arrives
 
-    const analytics = await getAnalytics(token);
-    const accounts  = await getAccounts(token);
-    const trades    = await getTrades(token);
+    try {
+        const [analytics, accounts, trades] = await Promise.all([
+            getAnalytics(token),
+            getAccounts(token),
+            getTrades(token)
+        ]);
 
-    document.getElementById("dashboardProfit").textContent   = `$${analytics.total_profit}`;
-    document.getElementById("dashboardWinRate").textContent  = `${analytics.win_rate}%`;
-    document.getElementById("dashboardAccounts").textContent = accounts.length;
-    document.getElementById("dashboardTrades").textContent   = analytics.trade_count;
+        // clear skeletons
+        document.querySelectorAll(".kpi-card.skeleton, .metric-card.skeleton, .section-card.skeleton")
+            .forEach(el => el.classList.remove("skeleton"));
 
-    buildEquityCurve(trades);
+        document.getElementById("dashboardProfit").textContent   = `$${analytics.total_profit}`;
+        document.getElementById("dashboardWinRate").textContent  = `${analytics.win_rate}%`;
+        document.getElementById("dashboardAccounts").textContent = accounts.length;
+        document.getElementById("dashboardTrades").textContent   = analytics.trade_count;
 
-    const table = document.getElementById("recentTradesTable");
-    table.innerHTML = "";
+        buildEquityCurve(trades);
 
-    if(trades.length === 0){
-        table.innerHTML = `
-            <tr>
-                <td colspan="3" style="text-align: center; color: var(--muted); padding: 40px 20px;">
-                    <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 12px; display: block; opacity: 0.3;"></i>
-                    <p>No trades yet — sync your MT5 account in Settings.</p>
-                </td>
-            </tr>
-        `;
-    } else {
-        trades.slice(-5).reverse().forEach(trade => {
+        const table = document.getElementById("recentTradesTable");
+        table.innerHTML = "";
 
-            const row = document.createElement("tr");
+        if(trades.length === 0){
+            showEmptyState(table.closest(".section-card") || table.parentElement, {
+                icon:        "fa-chart-line",
+                title:       "No trades yet",
+                message:     "Sync your MT5 account to import your trade history and unlock your full analytics.",
+                actionLabel: "Go to Settings",
+                actionHref:  "settings.html"
+            });
+        } else {
+            trades.slice(-5).reverse().forEach(trade => {
+                const row = document.createElement("tr");
+                const profitClass = trade.profit >= 0 ? "profit-positive" : "profit-negative";
+                row.innerHTML = `
+                    <td>${trade.symbol}</td>
+                    <td>${trade.order_type}</td>
+                    <td class="${profitClass}">${trade.profit >= 0 ? "+" : ""}$${trade.profit}</td>
+                `;
+                table.appendChild(row);
+            });
+        }
 
-            const profitClass = trade.profit >= 0
-                ? "profit-positive"
-                : "profit-negative";
-
-            row.innerHTML = `
-                <td>${trade.symbol}</td>
-                <td>${trade.order_type}</td>
-                <td class="${profitClass}">
-                    ${trade.profit >= 0 ? "+" : ""}$${trade.profit}
-                </td>
-            `;
-
-            table.appendChild(row);
-        });
+    } catch(err) {
+        console.error(err);
+        showToast("Could not load dashboard data. Please refresh.", "error");
+        document.querySelectorAll(".kpi-card.skeleton, .metric-card.skeleton")
+            .forEach(el => el.classList.remove("skeleton"));
     }
 }
 
