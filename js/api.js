@@ -477,6 +477,96 @@ function showToast(message, type = "info", duration = 3000){
     }
 }
 
+// ── Reusable empty state ──────────────────────────────────────────────
+function showEmptyState(container, { icon, title, message, actionLabel, actionHref }){
+    container.innerHTML = `
+        <div class="empty-state-card">
+            <i class="fas ${icon}"></i>
+            <h3>${title}</h3>
+            <p>${message}</p>
+            ${actionLabel && actionHref
+                ? `<a href="${actionHref}" class="btn-primary" style="padding:10px 20px; border-radius:10px; text-decoration:none; font-size:13px; font-weight:600;">${actionLabel}</a>`
+                : ""
+            }
+        </div>
+    `;
+}
+
+// ── Reusable error state 
+function showErrorState(container, message = "Something went wrong. Please refresh."){
+    container.innerHTML = `
+        <div class="error-state-card">
+            <i class="fas fa-triangle-exclamation"></i>
+            <h3>Could not load data</h3>
+            <p>${message}</p>
+            <button onclick="window.location.reload()" class="btn-primary" style="
+                border:none; padding:10px 20px; border-radius:10px;
+                cursor:pointer; font-size:13px; margin-top:8px;
+            ">Try again</button>
+        </div>
+    `;
+}
+
+// ── Backend wake-up indicator 
+// Render free tier spins down after inactivity. This pings the root
+// endpoint and shows a non-blocking banner if it takes more than 2s.
+
+async function pingBackend(){
+    const TIMEOUT = 2000;
+    const start   = Date.now();
+
+    let banner = null;
+
+    const timer = setTimeout(() => {
+        banner = document.createElement("div");
+        banner.id = "wake-banner";
+        banner.style.cssText = `
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: linear-gradient(90deg, #1e3a5f, #0d2137);
+            border-bottom: 1px solid rgba(59,130,246,0.3);
+            color: #93c5fd;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 99999;
+            text-align: center;
+            justify-content: center;
+        `;
+        banner.innerHTML = `
+            <i class="fas fa-spinner fa-spin" style="font-size:12px;"></i>
+            Backend is waking up — this takes about 30 seconds on first load…
+        `;
+        document.body.prepend(banner);
+    }, TIMEOUT);
+
+    try {
+        await fetch(`${API_URL}/`);
+    } catch(e) {
+        // silent fail — banner will stay until next successful request
+    } finally {
+        clearTimeout(timer);
+        if(banner){
+            const elapsed = Date.now() - start;
+            banner.innerHTML = `
+                <i class="fas fa-circle-check" style="color:#4ade80; font-size:12px;"></i>
+                Backend is ready!
+            `;
+            banner.style.background = "linear-gradient(90deg, #0d1f13, #091a0f)";
+            banner.style.borderColor = "rgba(34,197,94,0.3)";
+            banner.style.color       = "#86efac";
+            setTimeout(() => banner?.remove(), 2000);
+        }
+    }
+}
+
+// run on every page load
+pingBackend();
+
+
 // Local sync agent
 async function syncFromAgent(token){
     const response = await fetch("http://127.0.0.1:5001/sync", {
