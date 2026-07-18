@@ -3,20 +3,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const hamburgerBtn = document.getElementById("hamburgerBtn");
     const drawer       = document.getElementById("navDrawer");
     const overlay      = document.getElementById("drawerOverlay");
+    const rail         = document.querySelector(".nav-rail");
 
     function openDrawer(){
-        drawer.classList.add("open");
-        overlay.classList.add("show");
+        drawer?.classList.add("open");
+        overlay?.classList.add("show");
     }
     function closeDrawer(){
-        drawer.classList.remove("open");
-        overlay.classList.remove("show");
+        drawer?.classList.remove("open");
+        overlay?.classList.remove("show");
     }
 
-    hamburgerBtn?.addEventListener("click", openDrawer);
+    hamburgerBtn?.addEventListener("click", () => {
+        // on mobile — toggle rail
+        if(window.innerWidth <= 768 && rail){
+            rail.classList.toggle("open");
+            return;
+        }
+        // on desktop — open full drawer
+        openDrawer();
+    });
+
     overlay?.addEventListener("click", closeDrawer);
 
-    // populate drawer footer with logged-in user
+    // rail toggle button (settings page)
+    document.getElementById("railToggle")?.addEventListener("click", openDrawer);
+
+    // populate drawer/rail footer with logged-in user
     const token = localStorage.token;
     if(token){
         try{
@@ -24,32 +37,27 @@ document.addEventListener("DOMContentLoaded", () => {
             const email   = payload.email || "";
             const emailEl  = document.getElementById("drawerEmail");
             const avatarEl = document.getElementById("drawerAvatar");
+            const railAv   = document.getElementById("railAvatar");
             if(emailEl)  emailEl.textContent  = email;
             if(avatarEl && email) avatarEl.textContent = email[0].toUpperCase();
+            if(railAv   && email) railAv.textContent   = email[0].toUpperCase();
         }catch(e){}
     }
 
-    // ── Account switcher in topnav ────────────────────────────────────
+    // account switcher
     async function loadAccountSwitcher(){
         if(!token) return;
-
         try {
             const accounts = await getAccounts(token);
-            if(!accounts || accounts.length <= 1) return; // no switcher needed for 0 or 1 account
+            if(!accounts || accounts.length <= 1) return;
 
-            const topnav    = document.querySelector(".topnav");
-            const titleEl   = document.querySelector(".topnav-title");
+            const topnav   = document.querySelector(".topnav");
+            const titleEl  = document.querySelector(".topnav-title");
             if(!topnav || !titleEl) return;
 
-            const activeId  = getActiveAccountId();
-
+            const activeId = getActiveAccountId();
             const switcher = document.createElement("div");
-            switcher.style.cssText = `
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-left: 12px;
-            `;
+            switcher.style.cssText = "display:flex; align-items:center; gap:8px; margin-left:12px;";
 
             const select = document.createElement("select");
             select.style.cssText = `
@@ -79,6 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             select.addEventListener("change", () => {
                 setActiveAccountId(select.value || null);
+                _cacheInvalidate();
                 window.location.reload();
             });
 
@@ -92,9 +101,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadAccountSwitcher();
 
-    // fallback logout
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("voyager_active_account");
         window.location.href = "../login.html";
     });
 });
