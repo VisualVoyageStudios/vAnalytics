@@ -145,7 +145,7 @@ body{
     font-size:14px;
 }
 
-/* ── Off-canvas drawer (new) ── */
+/* ── Off-canvas drawer NAV (new) ── */
 .drawer-overlay{
     position:fixed;
     inset:0;
@@ -402,6 +402,34 @@ body{
     position:relative;
 }
 
+@media (max-width: 768px) {
+    .nav-rail {
+        width: 0;
+        overflow: hidden;
+        padding: 0;
+        border-right: none;
+        transition: width 0.3s ease;
+    }
+
+    .nav-rail.open {
+        width: 64px;
+        padding: 16px 0;
+        border-right: 1px solid var(--border);
+    }
+
+    .topnav {
+        margin-left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    /* hamburger shows on mobile to toggle the rail */
+    .hamburger-btn {
+        display: flex !important;
+    }
+}
 /** */
 
 .hero{
