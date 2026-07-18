@@ -1873,3 +1873,164 @@ def get_challenge_history(current_user=Depends(get_current_user), db: Session = 
         }
         for c in challenges
     ]
+
+# ─────────────────────────────────────────
+#  MACRO MATRIX
+# ─────────────────────────────────────────
+
+# Policy rates — updated manually when CBs change rates
+# Source: central bank websites (reliable, rarely changes)
+POLICY_RATES = {
+    "USD": {"rate": 4.50, "stance": "hold",    "trend": "cutting"},
+    "EUR": {"rate": 2.15, "stance": "cutting",  "trend": "cutting"},
+    "GBP": {"rate": 4.25, "stance": "hold",    "trend": "cutting"},
+    "JPY": {"rate": 0.50, "stance": "hiking",   "trend": "hiking"},
+    "AUD": {"rate": 3.85, "stance": "cutting",  "trend": "cutting"},
+    "CAD": {"rate": 2.75, "stance": "hold",     "trend": "cutting"},
+    "NZD": {"rate": 3.25, "stance": "cutting",  "trend": "cutting"},
+    "CHF": {"rate": 0.00, "stance": "hold",     "trend": "neutral"},
+    "ZAR": {"rate": 7.50, "stance": "hold",     "trend": "cutting"},
+}
+
+macro_matrix_cache = {"data": None, "timestamp": 0}
+MACRO_CACHE_TTL    = 12 * 3600  # 12 hours — World Bank data is annual anyway
+
+
+@app.get("/macro/matrix")
+async def get_macro_matrix(current_user=Depends(get_current_user)):
+
+    now = time.time()
+
+    if macro_matrix_cache["data"] and (now - macro_matrix_cache["timestamp"]) < MACRO_CACHE_TTL:
+        print("Macro matrix cache hit", flush=True)
+        return macro_matrix_cache["data"]
+
+    country_map = {
+        "US": "USD", "XC": "EUR", "GB": "GBP",
+        "JP": "JPY", "AU": "AUD", "CA": "CAD",
+        "NZ": "NZD", "CH": "CHF", "ZA": "ZAR"
+    }
+
+    country_codes = ";".join(country_map.keys())
+
+    indicators = {
+        "cpi":          "FP.CPI.TOTL.ZG",
+        "gdp_growth":   "NY.GDP.MKTP.KD.ZG",
+        "unemployment": "SL.UEM.TOTL.ZS",
+        "current_account": "BN.CAB.XOKA.GD.ZS"
+    }
+
+    wb_data = {code: {} for code in country_map.values()}
+
+    async with httpx.AsyncClient() as client:
+        for metric, indicator in indicators.items():
+            try:
+                res = await client.get(
+                    f"https://api.worldbank.org/v2/country/{country_codes}/indicator/{indicator}",
+                    params={"format": "json", "mrv": 1, "per_page": 20},
+                    timeout=30.0
+                )
+                data = res.json()
+                if isinstance(data, list) and len(data) > 1 and data[1]:
+                    for entry in data[1]:
+                        ccy   = country_map.get(entry["country"]["id"])
+                        value = entry["value"]
+                        if ccy and value is not None:
+                            wb_data[ccy][metric] = round(value, 2)
+            except Exception as e:
+                print(f"World Bank fetch failed for {metric}: {str(e)}")
+
+    # Build matrix rows
+    currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
+    rows = []
+
+    for ccy in currencies:
+        wb  = wb_data.get(ccy, {})
+        pol = POLICY_RATES.get(ccy, {})
+
+        cpi          = wb.get("cpi")
+        gdp          = wb.get("gdp_growth")
+        unemployment = wb.get("unemployment")
+        current_acc  = wb.get("current_account")
+        rate         = pol.get("rate")
+        stance       = pol.get("stance", "unknown")
+        trend        = pol.get("trend", "neutral")
+
+        # Score each indicator for the currency
+        # Positive = bullish for currency, negative = bearish
+        def score_rate(r):
+            if r is None: return None
+            if r >= 4.0:  return 2   # high rate = strong attract capital
+            if r >= 2.0:  return 1
+            if r >= 0.5:  return 0
+            return -1
+
+        def score_cpi(c):
+            if c is None: return None
+            if 1.5 <= c <= 3.0: return 1   # on-target = good
+            if c > 5.0:         return -2  # runaway inflation = bad
+            if c > 3.0:         return -1
+            return 0
+
+        def score_gdp(g):
+            if g is None: return None
+            if g >= 3.0:  return 2
+            if g >= 1.5:  return 1
+            if g >= 0.0:  return 0
+            return -1
+
+        def score_unemployment(u):
+            if u is None: return None
+            if u <= 4.0:  return 2
+            if u <= 5.5:  return 1
+            if u <= 7.0:  return 0
+            return -1
+
+        def score_current_acc(c):
+            if c is None: return None
+            if c >= 2.0:  return 2
+            if c >= 0.0:  return 1
+            return -1
+
+        scores = [
+            score_rate(rate),
+            score_cpi(cpi),
+            score_gdp(gdp),
+            score_unemployment(unemployment),
+            score_current_acc(current_acc)
+        ]
+
+        valid_scores = [s for s in scores if s is not None]
+        overall = round(sum(valid_scores) / len(valid_scores), 2) if valid_scores else 0
+
+        rows.append({
+            "currency":    ccy,
+            "rate":        rate,
+            "rate_stance": stance,
+            "rate_trend":  trend,
+            "cpi":         cpi,
+            "gdp":         gdp,
+            "unemployment": unemployment,
+            "current_account": current_acc,
+            "scores": {
+                "rate":            score_rate(rate),
+                "cpi":             score_cpi(cpi),
+                "gdp":             score_gdp(gdp),
+                "unemployment":    score_unemployment(unemployment),
+                "current_account": score_current_acc(current_acc)
+            },
+            "overall_score": overall
+        })
+
+    # Sort by overall score descending
+    rows.sort(key=lambda x: x["overall_score"], reverse=True)
+
+    result = {
+        "rows":       rows,
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+    macro_matrix_cache["data"]      = result
+    macro_matrix_cache["timestamp"] = now
+
+    return result
