@@ -85,11 +85,18 @@ async function generateCard(){
 
 
 function renderCanvas(data){
-    const canvas  = document.getElementById("recapCanvas");
-    const ctx     = canvas.getContext("2d");
+    const canvas    = document.getElementById("recapCanvas");
+    const ctx       = canvas.getContext("2d");
+    const container = document.getElementById("previewArea");
+
+    // scale canvas to container width on small screens
+    const maxW    = Math.min(CARD_W, container.clientWidth - 32);
+    const scale   = maxW / CARD_W;
 
     canvas.width  = CARD_W;
     canvas.height = CARD_H;
+    canvas.style.width  = `${maxW}px`;
+    canvas.style.height = `${Math.round(CARD_H * scale)}px`;
 
     // ── Background ──
     ctx.fillStyle = "#070b14";
