@@ -416,6 +416,123 @@ def import_trades(trades: List[TradeImport], current_user=Depends(get_current_us
     return {"status": "success", "imported": imported}
 
 # ─────────────────────────────────────────
+#  TRADE IDEAS
+# ─────────────────────────────────────────
+
+trade_ideas_cache = {"data": None, "timestamp": 0}
+TRADE_IDEAS_CACHE_TTL = 3600  # 1 hour
+
+@app.get("/trade-ideas")
+async def get_trade_ideas(current_user=Depends(get_current_user)):
+
+    now = time.time()
+
+    if trade_ideas_cache["data"] and (now - trade_ideas_cache["timestamp"]) < TRADE_IDEAS_CACHE_TTL:
+        return trade_ideas_cache["data"]
+
+    # Reuse the fundamentals endpoint data
+    country_map = {
+        "US": "USD", "XC": "EUR", "GB": "GBP",
+        "JP": "JPY", "AU": "AUD", "CA": "CAD",
+        "NZ": "NZD", "CH": "CHF"
+    }
+
+    country_codes = ";".join(country_map.keys())
+    indicators    = {
+        "gdp_growth":   "NY.GDP.MKTP.KD.ZG",
+        "inflation":    "FP.CPI.TOTL.ZG",
+        "unemployment": "SL.UEM.TOTL.ZS"
+    }
+
+    scores = {code: 0 for code in country_map.values()}
+
+    async with httpx.AsyncClient() as client:
+        for metric, indicator in indicators.items():
+            try:
+                res  = await client.get(
+                    f"https://api.worldbank.org/v2/country/{country_codes}/indicator/{indicator}",
+                    params={"format": "json", "mrv": 1, "per_page": 20},
+                    timeout=30.0
+                )
+                data = res.json()
+                if isinstance(data, list) and len(data) > 1 and data[1]:
+                    for entry in data[1]:
+                        ccy   = country_map.get(entry["country"]["id"])
+                        value = entry["value"]
+                        if ccy and value is not None:
+                            # Simple scoring per metric
+                            if metric == "gdp_growth":
+                                scores[ccy] += 2 if value >= 3 else 1 if value >= 1.5 else 0 if value >= 0 else -1
+                            elif metric == "inflation":
+                                scores[ccy] += 1 if 1.5 <= value <= 3 else -1 if value > 5 else 0
+                            elif metric == "unemployment":
+                                scores[ccy] += 2 if value <= 4 else 1 if value <= 5.5 else 0 if value <= 7 else -1
+            except Exception as e:
+                print(f"Trade ideas WB fetch failed: {str(e)}")
+
+    # Add policy rate scoring from POLICY_RATES
+    for ccy, pol in POLICY_RATES.items():
+        if ccy not in scores:
+            continue
+        rate = pol.get("rate", 0)
+        if rate >= 4.0:   scores[ccy] += 2
+        elif rate >= 2.0: scores[ccy] += 1
+        elif rate >= 0.5: scores[ccy] += 0
+        else:              scores[ccy] -= 1
+
+    # Generate pair ideas
+    PAIRS = [
+        ("EUR", "USD"), ("GBP", "USD"), ("USD", "JPY"),
+        ("USD", "CHF"), ("AUD", "USD"), ("USD", "CAD"),
+        ("NZD", "USD"), ("GBP", "JPY"), ("EUR", "GBP"),
+        ("EUR", "JPY"), ("AUD", "JPY"), ("GBP", "CHF"),
+        ("AUD", "NZD"), ("EUR", "AUD"), ("CAD", "JPY")
+    ]
+
+    ideas = []
+    for base, quote in PAIRS:
+        base_score  = scores.get(base, 0)
+        quote_score = scores.get(quote, 0)
+        diff        = base_score - quote_score
+
+        if abs(diff) < 1:
+            continue  # no meaningful edge — skip
+
+        direction   = "LONG" if diff > 0 else "SHORT"
+        pair        = f"{base}{quote}"
+        conviction  = "High" if abs(diff) >= 4 else "Medium" if abs(diff) >= 2 else "Low"
+        score_abs   = abs(diff)
+        bias_base   = base if diff > 0 else quote
+        bias_quote  = quote if diff > 0 else base
+
+        ideas.append({
+            "pair":         pair,
+            "direction":    direction,
+            "conviction":   conviction,
+            "score":        diff,
+            "score_abs":    score_abs,
+            "base":         base,
+            "quote":        quote,
+            "base_score":   base_score,
+            "quote_score":  quote_score,
+            "rationale":    f"{bias_base} fundamentally stronger than {bias_quote} — score differential of {score_abs}."
+        })
+
+    # Sort by score_abs descending (strongest conviction first)
+    ideas.sort(key=lambda x: x["score_abs"], reverse=True)
+
+    result = {
+        "ideas":      ideas[:12],  # top 12
+        "scores":     scores,
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+    trade_ideas_cache["data"]      = result
+    trade_ideas_cache["timestamp"] = now
+
+    return result
+
+# ─────────────────────────────────────────
 #  DATA
 # ─────────────────────────────────────────
 
