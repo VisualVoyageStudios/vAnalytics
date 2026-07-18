@@ -31,56 +31,36 @@
 <div class="drawer-overlay" id="drawerOverlay"></div>
 
 <!-- Off-canvas nav drawer -->
-<aside class="nav-drawer" id="navDrawer">
-    <div class="drawer-brand">
-        <i class="fas fa-rocket"></i>
-        <div>
-            <p class="brand-name">Voyager</p>
-            <p class="brand-plan">ANALYTICS</p>
-        </div>
-    </div>
-
-    <div class="drawer-section-label">Journaling</div>
-    <nav class="drawer-nav">
-        <a href="dashboard.html"><i class="fas fa-table-cells-large"></i>Dashboard</a>
-        <a href="accounts.html"><i class="fas fa-briefcase"></i>Accounts</a>
-        <a href="trades.html"><i class="fas fa-chart-line"></i>Trades</a>
-        <a href="analytics.html"><i class="fas fa-chart-simple"></i>Analytics</a>
-        <a href="journal.html"><i class="fas fa-book-open-reader"></i>Journal</a>
-        <a href="riskReward.html"><i class="fas fa-scale-balanced"></i>Risk / Reward</a>
-    </nav>
-
-    <div class="drawer-section-label">Market Tools</div>
-    <nav class="drawer-nav">
-        <a href="economicHeatmap.html"><i class="fas fa-globe"></i>Economic Heatmap <span class="nav-premium-badge">Elite</span></a>
-        <a href="edgeFinder.html"><i class="fas fa-crosshairs"></i>Edge Finder <span class="nav-premium-badge">Elite</span></a>
-        <a href="currencyStrength.html" class="active"><i class="fas fa-signal"></i>Currency Strength <span class="nav-premium-badge">Elite</span></a>
-        <a href="correlationMatrix.html"><i class="fas fa-table-cells"></i>Correlation Matrix <span class="nav-premium-badge">Elite</span></a>
-    </nav>
-
-    <div class="drawer-section-label">Premium</div>
-    <nav class="drawer-nav">
-        <a href="aiInsights.html"><i class="fas fa-microchip"></i>AI Insights <span class="nav-premium-badge">Pro</span></a>
-        <a href="sessionAnalysis.html"><i class="fas fa-clock"></i>Session Analysis <span class="nav-premium-badge">Starter</span></a>
-        <a href="streaks.html"><i class="fas fa-fire"></i>Streak Tracker <span class="nav-premium-badge">Starter</span></a>
-        <a href="goalTracker.html"><i class="fas fa-bullseye"></i>Goal Tracker <span class="nav-premium-badge">Starter</span></a>
-        <a href="reports.html"><i class="fas fa-file-pdf"></i>Reports <span class="nav-premium-badge">Elite</span></a>
-    </nav>
-
-    <div class="drawer-section-label">Account</div>
-    <nav class="drawer-nav">
-        <a href="settings.html"><i class="fas fa-gears"></i>Settings</a>
-    </nav>
-
-    <div class="drawer-footer">
-        <div class="drawer-user">
-            <div class="drawer-avatar" id="drawerAvatar">V</div>
-            <div>
-                <p class="drawer-user-name">voyager</p>
-                <p class="drawer-user-email" id="drawerEmail">—</p>
-            </div>
-        </div>
-    </div>
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"          class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"           class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"             class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"          class="nav-rail-icon" title="Analytics"><i class="fas fa-chart-simple"></i></a>
+    <a href="journal.html"            class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"         class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="macroMatrix.html"        class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"       class="nav-rail-icon" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="tradeIdeas.html"         class="nav-rail-icon" title="Trade Ideas"><i class="fas fa-lightbulb"></i></a>
+    <a href="currencyIntelligence.html" class="nav-rail-icon" title="Currency Intelligence"><i class="fas fa-brain"></i></a>
+    <a href="economicHeatmap.html"    class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"         class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="currencyStrength.html"   class="nav-rail-icon active" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html"  class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"         class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"    class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"            class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"        class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"          class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"            class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"           class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <button class="nav-rail-icon" id="railToggle" title="Menu"><i class="fas fa-bars"></i></button>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+    <button class="nav-rail-icon" id="logoutBtn" title="Logout" style="color:var(--danger);"><i class="fas fa-arrow-right-from-bracket"></i></button>
 </aside>
 
 <div class="dashboard-container">
