@@ -430,11 +430,13 @@ async def get_trade_ideas(current_user=Depends(get_current_user)):
     if trade_ideas_cache["data"] and (now - trade_ideas_cache["timestamp"]) < TRADE_IDEAS_CACHE_TTL:
         return trade_ideas_cache["data"]
 
-    # Reuse the fundamentals endpoint data
+    # fetch live policy rates
+    policy_rates = await fetch_policy_rates()
+
     country_map = {
         "US": "USD", "XC": "EUR", "GB": "GBP",
         "JP": "JPY", "AU": "AUD", "CA": "CAD",
-        "NZ": "NZD", "CH": "CHF"
+        "NZ": "NZD", "CH": "CHF", "ZA": "ZAR"
     }
 
     country_codes = ";".join(country_map.keys())
@@ -460,7 +462,6 @@ async def get_trade_ideas(current_user=Depends(get_current_user)):
                         ccy   = country_map.get(entry["country"]["id"])
                         value = entry["value"]
                         if ccy and value is not None:
-                            # Simple scoring per metric
                             if metric == "gdp_growth":
                                 scores[ccy] += 2 if value >= 3 else 1 if value >= 1.5 else 0 if value >= 0 else -1
                             elif metric == "inflation":
@@ -470,23 +471,22 @@ async def get_trade_ideas(current_user=Depends(get_current_user)):
             except Exception as e:
                 print(f"Trade ideas WB fetch failed: {str(e)}")
 
-    # Add policy rate scoring from POLICY_RATES
-    for ccy, pol in POLICY_RATES.items():
-        if ccy not in scores:
-            continue
-        rate = pol.get("rate", 0)
+    # add live policy rate scoring
+    for ccy in scores:
+        pol  = policy_rates.get(ccy, {})
+        rate = pol.get("rate", 0) or 0
         if rate >= 4.0:   scores[ccy] += 2
         elif rate >= 2.0: scores[ccy] += 1
         elif rate >= 0.5: scores[ccy] += 0
         else:              scores[ccy] -= 1
 
-    # Generate pair ideas
     PAIRS = [
-        ("EUR", "USD"), ("GBP", "USD"), ("USD", "JPY"),
-        ("USD", "CHF"), ("AUD", "USD"), ("USD", "CAD"),
-        ("NZD", "USD"), ("GBP", "JPY"), ("EUR", "GBP"),
-        ("EUR", "JPY"), ("AUD", "JPY"), ("GBP", "CHF"),
-        ("AUD", "NZD"), ("EUR", "AUD"), ("CAD", "JPY")
+        ("EUR","USD"),("GBP","USD"),("USD","JPY"),
+        ("USD","CHF"),("AUD","USD"),("USD","CAD"),
+        ("NZD","USD"),("GBP","JPY"),("EUR","GBP"),
+        ("EUR","JPY"),("AUD","JPY"),("GBP","CHF"),
+        ("AUD","NZD"),("EUR","AUD"),("CAD","JPY"),
+        ("USD","ZAR"),("EUR","ZAR")
     ]
 
     ideas = []
@@ -496,33 +496,31 @@ async def get_trade_ideas(current_user=Depends(get_current_user)):
         diff        = base_score - quote_score
 
         if abs(diff) < 1:
-            continue  # no meaningful edge — skip
+            continue
 
-        direction   = "LONG" if diff > 0 else "SHORT"
-        pair        = f"{base}{quote}"
-        conviction  = "High" if abs(diff) >= 4 else "Medium" if abs(diff) >= 2 else "Low"
-        score_abs   = abs(diff)
-        bias_base   = base if diff > 0 else quote
-        bias_quote  = quote if diff > 0 else base
+        direction  = "LONG" if diff > 0 else "SHORT"
+        pair       = f"{base}{quote}"
+        conviction = "High" if abs(diff) >= 4 else "Medium" if abs(diff) >= 2 else "Low"
+        bias_base  = base if diff > 0 else quote
+        bias_quote = quote if diff > 0 else base
 
         ideas.append({
-            "pair":         pair,
-            "direction":    direction,
-            "conviction":   conviction,
-            "score":        diff,
-            "score_abs":    score_abs,
-            "base":         base,
-            "quote":        quote,
-            "base_score":   base_score,
-            "quote_score":  quote_score,
-            "rationale":    f"{bias_base} fundamentally stronger than {bias_quote} — score differential of {score_abs}."
+            "pair":        pair,
+            "direction":   direction,
+            "conviction":  conviction,
+            "score":       diff,
+            "score_abs":   abs(diff),
+            "base":        base,
+            "quote":       quote,
+            "base_score":  base_score,
+            "quote_score": quote_score,
+            "rationale":   f"{bias_base} fundamentally stronger than {bias_quote} — score differential of {abs(diff)}."
         })
 
-    # Sort by score_abs descending (strongest conviction first)
     ideas.sort(key=lambda x: x["score_abs"], reverse=True)
 
     result = {
-        "ideas":      ideas[:12],  # top 12
+        "ideas":      ideas[:12],
         "scores":     scores,
         "updated_at": datetime.utcnow().isoformat()
     }
@@ -1991,27 +1989,169 @@ def get_challenge_history(current_user=Depends(get_current_user), db: Session = 
         for c in challenges
     ]
 
-# ─────────────────────────────────────────
+#--------
 #  MACRO MATRIX
-# ─────────────────────────────────────────
 
-# Policy rates — updated manually when CBs change rates (Change to auto update)
-# Source: central bank websites (reliable, rarely changes)
-POLICY_RATES = {
-    "USD": {"rate": 4.50, "stance": "hold",    "trend": "cutting"},
-    "EUR": {"rate": 2.15, "stance": "cutting",  "trend": "cutting"},
-    "GBP": {"rate": 4.25, "stance": "hold",    "trend": "cutting"},
-    "JPY": {"rate": 0.50, "stance": "hiking",   "trend": "hiking"},
-    "AUD": {"rate": 3.85, "stance": "cutting",  "trend": "cutting"},
-    "CAD": {"rate": 2.75, "stance": "hold",     "trend": "cutting"},
-    "NZD": {"rate": 3.25, "stance": "cutting",  "trend": "cutting"},
-    "CHF": {"rate": 0.00, "stance": "hold",     "trend": "neutral"},
-    "ZAR": {"rate": 7.50, "stance": "hold",     "trend": "cutting"},
+#  POLICY RATES — hybrid auto + fallback
+# Fallback rates for CBs without free machine-readable APIs
+# Only needs updating when these CBs actually change rates
+
+POLICY_RATES_FALLBACK = {
+    "JPY": {"rate": 0.50, "stance": "hiking",  "trend": "hiking"},
+    "AUD": {"rate": 3.85, "stance": "cutting", "trend": "cutting"},
+    "CAD": {"rate": 2.75, "stance": "hold",    "trend": "cutting"},
+    "NZD": {"rate": 3.25, "stance": "cutting", "trend": "cutting"},
+    "CHF": {"rate": 0.00, "stance": "hold",    "trend": "neutral"},
+    "ZAR": {"rate": 7.50, "stance": "cutting", "trend": "cutting"},
 }
 
-macro_matrix_cache = {"data": None, "timestamp": 0}
-MACRO_CACHE_TTL    = 12 * 3600  # 12 hours — World Bank data is annual anyway
+policy_rates_cache = {"data": None, "timestamp": 0}
+POLICY_RATES_CACHE_TTL = 6 * 3600  # 6 hours
 
+
+def _derive_stance(current: float, previous: float) -> dict:
+    """Derive stance and trend from current vs previous rate."""
+    if current > previous:
+        return {"stance": "hiking",  "trend": "hiking"}
+    if current < previous:
+        return {"stance": "cutting", "trend": "cutting"}
+    return {"stance": "hold", "trend": "neutral"}
+
+
+async def _fetch_fred_rate(client: httpx.AsyncClient, series_id: str) -> float | None:
+    """Fetch latest value for a FRED series."""
+    fred_key = os.getenv("FRED_API_KEY")
+    if not fred_key:
+        return None
+    try:
+        res = await client.get(
+            "https://api.stlouisfed.org/fred/series/observations",
+            params={
+                "series_id":        series_id,
+                "api_key":          fred_key,
+                "file_type":        "json",
+                "sort_order":       "desc",
+                "observation_start": "2020-01-01",
+                "limit":            2
+            },
+            timeout=15.0
+        )
+        data = res.json()
+        obs  = [o for o in data.get("observations", []) if o.get("value") != "."]
+        if len(obs) >= 1:
+            current  = round(float(obs[0]["value"]), 2)
+            previous = round(float(obs[1]["value"]), 2) if len(obs) >= 2 else current
+            return current, previous
+    except Exception as e:
+        print(f"FRED fetch failed for {series_id}: {str(e)}")
+    return None, None
+
+
+async def _fetch_ecb_rate(client: httpx.AsyncClient) -> tuple:
+    """Fetch ECB deposit facility rate from ECB SDMX API."""
+    try:
+        res = await client.get(
+            "https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV",
+            params={"format": "jsondata", "lastNObservations": 2},
+            headers={"Accept": "application/json"},
+            timeout=15.0,
+            follow_redirects=True
+        )
+        data  = res.json()
+        obs   = data["dataSets"][0]["series"]["0:0:0:0:0:0:0"]["observations"]
+        dates = sorted(obs.keys(), key=lambda x: int(x), reverse=True)
+        current  = round(float(obs[dates[0]][0]), 2)
+        previous = round(float(obs[dates[1]][0]), 2) if len(dates) >= 2 else current
+        return current, previous
+    except Exception as e:
+        print(f"ECB rate fetch failed: {str(e)}")
+        return None, None
+
+
+async def _fetch_boe_rate(client: httpx.AsyncClient) -> tuple:
+    """Fetch BoE bank rate from BoE Open Data API."""
+    try:
+        res = await client.get(
+            "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp",
+            params={
+                "csv.x":    "yes",
+                "Datefrom": "01/Jan/2020",
+                "Dateto":   "now",
+                "SeriesCodes": "IUMABEDR",
+                "CSVF":     "TN",
+                "UsingCodes": "Y"
+            },
+            timeout=15.0,
+            follow_redirects=True
+        )
+        lines = [l for l in res.text.strip().split("\n") if l.strip()]
+        # last two data rows (skip header)
+        data_rows = [l for l in lines if not l.startswith("DATE")]
+        if len(data_rows) >= 1:
+            current  = round(float(data_rows[-1].split(",")[1].strip()), 2)
+            previous = round(float(data_rows[-2].split(",")[1].strip()), 2) if len(data_rows) >= 2 else current
+            return current, previous
+    except Exception as e:
+        print(f"BoE rate fetch failed: {str(e)}")
+    return None, None
+
+
+async def fetch_policy_rates() -> dict:
+    """
+    Fetch policy rates from official free sources:
+    - USD: FRED (DFF series — effective federal funds rate)
+    - EUR: ECB SDMX API (deposit facility rate)
+    - GBP: BoE Open Data API
+    - Others: hardcoded fallback (updated manually when CBs change)
+    Returns dict keyed by currency code.
+    """
+    now = time.time()
+
+    if policy_rates_cache["data"] and (now - policy_rates_cache["timestamp"]) < POLICY_RATES_CACHE_TTL:
+        return policy_rates_cache["data"]
+
+    rates = {}
+
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+
+        # ── USD via FRED ──────────────────────────────────────────
+        usd_current, usd_prev = await _fetch_fred_rate(client, "DFEDTARU")
+        if usd_current is not None:
+            stance = _derive_stance(usd_current, usd_prev)
+            rates["USD"] = {"rate": usd_current, **stance}
+            print(f"USD rate fetched from FRED: {usd_current}%", flush=True)
+        else:
+            rates["USD"] = {"rate": 3.75, "stance": "hold", "trend": "cutting"}
+            print("USD rate: using fallback", flush=True)
+
+        # ── EUR via ECB ───────────────────────────────────────────
+        eur_current, eur_prev = await _fetch_ecb_rate(client)
+        if eur_current is not None:
+            stance = _derive_stance(eur_current, eur_prev)
+            rates["EUR"] = {"rate": eur_current, **stance}
+            print(f"EUR rate fetched from ECB: {eur_current}%", flush=True)
+        else:
+            rates["EUR"] = {"rate": 2.15, "stance": "cutting", "trend": "cutting"}
+            print("EUR rate: using fallback", flush=True)
+
+        # ── GBP via BoE ───────────────────────────────────────────
+        gbp_current, gbp_prev = await _fetch_boe_rate(client)
+        if gbp_current is not None:
+            stance = _derive_stance(gbp_current, gbp_prev)
+            rates["GBP"] = {"rate": gbp_current, **stance}
+            print(f"GBP rate fetched from BoE: {gbp_current}%", flush=True)
+        else:
+            rates["GBP"] = {"rate": 4.25, "stance": "cutting", "trend": "cutting"}
+            print("GBP rate: using fallback", flush=True)
+
+    # ── Remaining CBs — hardcoded fallback ────────────────────────
+    for ccy, data in POLICY_RATES_FALLBACK.items():
+        rates[ccy] = data
+
+    policy_rates_cache["data"]      = rates
+    policy_rates_cache["timestamp"] = now
+
+    return rates
 
 @app.get("/macro/matrix")
 async def get_macro_matrix(current_user=Depends(get_current_user)):
@@ -2022,6 +2162,9 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
         print("Macro matrix cache hit", flush=True)
         return macro_matrix_cache["data"]
 
+    # fetch live policy rates (auto where available, fallback otherwise)
+    policy_rates = await fetch_policy_rates()
+
     country_map = {
         "US": "USD", "XC": "EUR", "GB": "GBP",
         "JP": "JPY", "AU": "AUD", "CA": "CAD",
@@ -2031,9 +2174,9 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
     country_codes = ";".join(country_map.keys())
 
     indicators = {
-        "cpi":          "FP.CPI.TOTL.ZG",
-        "gdp_growth":   "NY.GDP.MKTP.KD.ZG",
-        "unemployment": "SL.UEM.TOTL.ZS",
+        "cpi":             "FP.CPI.TOTL.ZG",
+        "gdp_growth":      "NY.GDP.MKTP.KD.ZG",
+        "unemployment":    "SL.UEM.TOTL.ZS",
         "current_account": "BN.CAB.XOKA.GD.ZS"
     }
 
@@ -2057,13 +2200,12 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
             except Exception as e:
                 print(f"World Bank fetch failed for {metric}: {str(e)}")
 
-    # Build matrix rows
     currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
     rows = []
 
     for ccy in currencies:
         wb  = wb_data.get(ccy, {})
-        pol = POLICY_RATES.get(ccy, {})
+        pol = policy_rates.get(ccy, {})
 
         cpi          = wb.get("cpi")
         gdp          = wb.get("gdp_growth")
@@ -2071,21 +2213,19 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
         current_acc  = wb.get("current_account")
         rate         = pol.get("rate")
         stance       = pol.get("stance", "unknown")
-        trend        = pol.get("trend", "neutral")
+        trend        = pol.get("trend",  "neutral")
 
-        # Score each indicator for the currency
-        # Positive = bullish for currency, negative = bearish
         def score_rate(r):
             if r is None: return None
-            if r >= 4.0:  return 2   # high rate = strong attract capital
+            if r >= 4.0:  return 2
             if r >= 2.0:  return 1
             if r >= 0.5:  return 0
             return -1
 
         def score_cpi(c):
             if c is None: return None
-            if 1.5 <= c <= 3.0: return 1   # on-target = good
-            if c > 5.0:         return -2  # runaway inflation = bad
+            if 1.5 <= c <= 3.0: return 1
+            if c > 5.0:         return -2
             if c > 3.0:         return -1
             return 0
 
@@ -2121,13 +2261,13 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
         overall = round(sum(valid_scores) / len(valid_scores), 2) if valid_scores else 0
 
         rows.append({
-            "currency":    ccy,
-            "rate":        rate,
-            "rate_stance": stance,
-            "rate_trend":  trend,
-            "cpi":         cpi,
-            "gdp":         gdp,
-            "unemployment": unemployment,
+            "currency":        ccy,
+            "rate":            rate,
+            "rate_stance":     stance,
+            "rate_trend":      trend,
+            "cpi":             cpi,
+            "gdp":             gdp,
+            "unemployment":    unemployment,
             "current_account": current_acc,
             "scores": {
                 "rate":            score_rate(rate),
@@ -2136,10 +2276,15 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
                 "unemployment":    score_unemployment(unemployment),
                 "current_account": score_current_acc(current_acc)
             },
-            "overall_score": overall
+            "overall_score": overall,
+            "rate_source": (
+                "FRED" if ccy == "USD" else
+                "ECB"  if ccy == "EUR" else
+                "BoE"  if ccy == "GBP" else
+                "manual"
+            )
         })
 
-    # Sort by overall score descending
     rows.sort(key=lambda x: x["overall_score"], reverse=True)
 
     result = {
@@ -2149,5 +2294,7 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
 
     macro_matrix_cache["data"]      = result
     macro_matrix_cache["timestamp"] = now
+
+    return result
 
     return result
