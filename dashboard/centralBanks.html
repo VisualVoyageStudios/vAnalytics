@@ -107,6 +107,35 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
 
+async function loadLiveRates(){
+    try {
+        const res  = await fetch(`${API_URL}/macro/matrix`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        // patch live rates into the three auto-fetched CBs
+        ["USD", "EUR", "GBP"].forEach(ccy => {
+            const row = data.rows?.find(r => r.currency === ccy);
+            const cb  = CENTRAL_BANKS.find(c => c.ccy === ccy);
+            if(row && cb){
+                cb.prev_rate = cb.rate;
+                cb.rate      = row.rate;
+                cb.stance    = row.rate_stance;
+            }
+        });
+
+    } catch(err) {
+        console.warn("Could not fetch live rates — using hardcoded values", err);
+    }
+
+    renderRateStrip();
+    renderCBCards();
+}
+
+window.onload = loadLiveRates;
+
+
 const CENTRAL_BANKS = [
     {
         ccy:         "USD",
