@@ -1996,6 +1996,9 @@ def get_challenge_history(current_user=Depends(get_current_user), db: Session = 
 # Fallback rates for CBs without free machine-readable APIs
 # Only needs updating when these CBs actually change rates
 
+policy_rates_cache = {"data": None, "timestamp": 0}
+POLICY_RATES_CACHE_TTL = 6 * 3600  # 6 hours
+
 POLICY_RATES_FALLBACK = {
     "JPY": {"rate": 0.50, "stance": "hiking",  "trend": "hiking"},
     "AUD": {"rate": 3.85, "stance": "cutting", "trend": "cutting"},
@@ -2004,10 +2007,6 @@ POLICY_RATES_FALLBACK = {
     "CHF": {"rate": 0.00, "stance": "hold",    "trend": "neutral"},
     "ZAR": {"rate": 7.50, "stance": "cutting", "trend": "cutting"},
 }
-
-policy_rates_cache = {"data": None, "timestamp": 0}
-POLICY_RATES_CACHE_TTL = 6 * 3600  # 6 hours
-
 
 def _derive_stance(current: float, previous: float) -> dict:
     """Derive stance and trend from current vs previous rate."""
@@ -2069,30 +2068,43 @@ async def _fetch_ecb_rate(client: httpx.AsyncClient) -> tuple:
 
 
 async def _fetch_boe_rate(client: httpx.AsyncClient) -> tuple:
-    """Fetch BoE bank rate from BoE Open Data API."""
     try:
         res = await client.get(
             "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp",
             params={
-                "csv.x":    "yes",
-                "Datefrom": "01/Jan/2020",
-                "Dateto":   "now",
+                "csv.x":     "yes",
+                "Datefrom":  "01/Jan/2024",
+                "Dateto":    "now",
                 "SeriesCodes": "IUMABEDR",
-                "CSVF":     "TN",
+                "CSVF":      "TN",
                 "UsingCodes": "Y"
             },
             timeout=15.0,
             follow_redirects=True
         )
-        lines = [l for l in res.text.strip().split("\n") if l.strip()]
-        # last two data rows (skip header)
-        data_rows = [l for l in lines if not l.startswith("DATE")]
+
+        print(f"BoE raw response preview: {res.text[:300]}", flush=True)
+
+        lines = [l.strip() for l in res.text.strip().split("\n") if l.strip()]
+
+        # skip any header lines — data rows start with a date-like value
+        data_rows = []
+        for line in lines:
+            parts = line.split(",")
+            if len(parts) >= 2:
+                try:
+                    float(parts[1].strip())
+                    data_rows.append(parts)
+                except ValueError:
+                    continue  # skip header/non-numeric rows
+
         if len(data_rows) >= 1:
-            current  = round(float(data_rows[-1].split(",")[1].strip()), 2)
-            previous = round(float(data_rows[-2].split(",")[1].strip()), 2) if len(data_rows) >= 2 else current
+            current  = round(float(data_rows[-1][1].strip()), 2)
+            previous = round(float(data_rows[-2][1].strip()), 2) if len(data_rows) >= 2 else current
             return current, previous
+
     except Exception as e:
-        print(f"BoE rate fetch failed: {str(e)}")
+        print(f"BoE rate fetch failed: {str(e)}", flush=True)
     return None, None
 
 
@@ -2152,6 +2164,9 @@ async def fetch_policy_rates() -> dict:
     policy_rates_cache["timestamp"] = now
 
     return rates
+
+macro_matrix_cache = {"data": None, "timestamp": 0}
+MACRO_CACHE_TTL    = 12 * 3600  # 12 hours
 
 @app.get("/macro/matrix")
 async def get_macro_matrix(current_user=Depends(get_current_user)):
