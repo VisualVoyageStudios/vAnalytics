@@ -1,4 +1,4 @@
-import httpx
+import requests
 import csv
 import io
 from datetime import date, timedelta
@@ -14,7 +14,6 @@ CONTRACT_MAP = {
     "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE": "CAD",
     "SWISS FRANC - CHICAGO MERCANTILE EXCHANGE":     "CHF",
     "NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE": "NZD",
-
 }
 
 
