@@ -1682,7 +1682,7 @@ async def get_correlation_matrix(
     # buffer for weekends/holidays — fetch extra days to guarantee enough trading days
     fetch_days = days + 20
     start_date = end_date - timedelta(days=fetch_days)
-    targets    = "EUR,GBP,JPY,CHF,AUD,CAD,NZD"
+    targets    = "EUR,GBP,JPY,CHF,AUD,CAD,NZD,ZAR"
 
     try:
         async with httpx.AsyncClient(follow_redirects=True) as client:
@@ -1708,12 +1708,12 @@ async def get_correlation_matrix(
         pair_series = {
             "EURUSD": [], "GBPUSD": [], "USDJPY": [], "USDCHF": [],
             "AUDUSD": [], "USDCAD": [], "NZDUSD": [], "EURGBP": [],
-            "EURJPY": [], "GBPJPY": []
+            "EURJPY": [], "GBPJPY": [], "USDZAR":[]
         }
 
         for date in sorted_dates:
             r = daily_rates[date]
-            if not all(c in r for c in ["EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"]):
+            if not all(c in r for c in ["EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD", "ZAR"]):
                 continue
 
             eurusd = 1 / r["EUR"]
@@ -1723,6 +1723,7 @@ async def get_correlation_matrix(
             audusd = 1 / r["AUD"]
             usdcad = r["CAD"]
             nzdusd = 1 / r["NZD"]
+            usdzar = r["ZAR"]
 
             pair_series["EURUSD"].append(eurusd)
             pair_series["GBPUSD"].append(gbpusd)
@@ -1734,6 +1735,7 @@ async def get_correlation_matrix(
             pair_series["EURGBP"].append(eurusd / gbpusd)
             pair_series["EURJPY"].append(eurusd * usdjpy)
             pair_series["GBPJPY"].append(gbpusd * usdjpy)
+            pair_series["USDZAR"].append(usdzar)
 
         returns = {}
         for pair, series in pair_series.items():
@@ -1767,12 +1769,13 @@ async def get_correlation_matrix(
 
         currency_series = {
             "USD": [], "EUR": [], "GBP": [], "JPY": [],
-            "CHF": [], "AUD": [], "CAD": [], "NZD": []
+            "CHF": [], "AUD": [], "CAD": [], "NZD": [],
+            "ZAR":[]
         }
 
         for date in sorted_dates:
             r = daily_rates[date]
-            if not all(c in r for c in ["EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"]):
+            if not all(c in r for c in ["EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD", "ZAR"]):
                 continue
             # express each currency vs USD
             currency_series["USD"].append(1.0)
@@ -1783,6 +1786,7 @@ async def get_correlation_matrix(
             currency_series["AUD"].append(1 / r["AUD"])
             currency_series["CAD"].append(1 / r["CAD"])
             currency_series["NZD"].append(1 / r["NZD"])
+            currency_series["ZAR"].append(1 / r["ZAR"])
 
         # compute daily returns per currency
         currency_returns = {}
@@ -1839,7 +1843,6 @@ WEEKLY_CHALLENGES = [
     {"rule_type": "trade_limit",       "rule_value": 10.0, "description": "Take no more than 10 trades this week — quality over quantity."},
     {"rule_type": "profit_target",     "rule_value": 50.0, "description": "Hit at least $50 profit this week."},
 ]
-
 
 def _current_week_key():
     now = datetime.utcnow()
@@ -2030,7 +2033,7 @@ async def _fetch_fred_rate(client: httpx.AsyncClient, series_id: str) -> float |
                 "api_key":          fred_key,
                 "file_type":        "json",
                 "sort_order":       "desc",
-                "observation_start": "2020-01-01",
+                "observation_start": "2023-01-01",
                 "limit":            2
             },
             timeout=15.0
@@ -2073,7 +2076,7 @@ async def _fetch_boe_rate(client: httpx.AsyncClient) -> tuple:
             "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp",
             params={
                 "csv.x":     "yes",
-                "Datefrom":  "01/Jan/2024",
+                "Datefrom":  "01/Jan/2023",
                 "Dateto":    "now",
                 "SeriesCodes": "IUMABEDR",
                 "CSVF":      "TN",
@@ -2312,4 +2315,107 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
 
     return result
 
-    return result
+# COT DATA
+from models.cot import COTPosition
+from utils.cftc_fetcher import fetch_latest_cot, is_stale
+from datetime import date
+
+@app.get("/cot/positioning")
+def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_user)):
+
+    latest_per_currency = {}
+    all_currencies = ["EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD", "ZAR"]
+
+    for ccy in all_currencies:
+        latest = (
+            db.query(COTPosition)
+            .filter(COTPosition.currency == ccy)
+            .order_by(COTPosition.report_date.desc())
+            .first()
+        )
+        latest_per_currency[ccy] = latest
+
+    needs_refresh = (
+        not any(latest_per_currency.values())
+        or any(
+            row and is_stale(row.report_date)
+            for row in latest_per_currency.values()
+        )
+    )
+
+    if needs_refresh:
+        try:
+            fresh_rows = fetch_latest_cot()
+            for row in fresh_rows:
+                exists = (
+                    db.query(COTPosition)
+                    .filter(
+                        COTPosition.currency == row["currency"],
+                        COTPosition.report_date == row["report_date"]
+                    )
+                    .first()
+                )
+                if not exists:
+                    db.add(COTPosition(**row))
+            db.commit()
+
+            # prune anything older than 52 weeks per currency
+            cutoff = date.today() - timedelta(weeks=52)
+            db.query(COTPosition).filter(COTPosition.report_date < cutoff).delete()
+            db.commit()
+
+            for ccy in all_currencies:
+                latest_per_currency[ccy] = (
+                    db.query(COTPosition)
+                    .filter(COTPosition.currency == ccy)
+                    .order_by(COTPosition.report_date.desc())
+                    .first()
+                )
+        except Exception as e:
+            print(f"CFTC fetch failed, serving cached data: {e}")
+
+    results = []
+
+    for ccy in all_currencies:
+        history = (
+            db.query(COTPosition)
+            .filter(COTPosition.currency == ccy)
+            .order_by(COTPosition.report_date.desc())
+            .limit(52)
+            .all()
+        )
+
+        if not history:
+            results.append({
+                "currency": ccy,
+                "has_data": False
+            })
+            continue
+
+        history = list(reversed(history))  # oldest → newest for sparkline
+        current = history[-1]
+
+        net_positions = [h.net_position for h in history]
+        rank_count = sum(1 for n in net_positions if n <= current.net_position)
+        percentile = round((rank_count / len(net_positions)) * 100)
+
+        signal = None
+        if percentile >= 80:
+            signal = "extreme_long"   # contrarian bearish
+        elif percentile <= 20:
+            signal = "extreme_short"  # contrarian bullish
+
+        results.append({
+            "currency":        ccy,
+            "has_data":        True,
+            "report_date":     current.report_date.isoformat(),
+            "net_position":    current.net_position,
+            "open_interest":   current.open_interest,
+            "percentile_rank": percentile,
+            "signal":          signal,
+            "sparkline":       net_positions[-12:],  # last 12 weeks
+            "large_spec_long":  current.large_spec_long,
+            "large_spec_short": current.large_spec_short,
+        })
+
+    return {"positions": results, "updated": date.today().isoformat()}
