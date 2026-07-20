@@ -1,4 +1,4 @@
-import requests
+import httpx
 import csv
 import io
 from datetime import date, timedelta
