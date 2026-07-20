@@ -46,6 +46,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi import Request
 
+from utils.cot_scheduler import start_cot_scheduler, refresh_cot_data
+
 # MT5 is Windows-only
 try:
     import MetaTrader5 as mt5
@@ -117,6 +119,25 @@ with engine.connect() as conn:
     except Exception as e:
         conn.rollback()
         print(f"order_type migration skipped/failed: {e}")
+
+# COT PULL DATA ON STARTUP
+cot_scheduler = start_cot_scheduler()
+
+@app.on_event("startup")
+def seed_cot_on_boot():
+    """
+    If the table is empty (fresh DB / new environment), do one immediate
+    fetch on boot so the page isn't empty until the next Friday.
+    """
+    db = SessionLocal()
+    try:
+        from models.cot import COTPosition
+        has_data = db.query(COTPosition).first()
+        if not has_data:
+            print("COT table empty — running initial fetch on boot")
+            refresh_cot_data()
+    finally:
+        db.close()
 
 app = FastAPI()
 
@@ -2323,57 +2344,7 @@ from datetime import date
 @app.get("/cot/positioning")
 def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_user)):
 
-    latest_per_currency = {}
     all_currencies = ["EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD", "ZAR"]
-
-    for ccy in all_currencies:
-        latest = (
-            db.query(COTPosition)
-            .filter(COTPosition.currency == ccy)
-            .order_by(COTPosition.report_date.desc())
-            .first()
-        )
-        latest_per_currency[ccy] = latest
-
-    needs_refresh = (
-        not any(latest_per_currency.values())
-        or any(
-            row and is_stale(row.report_date)
-            for row in latest_per_currency.values()
-        )
-    )
-
-    if needs_refresh:
-        try:
-            fresh_rows = fetch_latest_cot()
-            for row in fresh_rows:
-                exists = (
-                    db.query(COTPosition)
-                    .filter(
-                        COTPosition.currency == row["currency"],
-                        COTPosition.report_date == row["report_date"]
-                    )
-                    .first()
-                )
-                if not exists:
-                    db.add(COTPosition(**row))
-            db.commit()
-
-            # prune anything older than 52 weeks per currency
-            cutoff = date.today() - timedelta(weeks=52)
-            db.query(COTPosition).filter(COTPosition.report_date < cutoff).delete()
-            db.commit()
-
-            for ccy in all_currencies:
-                latest_per_currency[ccy] = (
-                    db.query(COTPosition)
-                    .filter(COTPosition.currency == ccy)
-                    .order_by(COTPosition.report_date.desc())
-                    .first()
-                )
-        except Exception as e:
-            print(f"CFTC fetch failed, serving cached data: {e}")
-
     results = []
 
     for ccy in all_currencies:
@@ -2401,9 +2372,9 @@ def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_
 
         signal = None
         if percentile >= 80:
-            signal = "extreme_long"   # contrarian bearish
+            signal = "extreme_long"
         elif percentile <= 20:
-            signal = "extreme_short"  # contrarian bullish
+            signal = "extreme_short"
 
         results.append({
             "currency":        ccy,
@@ -2413,9 +2384,17 @@ def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_
             "open_interest":   current.open_interest,
             "percentile_rank": percentile,
             "signal":          signal,
-            "sparkline":       net_positions[-12:],  # last 12 weeks
+            "sparkline":       net_positions[-12:],
             "large_spec_long":  current.large_spec_long,
             "large_spec_short": current.large_spec_short,
         })
 
     return {"positions": results, "updated": date.today().isoformat()}
+
+# delete later
+@app.post("/cot/refresh-now")
+def manual_cot_refresh(user=Depends(get_current_user)):
+    # TEMP: for testing only — remove or restrict once verified working
+    refresh_cot_data()
+    return {"status": "refresh triggered"}
+
