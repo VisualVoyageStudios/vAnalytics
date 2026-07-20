@@ -120,25 +120,6 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"order_type migration skipped/failed: {e}")
 
-# COT PULL DATA ON STARTUP
-cot_scheduler = start_cot_scheduler()
-
-@app.on_event("startup")
-def seed_cot_on_boot():
-    """
-    If the table is empty (fresh DB / new environment), do one immediate
-    fetch on boot so the page isn't empty until the next Friday.
-    """
-    db = SessionLocal()
-    try:
-        from models.cot import COTPosition
-        has_data = db.query(COTPosition).first()
-        if not has_data:
-            print("COT table empty — running initial fetch on boot")
-            refresh_cot_data()
-    finally:
-        db.close()
-
 app = FastAPI()
 
 limiter = Limiter(key_func=get_remote_address)
@@ -160,7 +141,26 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# ── AI Cache ──────────────────────────────────────────────────────────
+# ── COT PULL DATA ON STARTUP
+cot_scheduler = start_cot_scheduler()
+
+@app.on_event("startup")
+def seed_cot_on_boot():
+    """
+    If the table is empty (fresh DB / new environment), do one immediate
+    fetch on boot so the page isn't empty until the next Friday.
+    """
+    db = SessionLocal()
+    try:
+        from models.cot import COTPosition
+        has_data = db.query(COTPosition).first()
+        if not has_data:
+            print("COT table empty — running initial fetch on boot")
+            refresh_cot_data()
+    finally:
+        db.close()
+
+# ── AI Cache 
 
 ai_cache = {}
 AI_CACHE_TTL = 3600
@@ -181,7 +181,7 @@ def set_cached_response(prompt: str, text: str):
     ai_cache[key] = {"text": text, "timestamp": time.time()}
     print(f"Cached: {key[:8]}")
 
-# ── TradeImport schema ────────────────────────────────────────────────
+# ── TradeImport schema 
 
 class TradeImport(BaseModel):
     ticket: str
