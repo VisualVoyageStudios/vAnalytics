@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Date, DateTime
 from datetime import datetime
-from database import Base
+from models.user import Base
 
 class COTPosition(Base):
     __tablename__ = "cot_positions"
