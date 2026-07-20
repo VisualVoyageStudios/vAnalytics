@@ -207,6 +207,10 @@ function renderGrid(positions){
             badge = `<span style="background:rgba(34,197,94,0.12); color:var(--success); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;">
                         <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i>Extreme Short — Contrarian Bullish
                       </span>`;
+        } else if(p.weeks_of_history < 8){
+            badge = `<span style="background:rgba(148,163,184,0.1); color:var(--muted); font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px;">
+                        <i class="fas fa-clock" style="margin-right:4px;"></i>Building history (${p.weeks_of_history}/8 weeks)
+                      </span>`;
         }
 
         const sparkPath = sparklinePath(p.sparkline, 260, 40);
@@ -226,7 +230,7 @@ function renderGrid(positions){
                 </div>
 
                 <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:14px;">
-                    <span>${p.percentile_rank}th percentile (52wk)</span>
+                    <span>${p.percentile_rank !== null ? `${p.percentile_rank}th percentile (52wk)` : "Collecting weekly data…"}</span>
                     <span>OI: ${p.open_interest.toLocaleString()}</span>
                 </div>
 
