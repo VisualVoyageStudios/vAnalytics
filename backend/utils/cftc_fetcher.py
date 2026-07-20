@@ -5,23 +5,40 @@ from datetime import date, timedelta
 
 CFTC_URL = "https://www.cftc.gov/dea/newcot/FinFutWk.txt"
 
-# CFTC contract names → our currency codes
+# CFTC contract names (verified against a real pulled file) → our currency codes
 CONTRACT_MAP = {
-    "EURO FX - CHICAGO MERCANTILE EXCHANGE":         "EUR",
-    "BRITISH POUND STERLING - CHICAGO MERCANTILE EXCHANGE": "GBP",
-    "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE":    "JPY",
-    "AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE": "AUD",
-    "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE": "CAD",
-    "SWISS FRANC - CHICAGO MERCANTILE EXCHANGE":     "CHF",
-    "NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE": "NZD",
+    "EURO FX - CHICAGO MERCANTILE EXCHANGE":            "EUR",
+    "BRITISH POUND - CHICAGO MERCANTILE EXCHANGE":      "GBP",
+    "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE":       "JPY",
+    "AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":  "AUD",
+    "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":    "CAD",
+    "SWISS FRANC - CHICAGO MERCANTILE EXCHANGE":        "CHF",
+    "NZ DOLLAR - CHICAGO MERCANTILE EXCHANGE":          "NZD",
+    "SO AFRICAN RAND - CHICAGO MERCANTILE EXCHANGE":    "ZAR",
+    "BITCOIN - CHICAGO MERCANTILE EXCHANGE":            "BTC",
 }
 
 
 def fetch_latest_cot():
     """
-    Downloads the CFTC weekly Financial Futures Commitment of Traders
-    report and returns parsed rows for the currencies we track.
-    Raises on network/parse failure so caller can fall back to cache.
+    Downloads the CFTC weekly Traders in Financial Futures (TFF) report
+    and returns parsed rows for the currencies we track.
+
+    Column layout (0-indexed), verified against a live pulled file:
+      0  Market_and_Exchange_Names
+      1  As_of_Date_YYMMDD
+      2  As_of_Date_YYYY-MM-DD   (ISO format, NOT packed YYYYMMDD)
+      7  Open_Interest_All
+      8  Dealer_Long        9  Dealer_Short       10  Dealer_Spread
+      11 AssetMgr_Long      12 AssetMgr_Short     13  AssetMgr_Spread
+      14 LevMoney_Long      15 LevMoney_Short     16  LevMoney_Spread
+      17 OtherRept_Long     18 OtherRept_Short    19  OtherRept_Spread
+      20 Tot_Rept_Long      21 Tot_Rept_Short
+      22 NonRept_Long       23 NonRept_Short
+
+    We use Leveraged Funds as "large speculators" (the standard proxy for
+    hedge fund/CTA positioning), Dealer as "commercial", and Non-Reportable
+    as "small speculators".
     """
     res = requests.get(CFTC_URL, timeout=20)
     res.raise_for_status()
@@ -30,7 +47,7 @@ def fetch_latest_cot():
     rows = []
 
     for line in reader:
-        if not line or len(line) < 20:
+        if not line or len(line) < 24:
             continue
 
         contract_name = line[0].strip()
@@ -38,20 +55,16 @@ def fetch_latest_cot():
             continue
 
         try:
-            report_date = date(
-                int(line[2][:4]), int(line[2][4:6]), int(line[2][6:8])
-            )
+            report_date = date.fromisoformat(line[2].strip())
 
-            large_spec_long  = int(line[8])
-            large_spec_short = int(line[9])
-            commercial_long  = int(line[10])
-            commercial_short = int(line[11])
-            open_interest    = int(line[7])
+            open_interest     = int(line[7])
 
-            total_reportable_long  = large_spec_long + commercial_long
-            total_reportable_short = large_spec_short + commercial_short
-            small_spec_long  = max(0, open_interest - total_reportable_long)
-            small_spec_short = max(0, open_interest - total_reportable_short)
+            large_spec_long   = int(line[14])   # Leveraged Funds long
+            large_spec_short  = int(line[15])   # Leveraged Funds short
+            commercial_long   = int(line[8])    # Dealer/Intermediary long
+            commercial_short  = int(line[9])    # Dealer/Intermediary short
+            small_spec_long   = int(line[22])   # Non-Reportable long
+            small_spec_short  = int(line[23])   # Non-Reportable short
 
             rows.append({
                 "currency":          CONTRACT_MAP[contract_name],
