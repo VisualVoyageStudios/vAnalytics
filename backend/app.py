@@ -2367,34 +2367,36 @@ def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_
         current = history[-1]
 
         net_positions = [h.net_position for h in history]
-        rank_count = sum(1 for n in net_positions if n <= current.net_position)
-        percentile = round((rank_count / len(net_positions)) * 100)
 
-        signal = None
-        if percentile >= 80:
-            signal = "extreme_long"
-        elif percentile <= 20:
-            signal = "extreme_short"
+        MIN_WEEKS_FOR_PERCENTILE = 8  # need a meaningful sample before ranking
+
+        if len(net_positions) >= MIN_WEEKS_FOR_PERCENTILE:
+            rank_count = sum(1 for n in net_positions if n <= current.net_position)
+            percentile = round((rank_count / len(net_positions)) * 100)
+
+            signal = None
+            if percentile >= 80:
+                signal = "extreme_long"
+            elif percentile <= 20:
+                signal = "extreme_short"
+        else:
+            percentile = None
+            signal = None
 
         results.append({
-            "currency":        ccy,
-            "has_data":        True,
-            "report_date":     current.report_date.isoformat(),
-            "net_position":    current.net_position,
-            "open_interest":   current.open_interest,
-            "percentile_rank": percentile,
-            "signal":          signal,
-            "sparkline":       net_positions[-12:],
+            "currency":         ccy,
+            "has_data":         True,
+            "report_date":      current.report_date.isoformat(),
+            "net_position":     current.net_position,
+            "open_interest":    current.open_interest,
+            "percentile_rank":  percentile,
+            "signal":           signal,
+            "weeks_of_history": len(net_positions),
+            "sparkline":        net_positions[-12:],
             "large_spec_long":  current.large_spec_long,
             "large_spec_short": current.large_spec_short,
         })
 
     return {"positions": results, "updated": date.today().isoformat()}
 
-# delete later
-@app.post("/cot/refresh-now")
-def manual_cot_refresh(user=Depends(get_current_user)):
-    # TEMP: for testing only — remove or restrict once verified working
-    refresh_cot_data()
-    return {"status": "refresh triggered"}
 
