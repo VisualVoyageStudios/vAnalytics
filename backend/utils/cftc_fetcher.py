@@ -7,9 +7,9 @@ CFTC_URL = "https://www.cftc.gov/dea/newcot/FinFutWk.txt"
 
 # CFTC contract names (verified against a real pulled file) → our currency codes
 CONTRACT_MAP = {
-    "VIX FUTURES - CBOE FUTURES EXCHANGE":              "VIX INDEX",
-    "USD INDEX - ICE FUTURES U.S.":                     "US DOLLAR INDEX",
-    "DJIA x $5 - CHICAGO BOARD OF TRADE":               "DOW JONES",
+    "VIX FUTURES - CBOE FUTURES EXCHANGE":              "VIX",
+    "USD INDEX - ICE FUTURES U.S.":                     "US INDEX",
+    "DJIA x $5 - CHICAGO BOARD OF TRADE":               "DOW",
     "S&P 500 Consolidated - CHICAGO MERCANTILE EXCHANGE": "S&P 500",
     "NAS100 Consolidated - CHICAGO MERCANTILE EXCHANGE":  "NAS 100",
     "EURO FX - CHICAGO MERCANTILE EXCHANGE":            "EUR",
