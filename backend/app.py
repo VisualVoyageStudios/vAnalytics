@@ -1354,7 +1354,7 @@ async def get_scorecard(
     INDEX = { "USD INDEX": "US INDEX", "NAS 100": "NAS 100", "S&P 500": "S&P 500"}
 
     METALS = {"XAU", "XAG", "XPT", "XCU"}
-    is_metal = asset in METALS : INDEX
+    is_metal = asset in METALS
 
     # ── Sections ─────────────────────────────────────────────────────
 
