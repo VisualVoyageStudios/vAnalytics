@@ -1,8 +1,9 @@
-const CACHE_NAME    = "voyager-v1";
+const CACHE_NAME    = "voyager-v2";
 const STATIC_ASSETS = [
     "/vAnalytics/",
     "/vAnalytics/dashboard/dashboard.html",
     "/vAnalytics/dashboard/trades.html",
+    "/vAnalytics/dashboard/tradeIdeas.html",
     "/vAnalytics/dashboard/analytics.html",
     "/vAnalytics/dashboard/journal.html",
     "/vAnalytics/dashboard/accounts.html",
@@ -15,9 +16,11 @@ const STATIC_ASSETS = [
     "/vAnalytics/dashboard/aiInsights.html",
     "/vAnalytics/dashboard/reports.html",
     "/vAnalytics/dashboard/currencyStrength.html",
+    "/vAnalytics/dashboard/currencyIntelligence.html",
     "/vAnalytics/dashboard/correlationMatrix.html",
     "/vAnalytics/dashboard/economicHeatmap.html",
     "/vAnalytics/dashboard/edgeFinder.html",
+    "/vAnalytics/dashboard/cotPositioning.html",
     "/vAnalytics/css/global.css",
     "/vAnalytics/css/dashboard.css",
     "/vAnalytics/css/pgAnime.css",
