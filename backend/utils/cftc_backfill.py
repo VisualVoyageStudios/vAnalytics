@@ -4,7 +4,8 @@ import csv
 import io
 from datetime import date, timedelta
 
-from utils.cftc_fetcher import CONTRACT_MAP
+from utils.cftc_fetcher import CONTRACT_MAP_FOREX
+from utils.cftc_fetcher import CONTRACT_MAP_FINANCIAL
 
 
 def _parse_tff_text(text: str):
@@ -18,7 +19,7 @@ def _parse_tff_text(text: str):
             continue
 
         contract_name = line[0].strip()
-        if contract_name not in CONTRACT_MAP:
+        if contract_name not in CONTRACT_MAP_FOREX or CONTRACT_MAP_FINANCIAL:
             continue
 
         try:
@@ -33,7 +34,7 @@ def _parse_tff_text(text: str):
             small_spec_short = int(line[23])
 
             rows.append({
-                "currency":          CONTRACT_MAP[contract_name],
+                "currency":          CONTRACT_MAP_FOREX[contract_name],
                 "report_date":       report_date,
                 "large_spec_long":   large_spec_long,
                 "large_spec_short":  large_spec_short,
