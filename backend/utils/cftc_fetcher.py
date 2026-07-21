@@ -131,9 +131,6 @@ def _parse_cot_entry(entry: dict, ccy: str, seen: set):
         return None
 
 
-    return rows
-
-
 def is_stale(last_fetch_date: date) -> bool:
     """CFTC publishes every Friday — treat data older than 7 days as stale."""
     return (date.today() - last_fetch_date).days >= 7
