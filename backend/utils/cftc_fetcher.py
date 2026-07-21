@@ -7,6 +7,11 @@ CFTC_URL = "https://www.cftc.gov/dea/newcot/FinFutWk.txt"
 
 # CFTC contract names (verified against a real pulled file) → our currency codes
 CONTRACT_MAP = {
+    "VIX FUTURES - CBOE FUTURES EXCHANGE":              "VIX INDEX",
+    "USD INDEX - ICE FUTURES U.S.":                     "US DOLLAR INDEX",
+    "DJIA x $5 - CHICAGO BOARD OF TRADE":               "DOW JONES",
+    "S&P 500 Consolidated - CHICAGO MERCANTILE EXCHANGE": "S&P 500",
+    "NAS100 Consolidated - CHICAGO MERCANTILE EXCHANGE":  "NAS 100",
     "EURO FX - CHICAGO MERCANTILE EXCHANGE":            "EUR",
     "BRITISH POUND - CHICAGO MERCANTILE EXCHANGE":      "GBP",
     "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE":       "JPY",
@@ -16,6 +21,9 @@ CONTRACT_MAP = {
     "NZ DOLLAR - CHICAGO MERCANTILE EXCHANGE":          "NZD",
     "SO AFRICAN RAND - CHICAGO MERCANTILE EXCHANGE":    "ZAR",
     "BITCOIN - CHICAGO MERCANTILE EXCHANGE":            "BTC",
+    "XRP - CHICAGO MERCANTILE EXCGANGE":                "XRP",
+    "MICRO ETHER - CHICAGO MERCANTILE EXCHANGE":        "ETH",
+    
 }
 
 
