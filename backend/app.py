@@ -1282,6 +1282,339 @@ async def get_currency_strength(current_user=Depends(get_current_user), db: Sess
             raise HTTPException(status_code=500, detail=str(e))
 
 # ─────────────────────────────────────────
+#  ASSET SCORECARD (Enhanced Edge Finder)
+# ─────────────────────────────────────────
+
+scorecard_cache = {}
+SCORECARD_CACHE_TTL = 3600  # 1 hour
+
+
+@app.get("/fundamentals/scorecard")
+async def get_scorecard(
+    asset: str = Query("USD"),
+    current_user=Depends(get_current_user)
+):
+    """
+    Returns a full scorecard for a given currency or metal.
+    Sections: growth, inflation, jobs, cot, overall.
+    """
+    now     = time.time()
+    cachekey = f"scorecard_{asset}"
+
+    cached = scorecard_cache.get(cachekey)
+    if cached and (now - cached["timestamp"]) < SCORECARD_CACHE_TTL:
+        return cached["data"]
+
+    # ── Pull economic calendar events ────────────────────────────────
+    # Reuse existing calendar cache if warm
+    calendar = economic_calendar_cache.get("data") or []
+
+    def find_event(keywords: list, country: str):
+        """Find most recent released event matching keywords for a country."""
+        for ev in sorted(calendar, key=lambda e: e.get("date",""), reverse=True):
+            if ev.get("country") != country:
+                continue
+            title = ev.get("event","").lower()
+            if any(k.lower() in title for k in keywords):
+                actual   = ev.get("actual","")
+                forecast = ev.get("forecast","")
+                if actual and actual not in ("", "—"):
+                    return {
+                        "actual":   actual,
+                        "forecast": forecast,
+                        "surprise": _calc_surprise(actual, forecast)
+                    }
+        return {"actual": "—", "forecast": "—", "surprise": None}
+
+    def _calc_surprise(actual_str, forecast_str):
+        try:
+            a = float(str(actual_str).replace("%","").replace("K","000").replace("M","000000").replace("k","000").strip())
+            f = float(str(forecast_str).replace("%","").replace("K","000").replace("M","000000").replace("k","000").strip())
+            diff = round(a - f, 2)
+            return diff
+        except:
+            return None
+
+    def bias_from_surprise(surprise, invert=False):
+        """Convert a surprise value to bullish/bearish/neutral."""
+        if surprise is None:
+            return "neutral"
+        threshold = 0
+        if invert:
+            return "bearish" if surprise > threshold else "bullish" if surprise < threshold else "neutral"
+        return "bullish" if surprise > threshold else "bearish" if surprise < threshold else "neutral"
+
+    # ── Country code map ─────────────────────────────────────────────
+    COUNTRY_MAP = {
+        "USD": "USD", "EUR": "EUR", "GBP": "GBP",
+        "JPY": "JPY", "AUD": "AUD", "CAD": "CAD",
+        "NZD": "NZD", "CHF": "CHF"
+    }
+
+    METALS = {"XAU", "XAG", "XPT", "XCU"}
+    is_metal = asset in METALS
+
+    # ── Sections ─────────────────────────────────────────────────────
+
+    if is_metal:
+        # Metals use commodity-specific logic
+        result = await _build_metal_scorecard(asset, calendar, find_event, _calc_surprise, bias_from_surprise)
+    else:
+        country = asset  # calendar uses currency code as country
+
+        # Growth bias
+        gdp_ev  = find_event(["GDP"], country)
+        mfg_ev  = find_event(["Manufacturing PMI", "ISM Manufacturing"], country)
+        svc_ev  = find_event(["Services PMI", "ISM Services", "ISM Non-Manufacturing"], country)
+        ret_ev  = find_event(["Retail Sales"], country)
+        conf_ev = find_event(["Consumer Confidence", "Consumer Sentiment"], country)
+
+        growth_items = [
+            {"label": "GDP Growth",         "data": gdp_ev,  "bias": bias_from_surprise(gdp_ev["surprise"])},
+            {"label": "Manufacturing PMI",   "data": mfg_ev,  "bias": bias_from_surprise(mfg_ev["surprise"])},
+            {"label": "Services PMI",        "data": svc_ev,  "bias": bias_from_surprise(svc_ev["surprise"])},
+            {"label": "Retail Sales MoM",    "data": ret_ev,  "bias": bias_from_surprise(ret_ev["surprise"])},
+            {"label": "Consumer Confidence", "data": conf_ev, "bias": bias_from_surprise(conf_ev["surprise"])},
+        ]
+        growth_score = _section_score(growth_items)
+
+        # Inflation bias
+        cpi_ev = find_event(["CPI", "Consumer Price Index"], country)
+        ppi_ev = find_event(["PPI", "Producer Price"], country)
+        pce_ev = find_event(["PCE"], country)
+
+        inflation_items = [
+            {"label": "CPI YoY",  "data": cpi_ev, "bias": bias_from_surprise(cpi_ev["surprise"])},
+            {"label": "PPI YoY",  "data": ppi_ev, "bias": bias_from_surprise(ppi_ev["surprise"])},
+            {"label": "PCE YoY",  "data": pce_ev, "bias": bias_from_surprise(pce_ev["surprise"])},
+        ]
+        inflation_score = _section_score(inflation_items)
+
+        # Jobs bias
+        nfp_ev    = find_event(["Non-Farm Payroll", "Employment Change", "NFP"], country)
+        unemp_ev  = find_event(["Unemployment Rate"], country)
+        claims_ev = find_event(["Jobless Claims", "Unemployment Claims"], country)
+        adp_ev    = find_event(["ADP"], country)
+
+        jobs_items = [
+            {"label": "Employment",      "data": nfp_ev,   "bias": bias_from_surprise(nfp_ev["surprise"])},
+            {"label": "Unemployment %",  "data": unemp_ev, "bias": bias_from_surprise(unemp_ev["surprise"], invert=True)},
+            {"label": "Jobless Claims",  "data": claims_ev,"bias": bias_from_surprise(claims_ev["surprise"], invert=True)},
+            {"label": "ADP Employment",  "data": adp_ev,   "bias": bias_from_surprise(adp_ev["surprise"])},
+        ]
+        jobs_score = _section_score(jobs_items)
+
+        # COT bias (from DB if available)
+        cot_data = await _get_cot_bias(asset)
+
+        # Macro score from existing matrix
+        macro_score = await _get_macro_score(asset)
+
+        # Composite score
+        weights = {
+            "growth":    0.30,
+            "inflation": 0.25,
+            "jobs":      0.25,
+            "cot":       0.20,
+        }
+
+        composite = round(
+            growth_score    * weights["growth"]    +
+            inflation_score * weights["inflation"] +
+            jobs_score      * weights["jobs"]      +
+            (cot_data.get("score", 0) or 0) * weights["cot"],
+            2
+        )
+
+        # Overall bias label
+        overall_bias = (
+            "Very Bullish"  if composite >= 0.6  else
+            "Bullish"       if composite >= 0.2  else
+            "Very Bearish"  if composite <= -0.6 else
+            "Bearish"       if composite <= -0.2 else
+            "Neutral"
+        )
+
+        result = {
+            "asset":        asset,
+            "composite":    composite,
+            "overall_bias": overall_bias,
+            "macro_score":  macro_score,
+            "sections": {
+                "growth": {
+                    "bias":  _section_bias(growth_score),
+                    "score": growth_score,
+                    "items": growth_items
+                },
+                "inflation": {
+                    "bias":  _section_bias(inflation_score),
+                    "score": inflation_score,
+                    "items": inflation_items
+                },
+                "jobs": {
+                    "bias":  _section_bias(jobs_score),
+                    "score": jobs_score,
+                    "items": jobs_items
+                },
+                "cot": cot_data
+            }
+        }
+
+    scorecard_cache[cachekey] = {"data": result, "timestamp": now}
+    return result
+
+
+def _section_score(items: list) -> float:
+    """Convert list of bias items to a score between -1 and +1."""
+    mapping = {"bullish": 1, "neutral": 0, "bearish": -1}
+    scores  = [mapping.get(i["bias"], 0) for i in items if i["data"]["actual"] != "—"]
+    return round(sum(scores) / len(scores), 2) if scores else 0.0
+
+
+def _section_bias(score: float) -> str:
+    if score >= 0.5:  return "Very Bullish"
+    if score >= 0.1:  return "Bullish"
+    if score <= -0.5: return "Very Bearish"
+    if score <= -0.1: return "Bearish"
+    return "Neutral"
+
+
+async def _get_cot_bias(currency: str) -> dict:
+    """Pull latest COT positioning from DB."""
+    db = SessionLocal()
+    try:
+        from models.cot import COTPosition
+        rows = (
+            db.query(COTPosition)
+            .filter(COTPosition.currency == currency)
+            .order_by(COTPosition.report_date.desc())
+            .limit(2)
+            .all()
+        )
+        if not rows:
+            return {"has_data": False, "score": 0}
+
+        current  = rows[0]
+        previous = rows[1] if len(rows) > 1 else None
+
+        net      = current.net_position
+        oi       = current.open_interest or 1
+        long_pct = round((current.large_spec_long  / oi) * 100, 1)
+        short_pct= round((current.large_spec_short / oi) * 100, 1)
+        change   = round(net - previous.net_position, 0) if previous else 0
+
+        # Score: positive net = bullish, scaled to -1..+1
+        score = max(-1, min(1, net / max(oi * 0.1, 1)))
+
+        return {
+            "has_data":    True,
+            "net_position":net,
+            "long_pct":    long_pct,
+            "short_pct":   short_pct,
+            "change":      change,
+            "bias":        "bullish" if net > 0 else "bearish" if net < 0 else "neutral",
+            "score":       round(score, 2)
+        }
+    except Exception as e:
+        print(f"COT bias error: {e}")
+        return {"has_data": False, "score": 0}
+    finally:
+        db.close()
+
+
+async def _get_macro_score(currency: str) -> float:
+    """Pull overall macro score from existing macro matrix cache."""
+    try:
+        matrix = macro_matrix_cache.get("data")
+        if not matrix:
+            policy_rates = await fetch_policy_rates()
+            # don't re-trigger full matrix build — just return 0 if not cached
+            return 0
+        row = next((r for r in matrix["rows"] if r["currency"] == currency), None)
+        return row["overall_score"] if row else 0
+    except:
+        return 0
+
+
+async def _build_metal_scorecard(asset, calendar, find_event, _calc_surprise, bias_from_surprise) -> dict:
+    """
+    Metals scorecard — uses USD fundamentals as base
+    (metals are priced in USD so USD strength = bearish for metals)
+    plus commodity-specific drivers.
+    """
+    METAL_NAMES = {
+        "XAU": "Gold",
+        "XAG": "Silver",
+        "XPT": "Platinum",
+        "XCU": "Copper"
+    }
+
+    METAL_DRIVERS = {
+        "XAU": ["Risk sentiment", "USD strength", "Inflation hedge", "Central bank buying"],
+        "XAG": ["Industrial demand", "USD strength", "Inflation hedge", "Solar/EV demand"],
+        "XPT": ["Auto catalysts", "Mining supply", "Industrial demand", "USD strength"],
+        "XCU": ["China PMI", "Construction", "EV demand", "Mining supply"]
+    }
+
+    # For metals: high USD inflation = bullish (inflation hedge)
+    # High USD strength (high rates) = bearish for metals
+    usd_cpi   = find_event(["CPI"], "USD")
+    usd_nfp   = find_event(["Non-Farm Payroll", "NFP"], "USD")
+    usd_rates = macro_matrix_cache.get("data", {}).get("rows", [])
+    usd_row   = next((r for r in usd_rates if r["currency"] == "USD"), {})
+    usd_rate  = usd_row.get("rate", 0) or 0
+
+    # High CPI = bullish for metals (inflation hedge)
+    cpi_surprise = usd_cpi.get("surprise")
+    cpi_bias     = "bullish" if (cpi_surprise or 0) > 0 else "bearish" if (cpi_surprise or 0) < 0 else "neutral"
+
+    # High USD rate = bearish for metals (opportunity cost)
+    rate_bias = "bearish" if usd_rate >= 4 else "neutral" if usd_rate >= 2 else "bullish"
+
+    # China PMI for industrial metals
+    china_pmi = find_event(["PMI", "Manufacturing"], "CNY") if asset in ("XCU", "XPT") else {"actual":"—","forecast":"—","surprise":None}
+    pmi_bias  = bias_from_surprise(china_pmi.get("surprise"))
+
+    if asset == "XAU":
+        items = [
+            {"label": "CPI Surprise (inflation hedge)", "data": usd_cpi,   "bias": cpi_bias},
+            {"label": "USD Rate (opportunity cost)",     "data": {"actual": f"{usd_rate}%", "forecast":"—", "surprise": None}, "bias": rate_bias},
+            {"label": "NFP (risk-off demand)",           "data": usd_nfp,   "bias": "bearish" if (usd_nfp.get("surprise") or 0) > 0 else "bullish"},
+        ]
+    elif asset == "XAG":
+        items = [
+            {"label": "CPI Surprise (inflation hedge)", "data": usd_cpi,   "bias": cpi_bias},
+            {"label": "USD Rate (opportunity cost)",    "data": {"actual": f"{usd_rate}%", "forecast":"—", "surprise": None}, "bias": rate_bias},
+            {"label": "Industrial PMI",                 "data": find_event(["Manufacturing PMI","ISM Manufacturing"], "USD"), "bias": bias_from_surprise(find_event(["Manufacturing PMI"], "USD").get("surprise"))},
+        ]
+    else:  # XPT, XCU
+        items = [
+            {"label": "China Manufacturing PMI",        "data": china_pmi, "bias": pmi_bias},
+            {"label": "USD Rate (demand impact)",       "data": {"actual": f"{usd_rate}%", "forecast":"—", "surprise": None}, "bias": rate_bias},
+            {"label": "US Manufacturing PMI",           "data": find_event(["Manufacturing PMI","ISM Manufacturing"], "USD"), "bias": bias_from_surprise(find_event(["Manufacturing PMI"], "USD").get("surprise"))},
+        ]
+
+    score        = _section_score(items)
+    overall_bias = _section_bias(score)
+
+    return {
+        "asset":        asset,
+        "name":         METAL_NAMES.get(asset, asset),
+        "composite":    score,
+        "overall_bias": overall_bias,
+        "drivers":      METAL_DRIVERS.get(asset, []),
+        "macro_score":  score,
+        "sections": {
+            "growth":    {"bias": overall_bias, "score": score, "items": items},
+            "inflation": {"bias": cpi_bias,     "score": 0,     "items": [{"label":"CPI","data":usd_cpi,"bias":cpi_bias}]},
+            "jobs":      {"bias": "neutral",    "score": 0,     "items": []},
+            "cot":       {"has_data": False,    "score": 0}
+        }
+    }
+
+
+
+# ─────────────────────────────────────────
 #  AI ENDPOINTS
 # ─────────────────────────────────────────
 
