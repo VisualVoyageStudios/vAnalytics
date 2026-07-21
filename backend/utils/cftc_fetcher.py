@@ -6,7 +6,6 @@ from datetime import date, timedelta
 CFTC_URL = "https://www.cftc.gov/dea/newcot/FinFutWk.txt"
 
 # CFTC contract names (verified against a real pulled file) → our currency codes
-# In cftc_fetcher.py — expand CONTRACT_MAP
 CONTRACT_MAP_FOREX = {
     "EURO FX - CHICAGO MERCANTILE EXCHANGE":               "EUR",
     "BRITISH POUND STERLING - CHICAGO MERCANTILE EXCHANGE":"GBP",
