@@ -2684,9 +2684,13 @@ from datetime import date
 @app.get("/cot/positioning")
 def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_user)):
 
-    all_currencies = ["US DOLLAR INDEX", "DOW JONES", "NAS 100", "S&P 500", "VIX INDEX",
-                      "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD", "ZAR",
-                      "BTC", "XRP"]
+    all_currencies = [
+        "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD",  # forex
+        "XAU", "XAG", "XPT", "XCU",                         # metals
+        "BTC", "ETH",                                        # crypto
+    ]
+
+    # rest of the endpoint stays exactly the same...
     results = []
 
     for ccy in all_currencies:
