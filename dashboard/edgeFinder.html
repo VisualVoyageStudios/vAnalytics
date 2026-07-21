@@ -580,132 +580,77 @@
 
 <div class="dashboard-container">
 
-  <main class="main-content">
+<main class="main-content">
     <header class="page-header">
-      <h2>Edge Finder</h2>
+        <h2>Edge Finder</h2>
+        <span id="ef-last-updated" style="font-size:12px; color:var(--muted);"></span>
     </header>
 
-    <div class="ef-wrapper">
+    <!-- Asset selector tabs -->
+    <div style="margin-bottom:24px;">
+        <p style="font-size:11px; color:var(--muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Currencies</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;" id="ccy-tabs"></div>
+        <p style="font-size:11px; color:var(--muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Metals</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;" id="metal-tabs"></div>
+    </div>
 
-      <!-- Controls -->
-      <div class="ef-controls">
-        <select id="ef-market-filter">
-          <option value="all">All Markets</option>
-          <option value="forex">Forex</option>
-          <option value="commodities">Commodities</option>
-          <option value="indices">Indices</option>
-        </select>
+    <!-- Loading state -->
+    <div id="scorecard-loading" style="text-align:center; padding:60px; color:var(--muted);">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem; display:block; margin-bottom:16px; opacity:0.3;"></i>
+        Loading scorecard…
+    </div>
 
-        <select id="ef-sort-by">
-          <option value="score">Sort: Overall Score</option>
-          <option value="rate">Sort: Interest Rate</option>
-          <option value="cpi">Sort: Inflation (CPI)</option>
-          <option value="gdp">Sort: GDP Growth</option>
-          <option value="employment">Sort: Employment</option>
-          <option value="pmi">Sort: PMI</option>
-        </select>
+    <!-- Main scorecard -->
+    <div id="scorecard-content" style="display:none;">
 
-        <div class="ef-crypto-toggle">
-            <button class="pair-chip active" id="forexTab" onclick="switchTab('forex')">
-                <i class="fas fa-chart-line"></i> Forex / Macro
-            </button>
-            <button class="pair-chip" id="cryptoTab" onclick="switchTab('crypto')">
-                <i class="fab fa-bitcoin"></i> Crypto
-            </button>
+        <!-- Top row: gauge + overall scores -->
+        <div style="display:grid; grid-template-columns:280px 1fr; gap:20px; margin-bottom:24px;" id="scorecard-top">
+
+            <!-- Gauge -->
+            <div style="
+                background:var(--card); border:1px solid var(--border);
+                border-radius:16px; padding:24px; text-align:center;
+            ">
+                <div style="font-size:13px; color:var(--muted); margin-bottom:16px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+                    EdgeFinder Score
+                </div>
+                <div id="gauge-container" style="position:relative; width:200px; height:120px; margin:0 auto 16px;">
+                    <svg width="200" height="120" viewBox="0 0 200 120">
+                        <!-- Background arc -->
+                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="16" stroke-linecap="round"/>
+                        <!-- Bearish zone -->
+                        <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="rgba(239,68,68,0.3)" stroke-width="16" stroke-linecap="round"/>
+                        <!-- Bullish zone -->
+                        <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(34,197,94,0.3)" stroke-width="16" stroke-linecap="round"/>
+                        <!-- Dynamic fill arc -->
+                        <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#94a3b8" stroke-width="16" stroke-linecap="round" stroke-dasharray="0 251"/>
+                        <!-- Needle -->
+                        <line id="gauge-needle" x1="100" y1="100" x2="100" y2="28" stroke="white" stroke-width="2.5" stroke-linecap="round" transform="rotate(0, 100, 100)"/>
+                        <circle cx="100" cy="100" r="5" fill="white"/>
+                        <!-- Labels -->
+                        <text x="14" y="116" fill="#ef4444" font-size="10" font-weight="700">-10</text>
+                        <text x="96" y="14" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="middle">0</text>
+                        <text x="175" y="116" fill="#22c55e" font-size="10" font-weight="700" text-anchor="end">+10</text>
+                    </svg>
+                </div>
+                <div id="gauge-score" style="font-size:2.5rem; font-weight:900; margin-bottom:4px;">0</div>
+                <div id="gauge-label" style="font-size:13px; font-weight:700; padding:4px 16px; border-radius:20px; display:inline-block;">Neutral</div>
+
+                <div style="margin-top:20px; display:flex; flex-direction:column; gap:8px;" id="score-breakdown"></div>
+            </div>
+
+            <!-- Section cards -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" id="section-summary"></div>
         </div>
 
-        <button id="ef-refresh-btn" class="ef-refresh-btn">
-          <i class="fas fa-rotate-right"></i> Refresh Data
-        </button>
-        <span class="ef-last-updated" id="ef-last-updated">–</span>
-      </div>
+        <!-- COT positioning row -->
+        <div id="cot-row" style="margin-bottom:20px;"></div>
 
-      <!-- Score cards -->
-      <div class="ef-score-grid" id="ef-score-grid">
-        <!-- populated by JS -->
-      </div>
+        <!-- Detailed section tables -->
+        <div id="section-tables" style="display:flex; flex-direction:column; gap:16px;"></div>
 
-      <!-- AI Insight -->
-      <div class="ef-insight-box">
-        <h3><i class="fas fa-brain"></i> Fundamental Insight</h3>
-        <div class="ef-insight-text loading-pulse" id="ef-insight-text">
-          Analysing fundamental data…
-        </div>
-      </div>
-
-      <!-- Main ranking table -->
-      <div class="ef-table-section">
-        <div class="ef-table-header">
-          <h3><i class="fas fa-ranking-star"></i> Country Strength Ranking</h3>
-          <div class="ef-legend">
-            <span><span class="dot dot-bull"></span> Bullish</span>
-            <span><span class="dot dot-bear"></span> Bearish</span>
-            <span><span class="dot dot-neu"></span>  Neutral</span>
-          </div>
-        </div>
-        <div class="ef-table-wrap">
-          <table class="ef-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Country / Currency</th>
-                <th class="sortable" data-col="score">Overall Score ↕</th>
-                <th class="sortable" data-col="rate">Rate ↕</th>
-                <th class="sortable" data-col="cpi">CPI ↕</th>
-                <th class="sortable" data-col="gdp">GDP ↕</th>
-                <th class="sortable" data-col="employment">Employment ↕</th>
-                <th class="sortable" data-col="pmi">PMI ↕</th>
-                <th>Trend</th>
-                <th>Bias</th>
-              </tr>
-            </thead>
-            <tbody id="ef-table-body">
-              <tr><td colspan="10" class="ef-empty"><i class="fas fa-satellite-dish"></i>Loading data…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Pair implications -->
-      <div class="ef-pairs-section">
-        <div class="ef-pairs-header">
-          <h3><i class="fas fa-arrows-left-right"></i> Pair Implications</h3>
-          <span style="font-size:0.75rem;color:var(--ef-sub);">Based on fundamental score differentials</span>
-        </div>
-        <div class="ef-pairs-grid" id="ef-pairs-grid">
-          <!-- populated by JS -->
-        </div>
-      </div>
-
-      <!-- Methodology -->
-      <details class="ef-method">
-        <summary><i class="fas fa-circle-info"></i> How the score is calculated</summary>
-        <div class="ef-method-grid">
-          <div class="ef-method-item">
-            <strong>Interest Rate (25%)</strong>
-            <p>Higher rates → stronger currency. Hawkish surprises weighted positively.</p>
-          </div>
-          <div class="ef-method-item">
-            <strong>CPI / Inflation (20%)</strong>
-            <p>Above-target inflation that prompts rate hikes scores bullish; runaway inflation scores bearish.</p>
-          </div>
-          <div class="ef-method-item">
-            <strong>GDP Growth (20%)</strong>
-            <p>Positive growth versus expectations is bullish for the currency and risk assets.</p>
-          </div>
-          <div class="ef-method-item">
-            <strong>Employment (20%)</strong>
-            <p>Low unemployment & strong NFP/jobs beats drive currency strength.</p>
-          </div>
-          <div class="ef-method-item">
-            <strong>PMI / Trade (15%)</strong>
-            <p>PMI above 50 signals expansion. Trade surplus nations receive a positive premium.</p>
-          </div>
-        </div>
-      </details>
-
-    </div><!-- /ef-wrapper -->
-  </main>
+    </div>
+</main>
 </div>
 
 <script src="../js/api.js"></script>
