@@ -1539,14 +1539,9 @@ async def _get_macro_score(currency: str) -> float:
 
 
 async def _build_metal_scorecard(asset, calendar, find_event, _calc_surprise, bias_from_surprise) -> dict:
-    """
-    Metals scorecard — uses USD fundamentals as base
-    (metals are priced in USD so USD strength = bearish for metals)
-    plus commodity-specific drivers.
-    """
     METAL_NAMES = {
         "XAU": "Gold",
-        "XAG": "Silver",
+        "XAG": "Silver", 
         "XPT": "Platinum",
         "XCU": "Copper"
     }
@@ -1558,42 +1553,52 @@ async def _build_metal_scorecard(asset, calendar, find_event, _calc_surprise, bi
         "XCU": ["China PMI", "Construction", "EV demand", "Mining supply"]
     }
 
-    # For metals: high USD inflation = bullish (inflation hedge)
-    # High USD strength (high rates) = bearish for metals
-    usd_cpi   = find_event(["CPI"], "USD")
-    usd_nfp   = find_event(["Non-Farm Payroll", "NFP"], "USD")
-    usd_rates = macro_matrix_cache.get("data", {}).get("rows", [])
-    usd_row   = next((r for r in usd_rates if r["currency"] == "USD"), {})
-    usd_rate  = usd_row.get("rate", 0) or 0
+    # safe cache access — don't crash if matrix hasn't been fetched yet
+    matrix_data = macro_matrix_cache.get("data") or {}
+    usd_rates   = matrix_data.get("rows", [])
+    usd_row     = next((r for r in usd_rates if r["currency"] == "USD"), {})
+    usd_rate    = usd_row.get("rate") or 0
 
-    # High CPI = bullish for metals (inflation hedge)
+    usd_cpi  = find_event(["CPI", "Consumer Price Index"], "USD")
+    usd_nfp  = find_event(["Non-Farm Payroll", "NFP", "Employment Change"], "USD")
+    usd_mfg  = find_event(["Manufacturing PMI", "ISM Manufacturing"], "USD")
+    china_pmi= find_event(["Manufacturing PMI"], "CNY") if asset in ("XCU", "XPT") else {"actual":"—","forecast":"—","surprise":None}
+
     cpi_surprise = usd_cpi.get("surprise")
     cpi_bias     = "bullish" if (cpi_surprise or 0) > 0 else "bearish" if (cpi_surprise or 0) < 0 else "neutral"
-
-    # High USD rate = bearish for metals (opportunity cost)
-    rate_bias = "bearish" if usd_rate >= 4 else "neutral" if usd_rate >= 2 else "bullish"
-
-    # China PMI for industrial metals
-    china_pmi = find_event(["PMI", "Manufacturing"], "CNY") if asset in ("XCU", "XPT") else {"actual":"—","forecast":"—","surprise":None}
-    pmi_bias  = bias_from_surprise(china_pmi.get("surprise"))
+    rate_bias    = "bearish" if usd_rate >= 4 else "neutral" if usd_rate >= 2 else "bullish"
+    nfp_surprise = usd_nfp.get("surprise")
+    nfp_bias     = "bearish" if (nfp_surprise or 0) > 0 else "bullish" if (nfp_surprise or 0) < 0 else "neutral"
+    pmi_bias     = bias_from_surprise(china_pmi.get("surprise"))
+    mfg_bias     = bias_from_surprise(usd_mfg.get("surprise"))
 
     if asset == "XAU":
         items = [
-            {"label": "CPI Surprise (inflation hedge)", "data": usd_cpi,   "bias": cpi_bias},
-            {"label": "USD Rate (opportunity cost)",     "data": {"actual": f"{usd_rate}%", "forecast":"—", "surprise": None}, "bias": rate_bias},
-            {"label": "NFP (risk-off demand)",           "data": usd_nfp,   "bias": "bearish" if (usd_nfp.get("surprise") or 0) > 0 else "bullish"},
+            {"label": "CPI Surprise (inflation hedge)", "data": usd_cpi,  "bias": cpi_bias},
+            {"label": "USD Rate (opportunity cost)",    "data": {"actual": f"{usd_rate}%" if usd_rate else "—", "forecast": "—", "surprise": None}, "bias": rate_bias},
+            {"label": "NFP (risk-off demand)",          "data": usd_nfp,  "bias": nfp_bias},
+            {"label": "US Manufacturing PMI",           "data": usd_mfg,  "bias": mfg_bias},
         ]
     elif asset == "XAG":
         items = [
-            {"label": "CPI Surprise (inflation hedge)", "data": usd_cpi,   "bias": cpi_bias},
-            {"label": "USD Rate (opportunity cost)",    "data": {"actual": f"{usd_rate}%", "forecast":"—", "surprise": None}, "bias": rate_bias},
-            {"label": "Industrial PMI",                 "data": find_event(["Manufacturing PMI","ISM Manufacturing"], "USD"), "bias": bias_from_surprise(find_event(["Manufacturing PMI"], "USD").get("surprise"))},
+            {"label": "CPI Surprise (inflation hedge)", "data": usd_cpi,  "bias": cpi_bias},
+            {"label": "USD Rate (opportunity cost)",    "data": {"actual": f"{usd_rate}%" if usd_rate else "—", "forecast": "—", "surprise": None}, "bias": rate_bias},
+            {"label": "US Manufacturing PMI",           "data": usd_mfg,  "bias": mfg_bias},
+            {"label": "NFP (industrial demand proxy)",  "data": usd_nfp,  "bias": nfp_bias},
         ]
-    else:  # XPT, XCU
+    elif asset == "XPT":
+        items = [
+            {"label": "US Manufacturing PMI (auto)",    "data": usd_mfg,   "bias": mfg_bias},
+            {"label": "China Manufacturing PMI",        "data": china_pmi, "bias": pmi_bias},
+            {"label": "USD Rate (opportunity cost)",    "data": {"actual": f"{usd_rate}%" if usd_rate else "—", "forecast": "—", "surprise": None}, "bias": rate_bias},
+            {"label": "CPI Surprise",                   "data": usd_cpi,   "bias": cpi_bias},
+        ]
+    else:  # XCU
         items = [
             {"label": "China Manufacturing PMI",        "data": china_pmi, "bias": pmi_bias},
-            {"label": "USD Rate (demand impact)",       "data": {"actual": f"{usd_rate}%", "forecast":"—", "surprise": None}, "bias": rate_bias},
-            {"label": "US Manufacturing PMI",           "data": find_event(["Manufacturing PMI","ISM Manufacturing"], "USD"), "bias": bias_from_surprise(find_event(["Manufacturing PMI"], "USD").get("surprise"))},
+            {"label": "US Manufacturing PMI",           "data": usd_mfg,   "bias": mfg_bias},
+            {"label": "USD Rate (demand impact)",       "data": {"actual": f"{usd_rate}%" if usd_rate else "—", "forecast": "—", "surprise": None}, "bias": rate_bias},
+            {"label": "NFP (construction demand)",      "data": usd_nfp,   "bias": nfp_bias},
         ]
 
     score        = _section_score(items)
@@ -1608,9 +1613,9 @@ async def _build_metal_scorecard(asset, calendar, find_event, _calc_surprise, bi
         "macro_score":  score,
         "sections": {
             "growth":    {"bias": overall_bias, "score": score, "items": items},
-            "inflation": {"bias": cpi_bias,     "score": 0,     "items": [{"label":"CPI","data":usd_cpi,"bias":cpi_bias}]},
-            "jobs":      {"bias": "neutral",    "score": 0,     "items": []},
-            "cot":       {"has_data": False,    "score": 0}
+            "inflation": {"bias": cpi_bias,     "score": round((1 if cpi_bias=="bullish" else -1 if cpi_bias=="bearish" else 0), 2), "items": [{"label":"CPI","data":usd_cpi,"bias":cpi_bias}]},
+            "jobs":      {"bias": nfp_bias,     "score": round((1 if nfp_bias=="bullish" else -1 if nfp_bias=="bearish" else 0), 2), "items": [{"label":"NFP","data":usd_nfp,"bias":nfp_bias}]},
+            "cot":       {"has_data": False, "score": 0}
         }
     }
 
