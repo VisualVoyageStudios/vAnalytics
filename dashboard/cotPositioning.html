@@ -146,6 +146,13 @@ if(!token) window.location.href = "../login.html";
 async function loadCOT(){
     const grid = document.getElementById("cotGrid");
 
+    const ASSET_LABELS = {
+        EUR:" EUR", GBP:" GBP", JPY:" JPY",
+        AUD:"AUD", CAD:" CAD", CHF:" CHF", NZD:" NZD",
+        XAU:"Gold",  XAG:"Silver", XPT:"Platinum", XCU:" Copper",
+        BTC:"Bitcoin", ETH:"Ethereum"
+    };
+
     try {
         const res  = await fetch(`${API_URL}/cot/positioning`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -219,7 +226,7 @@ function renderGrid(positions){
         return `
             <div class="metric-card">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-                    <h3 style="font-size:16px; opacity:1;">${p.currency}</h3>
+                    `<h3 style="font-size:16px; opacity:1;">${ASSET_LABELS[p.currency] || p.currency}</h3>`
                     <span style="font-weight:700; color:${barColor}; font-size:14px;">
                         ${isLong ? "+" : ""}${p.net_position.toLocaleString()}
                     </span>
