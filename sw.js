@@ -1,4 +1,4 @@
-const CACHE_NAME    = "voyager-v2";
+const CACHE_NAME    = "voyager-v3";
 const STATIC_ASSETS = [
     "/vAnalytics/",
     "/vAnalytics/dashboard/dashboard.html",
