@@ -1351,8 +1351,10 @@ async def get_scorecard(
         "NZD": "NZD", "CHF": "CHF"
     }
 
+    INDEX = { "USD INDEX": "US INDEX", "NAS 100": "NAS 100", "S&P 500": "S&P 500"}
+
     METALS = {"XAU", "XAG", "XPT", "XCU"}
-    is_metal = asset in METALS
+    is_metal = asset in METALS : INDEX
 
     # ── Sections ─────────────────────────────────────────────────────
 
