@@ -2769,3 +2769,20 @@ def trigger_cot_backfill(db: Session = Depends(get_db), user=Depends(get_current
         "rows_found": len(rows),
         "rows_inserted": inserted
     }
+
+
+@app.get("/cot/debug-contracts")
+def debug_contract_names(user=Depends(get_current_user)):
+    import httpx
+    from utils.cftc_fetcher import DISAGGREGATED_URL, TFF_URL
+
+    with httpx.Client(timeout=20) as client:
+        metals_res = client.get(DISAGGREGATED_URL, params={"$limit": "20", "$order": "report_date_as_yyyy_mm_dd DESC"})
+        crypto_res = client.get(TFF_URL, params={"$limit": "20", "$order": "report_date_as_yyyy_mm_dd DESC"})
+
+    metals_names = sorted(set(e.get("market_and_exchange_names", "") for e in metals_res.json()))
+    crypto_names = sorted(set(e.get("market_and_exchange_names", "") for e in crypto_res.json()))
+
+    return {"metals_sample": metals_names, "crypto_sample": crypto_names}
+    
+
