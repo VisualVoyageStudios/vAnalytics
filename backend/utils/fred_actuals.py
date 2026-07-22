@@ -24,6 +24,11 @@ FRED_SERIES = {
         "label": "GDP Growth",
         "transform": "level",
     },
+    "jobless_claims": {
+        "series_id": "ICSA",              # Initial Claims, weekly, seasonally adjusted
+        "label": "Unemployment Claims",
+        "transform": "claims_level",
+    },
 }
 
 
@@ -111,6 +116,16 @@ async def fetch_usd_actuals() -> dict:
                         "label": meta["label"],
                         "value": pct,
                         "unit": "%",
+                        "date": latest["date"],
+                    }
+                    
+                elif meta["transform"] == "claims_level":
+                    latest = obs[0]
+                    value = round(float(latest["value"]) / 1000, 0)  # FRED reports raw count, calendar shows in "K"
+                    results[key] = {
+                        "label": meta["label"],
+                        "value": value,
+                        "unit": "K",
                         "date": latest["date"],
                     }
 
