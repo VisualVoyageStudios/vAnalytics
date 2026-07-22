@@ -2741,4 +2741,31 @@ def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_
 
     return {"positions": results, "updated": date.today().isoformat()}
 
+# ....
+from utils.cftc_backfill import backfill_cot_history
 
+@app.post("/cot/backfill-history")
+def trigger_cot_backfill(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    rows = backfill_cot_history()
+
+    inserted = 0
+    for row in rows:
+        exists = (
+            db.query(COTPosition)
+            .filter(
+                COTPosition.currency == row["currency"],
+                COTPosition.report_date == row["report_date"]
+            )
+            .first()
+        )
+        if not exists:
+            db.add(COTPosition(**row))
+            inserted += 1
+
+    db.commit()
+
+    return {
+        "status": "backfill complete",
+        "rows_found": len(rows),
+        "rows_inserted": inserted
+    }
