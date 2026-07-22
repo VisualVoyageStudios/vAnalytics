@@ -221,11 +221,11 @@ function renderGrid(positions){
         let badge = "";
         if(p.signal === "extreme_long"){
             badge = `<span style="background:rgba(239,68,68,0.12); color:var(--danger); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;">
-                        <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i>Extreme Long — Contrarian Bearish
+                        <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i>Extreme Long — Contrarian Bearish <i class="info-tip" data-tip="Hedge funds are more long than 80% of the time over the past year. Crowded positioning like this often precedes a reversal as there are fewer buyers left.">i</i>
                       </span>`;
         } else if(p.signal === "extreme_short"){
             badge = `<span style="background:rgba(34,197,94,0.12); color:var(--success); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;">
-                        <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i>Extreme Short — Contrarian Bullish
+                        <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i>Extreme Short — Contrarian Bullish <i class="info-tip" data-tip="Hedge funds are more short than 80% of the time over the past year. When everyone is already short, a squeeze higher becomes more likely.">i</i>
                       </span>`;
         } else if(p.weeks_of_history < 8){
             badge = `<span style="background:rgba(148,163,184,0.1); color:var(--muted); font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px;">
@@ -241,7 +241,7 @@ function renderGrid(positions){
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
                     <h3 style="font-size:16px; opacity:1;">${ASSET_LABELS[p.currency] || p.currency}</h3>
                     <span style="font-weight:700; color:${barColor}; font-size:14px;">
-                        ${isLong ? "+" : ""}${p.net_position.toLocaleString()}
+                        ${isLong ? "+" : ""}${p.net_position.toLocaleString()} <i class="info-tip" data-tip="Long contracts minus short contracts held by large speculators. Positive = more bullish bets than bearish. Negative = more bearish bets.">i</i>
                     </span>
                 </div>
 
@@ -250,7 +250,7 @@ function renderGrid(positions){
                 </div>
 
                 <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:14px;">
-                    <span>${p.percentile_rank !== null ? `${p.percentile_rank}th percentile (52wk)` : "Collecting weekly data…"}</span>
+                    <span>${p.percentile_rank !== null ? `${p.percentile_rank}th percentile (52wk)` : "Collecting weekly data…"} <i class="info-tip" data-tip="Where current positioning sits relative to the last 52 weeks. 90th percentile means they are more long than 90% of the time — a contrarian bearish warning. 10th percentile is the opposite.">i</i></span>
                     <span>OI: ${p.open_interest.toLocaleString()}</span>
                 </div>
                 
