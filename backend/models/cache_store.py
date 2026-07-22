@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Text, DateTime
 from datetime import datetime
-from database import Base
+from models.user import Base
 
 
 class CacheStore(Base):
