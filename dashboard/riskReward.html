@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
 
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
@@ -82,17 +83,20 @@
         <!-- Summary cards -->
         <div class="dashboard-grid" id="summaryGrid">
             <div class="metric-card skeleton">
-                <h3>Avg. Planned R:R</h3>
+                <h3>Avg. Planned R:R <i class="info-tip" data-tip="On average, how much did you aim to make for every dollar you risked? 2:1 means targeting $2 profit for every $1 risked.">i</i>
+</h3>
                 <p id="avgPlannedRR">—</p>
             </div>
 
             <div class="metric-card skeleton">
-                <h3>Win Rate on Tracked Trades</h3>
+                <h3>Win Rate on Tracked Trades <i class="info-tip" data-tip="Win rate only for trades where you set a stop loss and take profit — the trades where you actually planned your risk.">i</i>
+</h3>
                 <p id="winRateRR">—</p>
             </div>
 
             <div class="metric-card skeleton">
-                <h3>Trades With R:R Set</h3>
+                <h3>Trades With R:R Set <i class="info-tip" data-tip="Number of trades where you set both a stop loss and take profit before entering — the foundation of proper risk management.">i</i>
+</h3>
                 <p id="trackedCount">—</p>
             </div>
 
@@ -107,7 +111,8 @@
             <div class="section-card-header">
                 <div>
                     <h3>Trade Breakdown</h3>
-                    <p>Planned vs. realized ratio per trade</p>
+                    <p>Planned R:R <i class="info-tip" data-tip="Your intended reward-to-risk ratio based on where you placed your stop loss and take profit before the trade.">i</i>
+ vs. Realized R:R <i class="info-tip" data-tip="The actual reward-to-risk based on where price moved compared to your stop distance. May differ from planned if you moved your stop.">i</i> per trade</p>
                 </div>
             </div>
 
@@ -139,5 +144,6 @@
 <script src="../js/riskReward.js"></script>
 <script src="../js/nav.js"></script>
 <script src="../js/pgAnime.js"></script>
+<script src="../js/tooltip.js"></script>
 </body>
 </html>
