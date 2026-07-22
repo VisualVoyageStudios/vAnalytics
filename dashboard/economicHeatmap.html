@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
 <link rel="stylesheet" href="../css/economicHeatmap.css">
+<link rel="stylesheet" href="../css/tooltip.css">
 
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
@@ -72,7 +73,8 @@
     <main class="main-content">
 
         <header class="page-header">
-            <h2>Economic Heatmap</h2>
+            <h2>Economic Heatmap <i class="info-tip" data-tip="Real calendar data from ForexFactory. Shows what was released, what was expected, and whether the result beat or missed forecasts.">i</i>
+</h2>
             <div style="display:flex; gap:10px; align-items:center;">
                 <span id="lastRefreshed" style="font-size:12px; color:var(--muted);"></span>
                 <button class="btn-primary" id="refreshBtn" style="padding:10px 18px; border:none; border-radius:10px; cursor:pointer; font-size:13px;">
@@ -85,7 +87,7 @@
         <div class="ai-insight" id="aiInsightBox">
             <div class="ai-insight-header">
                 <i class="fas fa-microchip"></i>
-                <span>AI Market Insight</span>
+                <span>AI Market Insight <i class="info-tip" data-tip="A short summary from AI of what the recent economic releases mean for the market — written like a morning briefing for a trader.">i</i></span>
             </div>
             <p class="loading-text" id="aiInsightText">
                 <i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>
@@ -144,10 +146,14 @@
                     <tr>
                         <th>Event</th>
                         <th>Country</th>
-                        <th>Impact</th>
-                        <th style="text-align:right;">Actual</th>
-                        <th style="text-align:right;">Forecast</th>
-                        <th style="text-align:right;">Change</th>
+                        <th>Impact <i class="info-tip" data-tip="How much this event is expected to move the market. High impact = red folder = trade carefully around this release.">i</i>
+</th>
+                        <th style="text-align:right;">Actual <i class="info-tip" data-tip="The number that was officially released.">i</i>
+</th>
+                        <th style="text-align:right;">Forecast <i class="info-tip" data-tip="What the market was expecting. The gap between actual and forecast drives the price reaction.">i</i>
+</th>
+                        <th style="text-align:right;">Change <i class="info-tip" data-tip="Actual minus forecast. Blue = beat expectations (bullish), red = missed expectations (bearish).">i</i>
+</th>
                         <th>Date</th>
                     </tr>
                 </thead>
@@ -171,5 +177,6 @@
 <script src="../js/pgAnime.js"></script>
 <script src="../js/economicHeatmap.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 </body>
 </html>
