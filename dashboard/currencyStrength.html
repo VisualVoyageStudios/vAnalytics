@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
 
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
@@ -80,7 +82,8 @@
 
         <!-- Strength Gauges -->
         <div class="section-heading">
-            <i class="fas fa-signal"></i> Live Strength Scores
+            <i class="fas fa-signal"></i> Live Strength Scores <i class="info-tip" data-tip="How each currency has performed against all other majors based on today's exchange rate movements. Think of it as a leaderboard — the strongest currency is best to buy, the weakest is best to sell.">i</i>
+
         </div>
 
         <div id="strengthGrid" style="
@@ -97,7 +100,8 @@
 
         <!-- Ranking Table -->
         <div class="section-heading">
-            <i class="fas fa-trophy"></i> Strength Ranking
+            <i class="fas fa-trophy"></i> Strength Ranking <i class="info-tip" data-tip="Currencies ranked from strongest to weakest. For the best setups, pair the #1 currency against the #8 currency.">i</i>
+
         </div>
 
         <div class="heatmap-table-wrapper">
@@ -117,7 +121,7 @@
 
         <!-- Pair Matrix -->
         <div class="section-heading" style="margin-top:32px;">
-            <i class="fas fa-table-cells"></i> Pair Strength Matrix
+            <i class="fas fa-table-cells"></i> Pair Strength Matrix <i class="info-tip" data-tip="Shows the strength difference between two currencies in a pair. Positive = first currency is stronger. Negative = second currency is stronger.">i</i>
         </div>
 
         <div id="pairMatrix" style="
@@ -134,5 +138,6 @@
 <script src="../js/pgAnime.js"></script>
 <script src="../js/currencyStrength.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 </body>
 </html>
