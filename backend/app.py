@@ -2906,7 +2906,7 @@ async def debug_raw_calendar(current_user=Depends(get_current_user)):
         return {"error": f"{type(e).__name__}: {str(e)}"}
 
 #..
-@app.get("/economic/debug-ons")
+@app.get("/economic/debug-ons-v2")
 async def debug_ons(current_user=Depends(get_current_user)):
     try:
         async with httpx.AsyncClient() as client:
