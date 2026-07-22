@@ -2924,18 +2924,12 @@ async def debug_ons_v4(current_user=Depends(get_current_user)):
         return {"error": f"{type(e).__name__}: {str(e)}"}
 
 #.. cad
-@app.get("/economic/debug-statcan")
-async def debug_statcan(current_user=Depends(get_current_user)):
+@app.get("/economic/debug-statcan-v2")
+async def debug_statcan_v2(current_user=Depends(get_current_user)):
     try:
-        async with httpx.AsyncClient() as client:
-            res = await client.post(
-                "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods",
-                json=[
-                    {"vectorId": 41690973, "latestN": 3},
-                    {"vectorId": 2062815, "latestN": 3},
-                ],
-                timeout=15.0
-            )
-        return {"status_code": res.status_code, "body_preview": res.text[:2000]}
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Try a simple GET to their base domain first — just checking reachability
+            res = await client.get("https://www150.statcan.gc.ca/t1/wds/rest/getCubeMetadata", timeout=25.0)
+        return {"status_code": res.status_code, "body_preview": res.text[:500]}
     except Exception as e:
         return {"error": f"{type(e).__name__}: {str(e)}"}
