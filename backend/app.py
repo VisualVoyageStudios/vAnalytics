@@ -13,6 +13,7 @@ from schemas.goal import GoalCreate
 from models.currency_snapshot import CurrencySnapshot
 from models.challenge import UserChallenge
 from models.journal_template import JournalTemplate
+from models.cache_store import CacheStore
 
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -55,6 +56,39 @@ try:
 except ImportError:
     mt5 = None
     MT5_AVAILABLE = False
+
+#persistent helper
+from models.cache_store import CacheStore
+def load_persistent_cache(key: str):
+    db = SessionLocal()
+    try:
+        row = db.query(CacheStore).filter(CacheStore.key == key).first()
+        if row:
+            return json.loads(row.value), row.updated_at.timestamp()
+        return None, 0
+    except Exception as e:
+        print(f"load_persistent_cache failed for {key}: {e}")
+        return None, 0
+    finally:
+        db.close()
+
+def save_persistent_cache(key: str, data):
+    db = SessionLocal()
+    try:
+        row = db.query(CacheStore).filter(CacheStore.key == key).first()
+        payload = json.dumps(data)
+        if row:
+            row.value = payload
+            row.updated_at = datetime.utcnow()
+        else:
+            db.add(CacheStore(key=key, value=payload, updated_at=datetime.utcnow()))
+        db.commit()
+    except Exception as e:
+        print(f"save_persistent_cache failed for {key}: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -144,6 +178,7 @@ app.add_middleware(
 # ── COT PULL DATA ON STARTUP
 cot_scheduler = start_cot_scheduler()
 
+#COT get data on start up
 @app.on_event("startup")
 def seed_cot_on_boot():
     """
@@ -159,6 +194,14 @@ def seed_cot_on_boot():
             refresh_cot_data()
     finally:
         db.close()
+# calandar data get start up
+@app.on_event("startup")
+def warm_economic_calendar_cache():
+    data, ts = load_persistent_cache("economic_calendar")
+    if data:
+        economic_calendar_cache["data"]      = data
+        economic_calendar_cache["timestamp"] = ts
+        print(f"Warmed economic calendar cache from disk ({len(data)} events)")
 
 # ── AI Cache 
 
@@ -1827,13 +1870,16 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
         try:
             events, reason = await _fetch_calendar_once(client, url, headers)
 
-            if events is None and reason == "rate_limited":
-                print("Calendar fetch rate-limited (429) — retrying once after short delay")
-                await asyncio.sleep(5)
+            retry_delays = [5, 15, 30]
+            for delay in retry_delays:
+                if events is not None or reason != "rate_limited":
+                    break
+                print(f"Calendar fetch rate-limited (429) — retrying in {delay}s")
+                await asyncio.sleep(delay)
                 events, reason = await _fetch_calendar_once(client, url, headers)
 
             if events is None:
-                print(f"Calendar fetch failed after retry: {reason}")
+                print(f"Calendar fetch failed after all retries: {reason}")
                 events = []
 
         except Exception as e:
@@ -1878,6 +1924,7 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
 
     economic_calendar_cache["data"]      = cleaned
     economic_calendar_cache["timestamp"] = now
+    save_persistent_cache("economic_calendar", cleaned)
 
     return cleaned
 
