@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/pgAnime.css">
+    <link rel="stylesheet" href="../css/tooltip.css">
+
 
     <link rel="manifest" href="/vAnalytics/manifest.json">
     <meta name="theme-color" content="#070b14">
@@ -449,7 +451,8 @@
             <div class="s-card">
                 <div class="s-card-header">
                     <i class="fas fa-rocket"></i>
-                    <h3>Subscription Plan</h3>
+                    <h3>Subscription Plan <i class="info-tip" data-tip="Your current plan determines which premium features are unlocked. Upgrade as new features are released.">i</i>
+</h3>
                 </div>
                 <div class="s-card-body">
                     <div class="s-plan-grid">
@@ -587,7 +590,8 @@
 
                     <div class="s-toggle-row" style="border-bottom:none; padding-bottom:0;">
                         <div class="s-toggle-label">
-                            <strong>Light mode</strong>
+                            <strong>Light mode <i class="info-tip" data-tip="Switches to a light colour scheme. Your preference is saved and applied on every page automatically.">i</i>
+</strong>
                             <span>Switch to a light colour scheme</span>
                         </div>
                         <label class="s-toggle">
@@ -597,7 +601,8 @@
                     </div>
 
                     <div class="s-field" style="margin-top:4px;">
-                        <label>Accent Colour</label>
+                        <label>Accent Colour <i class="info-tip" data-tip="Changes the highlight colour used across the whole app — buttons, active states and charts.">i</i>
+</label>
                         <div class="s-accent-row" id="accentPicker">
                             <div class="s-accent-dot active" style="background:#3b82f6;" data-color="#3b82f6" title="Blue"></div>
                             <div class="s-accent-dot" style="background:#8b5cf6;" data-color="#8b5cf6" title="Purple"></div>
@@ -614,7 +619,8 @@
             <div class="s-card">
                 <div class="s-card-header">
                     <i class="fas fa-rotate"></i>
-                    <h3>Sync Trades</h3>
+                    <h3>Sync Trades Agent <i class="info-tip" data-tip="A small background program that connects to your MetaTrader 5 and sends your trade history to Voyager. It runs on your Windows PC only.">i</i>
+</h3>
                 </div>
                 <div class="s-card-body">
                     <p style="font-size:0.82rem;color:var(--muted);margin:0;">
@@ -664,7 +670,7 @@
                 <div class="s-card-body">
                     <div class="s-toggle-row" style="padding-top:0;">
                         <div class="s-toggle-label">
-                            <strong>Clear all trade data</strong>
+                            <strong>Clear All Trade Data <i class="info-tip" data-tip="Permanently deletes every trade and journal entry from your account. This cannot be undone.">i</i></strong>
                             <span>Permanently delete every trade and journal entry. Cannot be undone.</span>
                         </div>
                         <button class="s-btn s-btn-danger" id="clearDataBtn">
@@ -673,7 +679,7 @@
                     </div>
                     <div class="s-toggle-row">
                         <div class="s-toggle-label">
-                            <strong>Delete account</strong>
+                            <strong>Delete Account Data <i class="info-tip" data-tip="Permanently delete your trades and journal entry and your account data. This cannot be undone.">i</i></strong>
                             <span>Remove your Voyager account and all associated data permanently.</span>
                         </div>
                         <button class="s-btn s-btn-danger" id="deleteAccountBtn">
@@ -719,5 +725,6 @@
 <script src="../js/api.js"></script>
 <script src="../js/settings.js"></script>
 <script src="../js/pgAnime.js"></script>
+<script src="../js/tooltip.js"></script>
 </body>
 </html>
