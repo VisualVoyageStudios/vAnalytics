@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
 <link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/tooltip.css">
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
 </head>
@@ -71,7 +72,8 @@
 
         <!-- Rate landscape strip -->
         <div class="section-heading" style="margin-bottom:16px;">
-            <i class="fas fa-percent"></i> Policy Rate Landscape
+            <i class="fas fa-percent"></i>Policy Rate Landscape <i class="info-tip" data-tip="All major central bank rates side by side. The colour shows direction — green = raising rates, red = cutting rates, grey = on hold.">i</i>
+
         </div>
 
         <div id="rateStrip" style="
@@ -83,7 +85,8 @@
 
         <!-- CB cards -->
         <div class="section-heading" style="margin-bottom:16px;">
-            <i class="fas fa-landmark"></i> Central Bank Detail
+            <i class="fas fa-landmark"></i> Central Bank Detail <i class="info-tip" data-tip="Each card shows what a central bank is doing, why, and when they next meet. This context helps you trade the currency with the trend.">i</i>
+
         </div>
 
         <div id="cbGrid" style="
@@ -104,6 +107,7 @@
 <script src="../js/api.js"></script>
 <script src="../js/pgAnime.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 <script>
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
@@ -389,11 +393,13 @@ function renderCBCards(){
                 <!-- stats grid -->
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
                     <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
-                        <div style="font-size:10px; color:var(--muted); margin-bottom:3px;">Last change</div>
+                        <div style="font-size:10px; color:var(--muted); margin-bottom:3px;">Last change <i class="info-tip" data-tip="When the central bank last moved its interest rate and by how much.">i</i>
+</div>
                         <div style="font-size:12px; font-weight:600;">${cb.last_change}</div>
                     </div>
                     <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
-                        <div style="font-size:10px; color:var(--muted); margin-bottom:3px;">Forward guidance</div>
+                        <div style="font-size:10px; color:var(--muted); margin-bottom:3px;">Forward guidance <i class="info-tip" data-tip="What the central bank has signalled about future rate decisions. This tells you where rates are likely heading.">i</i>
+</div>
                         <div style="font-size:12px; font-weight:600; line-height:1.4;">${cb.dot_plot}</div>
                     </div>
                 </div>
@@ -413,7 +419,7 @@ function renderCBCards(){
                 <!-- next meeting -->
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div style="font-size:10px; color:var(--muted); margin-bottom:2px;">Next meeting</div>
+                        <div style="font-size:10px; color:var(--muted); margin-bottom:2px;">Next meeting <i class="info-tip" data-tip="Central banks decide rates at scheduled meetings. Big moves often happen at these dates — mark them in your calendar.">i</i></div>
                         <div style="font-size:12px; font-weight:600;">
                             ${new Date(cb.next_meeting).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" })}
                         </div>
