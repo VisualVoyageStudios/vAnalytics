@@ -2734,7 +2734,7 @@ def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_
             "percentile_rank":  percentile,
             "signal":           signal,
             "weeks_of_history": len(net_positions),
-            "sparkline":        net_positions[-12:],
+            "sparkline":        net_positions[-52:],
             "large_spec_long":  current.large_spec_long,
             "large_spec_short": current.large_spec_short,
         })
