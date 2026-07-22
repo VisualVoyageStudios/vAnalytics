@@ -2,7 +2,7 @@ const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
 
 const CURRENCIES = [
-    { code:"US DOLLAR INDEX", flag:"🇺🇸" },
+    { code:"USD", flag:"🇺🇸" },
     { code:"EUR", flag:"🇪🇺" },
     { code:"GBP", flag:"🇬🇧" },
     { code:"JPY", flag:"🇯🇵" },
