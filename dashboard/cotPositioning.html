@@ -176,16 +176,24 @@ async function loadCOT(){
 }
 
 function sparklinePath(values, w, h){
-    if(values.length < 2) return "";
+    if(values.length < 2) return { path: "", high: null, low: null, highY: 0, lowY: 0 };
+
     const min = Math.min(...values);
     const max = Math.max(...values);
     const range = max - min || 1;
 
-    return values.map((v, i) => {
-        const x = (i / (values.length - 1)) * w;
-        const y = h - ((v - min) / range) * h;
-        return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(" ");
+    const points = values.map((v, i) => ({
+        x: (i / (values.length - 1)) * w,
+        y: h - ((v - min) / range) * h,
+        v
+    }));
+
+    const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+
+    const highPoint = points.reduce((a, b) => (b.v > a.v ? b : a));
+    const lowPoint  = points.reduce((a, b) => (b.v < a.v ? b : a));
+
+    return { path, highPoint, lowPoint };
 }
 
 function renderGrid(positions){
@@ -220,7 +228,7 @@ function renderGrid(positions){
                       </span>`;
         }
 
-        const sparkPath = sparklinePath(p.sparkline, 260, 40);
+        const spark = sparklinePath(p.sparkline, 260, 40);
         const sparkColor = isLong ? "#22c55e" : "#ef4444";
 
         return `
@@ -240,10 +248,29 @@ function renderGrid(positions){
                     <span>${p.percentile_rank !== null ? `${p.percentile_rank}th percentile (52wk)` : "Collecting weekly data…"}</span>
                     <span>OI: ${p.open_interest.toLocaleString()}</span>
                 </div>
-
-                <svg width="100%" height="40" viewBox="0 0 260 40" preserveAspectRatio="none" style="margin-bottom:12px;">
-                    <path d="${sparkPath}" fill="none" stroke="${sparkColor}" stroke-width="2"/>
+                
+                <svg width="100%" height="40" viewBox="0 0 260 40" preserveAspectRatio="none" style="margin-bottom:12px; overflow:visible;">
+                    ${spark.highPoint ? `
+                        <line x1="0" y1="${spark.highPoint.y}" x2="260" y2="${spark.highPoint.y}"
+                              stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+                    ` : ""}
+                    ${spark.lowPoint ? `
+                        <line x1="0" y1="${spark.lowPoint.y}" x2="260" y2="${spark.lowPoint.y}"
+                              stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+                    ` : ""}
+                    <path d="${spark.path}" fill="none" stroke="${sparkColor}" stroke-width="2" vector-effect="non-scaling-stroke"/>
+                    ${spark.highPoint ? `
+                        <circle cx="${spark.highPoint.x}" cy="${spark.highPoint.y}" r="3" fill="#22c55e"/>
+                    ` : ""}
+                    ${spark.lowPoint ? `
+                        <circle cx="${spark.lowPoint.x}" cy="${spark.lowPoint.y}" r="3" fill="#ef4444"/>
+                    ` : ""}
                 </svg>
+
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-bottom:12px;">
+                    <span>52wk low: ${spark.lowPoint ? p.sparkline[p.sparkline.indexOf(Math.min(...p.sparkline))].toLocaleString() : "—"}</span>
+                    <span>52wk high: ${spark.highPoint ? p.sparkline[p.sparkline.indexOf(Math.max(...p.sparkline))].toLocaleString() : "—"}</span>
+                </div>
 
                 ${badge}
             </div>
