@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
 
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
@@ -98,7 +100,7 @@
 
         <!-- Streak Timeline -->
         <div class="section-heading">
-            <i class="fas fa-chart-bar"></i> Streak Timeline
+            <i class="fas fa-chart-bar"></i> Streak Timeline <i class="info-tip" data-tip="A chart of all your historical win and loss streaks. Patterns here can reveal whether losses are random or cluster around specific conditions.">i</i>
         </div>
 
         <div class="chart-container">
@@ -112,6 +114,7 @@
 <script src="../js/api.js"></script>
 <script src="../js/pgAnime.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 <script>
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
@@ -157,7 +160,8 @@ function renderCurrentStreak(data){
                 color: ${color};
                 line-height: 1;
                 margin-bottom: 8px;
-            ">${data.current_streak}</div>
+            ">${data.current_streak} <i class="info-tip" data-tip="How many wins or losses in a row you are currently on. Loss streaks are normal — the key is not to increase size or revenge trade during them.">i</i>
+</div>
             <div style="
                 font-size: 16px;
                 font-weight: 700;
