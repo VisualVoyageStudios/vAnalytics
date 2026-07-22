@@ -8,13 +8,14 @@ TFF_URL          = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"   
 
 # ── Contract name → currency code maps ───────────────────────────────
 CONTRACT_MAP_FOREX = {
-    "EURO FX - CHICAGO MERCANTILE EXCHANGE":                "EUR",
-    "BRITISH POUND STERLING - CHICAGO MERCANTILE EXCHANGE": "GBP",
-    "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE":           "JPY",
-    "AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":      "AUD",
-    "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":        "CAD",
-    "SWISS FRANC - CHICAGO MERCANTILE EXCHANGE":            "CHF",
-    "NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE":     "NZD",
+    "EURO FX - CHICAGO MERCANTILE EXCHANGE":            "EUR",
+    "BRITISH POUND - CHICAGO MERCANTILE EXCHANGE":      "GBP",   # was "BRITISH POUND STERLING - ..."
+    "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE":       "JPY",
+    "AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":  "AUD",
+    "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":    "CAD",
+    "SWISS FRANC - CHICAGO MERCANTILE EXCHANGE":        "CHF",
+    "NZ DOLLAR - CHICAGO MERCANTILE EXCHANGE":          "NZD",   # was "NEW ZEALAND DOLLAR - ..."
+    "USD INDEX - ICE FUTURES U.S.":                     "USD",   # add this — it's what Edge Finder needs for the Dollar Index
 }
 
 CONTRACT_MAP_METALS = {
