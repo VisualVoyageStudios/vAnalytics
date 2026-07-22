@@ -431,10 +431,7 @@ function renderExposureWarning(data, trades){
 
 // ── Event listeners ───────────────────────────────────────────────────
 
-document.getElementById("timeframeSelect").addEventListener("change", (e) => {
-    selectedDays = parseInt(e.target.value);
-    loadMatrix();
-});
+
 
 document.getElementById("refreshBtn").addEventListener("click", loadMatrix);
 
