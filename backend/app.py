@@ -1893,6 +1893,8 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
         print("Fetch failed and no usable cache — returning empty list")
         return []
 
+    usd_actuals = await get_cached_usd_actuals()
+
     cleaned = []
     seen    = set()
 
@@ -1910,11 +1912,24 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
             continue
         seen.add(key)
 
+        actual_value = e.get("actual", "") or ""
+
+        # Backfill USD actuals from FRED when the free calendar leaves it blank
+        if country == "USD" and not actual_value:
+            metric_key = match_event_to_metric(e.get("title", ""))
+            if metric_key and usd_actuals.get(metric_key):
+                metric = usd_actuals[metric_key]
+                event_date = e.get("date", "")[:10]
+                # only backfill if the FRED data point is from on/around this event's date,
+                # so we don't attach a stale reading to the wrong release
+                if metric["date"][:7] == event_date[:7]:  # same year-month
+                    actual_value = f"{metric['value']}{metric['unit']}"
+
         cleaned.append({
             "event":    e.get("title", ""),
             "country":  country,
             "impact":   impact.lower(),
-            "actual":   e.get("actual", "") or "",
+            "actual":   actual_value,
             "forecast": e.get("forecast", "") or "",
             "previous": e.get("previous", "") or "",
             "date":     e.get("date", "")
@@ -1925,6 +1940,20 @@ async def get_economic_calendar(current_user=Depends(get_current_user)):
     economic_calendar_cache["data"]      = cleaned
     economic_calendar_cache["timestamp"] = now
     save_persistent_cache("economic_calendar", cleaned)
+
+    from utils.fred_actuals import fetch_usd_actuals, match_event_to_metric
+
+    usd_actuals_cache = {"data": None, "timestamp": 0}
+    USD_ACTUALS_CACHE_TTL = 6 * 3600  # 6 hours — FRED data doesn't change intraday
+
+    async def get_cached_usd_actuals():
+        now = time.time()
+        if usd_actuals_cache["data"] and (now - usd_actuals_cache["timestamp"]) < USD_ACTUALS_CACHE_TTL:
+            return usd_actuals_cache["data"]
+        data = await fetch_usd_actuals()
+        usd_actuals_cache["data"] = data
+        usd_actuals_cache["timestamp"] = now
+        return data
 
     return cleaned
 
