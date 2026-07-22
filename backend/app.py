@@ -2835,16 +2835,44 @@ def debug_contract_names(user=Depends(get_current_user)):
 
 @app.get("/economic/debug-raw")
 async def debug_raw_calendar(current_user=Depends(get_current_user)):
-    async with httpx.AsyncClient() as client:
-        res = await client.get(
-            "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-                "Accept": "application/json, text/plain, */*",
-            },
-            timeout=15.0
-        )
-    data = res.json()
-    # find a specific event we know is clearly in the past
-    gbp_cpi = [e for e in data if e.get("country") == "GBP" and "CPI" in e.get("title", "")]
-    return {"status_code": res.status_code, "gbp_cpi_matches": gbp_cpi, "total_events": len(data)}
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+                    "Accept": "application/json, text/plain, */*",
+                },
+                timeout=15.0
+            )
+
+        raw_preview = res.text[:500]
+
+        try:
+            data = res.json()
+        except Exception as parse_err:
+            return {
+                "status_code": res.status_code,
+                "parse_error": str(parse_err),
+                "raw_preview": raw_preview
+            }
+
+        if not isinstance(data, list):
+            return {
+                "status_code": res.status_code,
+                "unexpected_shape": str(type(data)),
+                "raw_preview": raw_preview
+            }
+
+        gbp_cpi = [e for e in data if e.get("country") == "GBP" and "CPI" in e.get("title", "")]
+
+        return {
+            "status_code": res.status_code,
+            "total_events": len(data),
+            "gbp_cpi_matches": gbp_cpi,
+            "sample_first_event": data[0] if data else None
+        }
+
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {str(e)}"}
+
