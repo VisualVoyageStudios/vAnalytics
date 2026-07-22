@@ -2905,3 +2905,15 @@ async def debug_raw_calendar(current_user=Depends(get_current_user)):
     except Exception as e:
         return {"error": f"{type(e).__name__}: {str(e)}"}
 
+#..
+@app.get("/economic/debug-ons")
+async def debug_ons(current_user=Depends(get_current_user)):
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                "https://api.ons.gov.uk/timeseries/D7G7/dataset/mm23/data",
+                timeout=15.0
+            )
+        return {"status_code": res.status_code, "body_preview": res.text[:1000]}
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {str(e)}"}
