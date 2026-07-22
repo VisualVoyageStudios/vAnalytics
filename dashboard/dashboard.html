@@ -90,7 +90,8 @@
     <section class="section-card">
         <div class="section-card-header">
             <div>
-                <h3>Account Balance</h3>
+                <h3>Account Balance <i class="info-tip" data-tip="Your total profit from the last 30 days across all connected accounts.">i</i>
+</h3>
                 <p>Last 30 Days</p>
             </div>
         </div>
@@ -102,22 +103,24 @@
         <!-- KPI Cards -->
         <div class="dashboard-grid">
             <div class="metric-card skeleton">
-                <h3>Total Profit</h3>
+                <h3>Total Profit <i class="info-tip" data-tip="Your total profit or loss across all closed trades synced from MT5.">i</i></h3>
                 <p id="dashboardProfit">$0</p>
             </div>
 
             <div class="metric-card skeleton">
-                <h3>Win Rate</h3>
+                <h3>Win Rate <i class="info-tip" data-tip="The percentage of your trades that closed in profit. Above 50% means more winners than losers.">i</i></h3>
                 <p id="dashboardWinRate">0%</p>
             </div>
 
             <div class="metric-card skeleton">
-                <h3>Accounts</h3>
+                <h3>Accounts <i class="info-tip" data-tip="Number of trading accounts you have connected to Voyager.">i</i>
+</h3>
                 <p id="dashboardAccounts">0</p>
             </div>
 
             <div class="metric-card skeleton">
-                <h3>Total Trades</h3>
+                <h3>Total Trades <i class="info-tip" data-tip="Total number of closed trades imported from your MT5 account.">i</i>
+</h3>
                 <p id="dashboardTrades">0</p>
             </div>
         </div>
@@ -126,7 +129,8 @@
         <section class="section-card" id="challengeCard" style="margin-bottom:24px;">
             <div class="section-card-header">
                 <div>
-                    <h3>⚡ Weekly Challenge</h3>
+                    <h3>⚡Weekly Challenge <i class="info-tip" data-tip="A new trading discipline goal every week. Complete it to build better trading habits. Resets every Monday.">i</i>
+</h3>
                     <p id="challengeDesc" style="color:var(--muted); font-size:13px;">Loading…</p>
                 </div>
                 <span id="challengeBadge" style="
@@ -152,7 +156,8 @@
         
         <!-- Equity Curve -->
         <div class="chart-container">
-            <h2>Equity Curve</h2>
+            <h2>Equity Curve <i class="info-tip" data-tip="A chart of your account balance over time. A rising curve means consistent profits. Dips show drawdown periods.">i</i>
+</h2>
             <canvas id="equityChart" class="skeleton"></canvas>
         </div>
 
@@ -181,7 +186,7 @@
         <section class="section-card">
             <div class="section-card-header">
                 <div>
-                    <h3>High Impact News</h3>
+                    <h3>High Impact News <i class="info-tip" data-tip="Economic events today that are likely to move the market. Red folder events — like NFP or CPI — can cause sharp price spikes.">i</i></h3>
                     <p>Today's upcoming high impact news</p>
                 </div>
                 <button class="icon-btn"><i class="fas fa-filter"></i></button>
