@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
 <link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/tooltip.css">
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
 </head>
@@ -62,7 +63,8 @@
 
         <header class="page-header">
             <div>
-                <h2>Currency Intelligence</h2>
+                <h2>Currency Intelligence <i class="info-tip" data-tip="A one-page overview of everything driving a specific currency — macro score, intraday strength, related trade ideas and upcoming economic events.">i</i>
+</h2>
                 <p style="color:var(--muted); font-size:13px; margin-top:4px;">
                     Per-currency overview combining fundamentals, strength and economic calendar
                 </p>
@@ -85,7 +87,7 @@
 
         <!-- Relevant calendar events -->
         <div class="section-heading" style="margin-bottom:16px;">
-            <i class="fas fa-calendar"></i> Upcoming Events for Selected Currency
+            <i class="fas fa-calendar"></i> Upcoming Events <i class="info-tip" data-tip="Scheduled economic releases for this currency this week. High-impact events can cause sharp price moves around release time.">i</i>
         </div>
         <div id="calendarEvents" style="margin-bottom:40px;"></div>
 
@@ -95,6 +97,7 @@
 <script src="../js/api.js"></script>
 <script src="../js/pgAnime.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 <script>
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
@@ -245,7 +248,7 @@ function renderCard(ccy){
                         <div style="font-size:1.8rem; font-weight:900; color:${overallCol};">
                             ${overallScore > 0 ? "+" : ""}${overallScore}
                         </div>
-                        <div style="font-size:11px; color:var(--muted);">Macro Score</div>
+                        <div style="font-size:11px; color:var(--muted);">Macro Score <i class="info-tip" data-tip="Overall fundamental rating based on interest rates, GDP, inflation and employment data. Positive = bullish, negative = bearish.">i</i></div>
                     </div>
                 </div>
 
@@ -269,7 +272,8 @@ function renderCard(ccy){
                 ">
                     <div style="font-size:13px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                         <i class="fas fa-signal" style="color:var(--primary); font-size:12px;"></i>
-                        Intraday Strength
+                        Intraday Strength <i class="info-tip" data-tip="How the currency has moved against all other majors today based on live exchange rates. Shows short-term momentum, not fundamentals.">i</i>
+
                     </div>
                     <div style="font-size:2rem; font-weight:800; color:${strengthScore > 0 ? "#22c55e" : strengthScore < 0 ? "#ef4444" : "#94a3b8"}; margin-bottom:8px;">
                         ${strengthScore > 0 ? "+" : ""}${strengthScore}
@@ -302,7 +306,8 @@ function renderCard(ccy){
                 ">
                     <div style="font-size:13px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                         <i class="fas fa-lightbulb" style="color:#f59e0b; font-size:12px;"></i>
-                        Related Trade Ideas
+                        Related Trade Ideas <i class="info-tip" data-tip="Pair setups involving this currency based on fundamental score differences. These are directional biases, not trade signals.">i</i>
+
                     </div>
                     ${ideasHtml}
                     ${ideas.length > 0 ? `<a href="tradeIdeas.html" style="font-size:12px; color:var(--primary); text-decoration:none; display:block; margin-top:10px;">View all ideas →</a>` : ""}
