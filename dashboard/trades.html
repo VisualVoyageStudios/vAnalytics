@@ -13,7 +13,9 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
-
+<link rel="stylesheet" href="../css/tooltip.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+  
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -115,13 +117,15 @@
                 <thead>
                     <tr>
 
-                        <th>Symbol</th>
+                        <th>Symbol <i class="info-tip" data-tip="The currency pair or asset you traded — e.g. EURUSD, XAUUSD.">i</i></th>
 
-                        <th>Type</th>
+                        <th>Type <i class="info-tip" data-tip="BUY means you went long (expecting price to rise). SELL means you went short (expecting price to fall).">i</i></th>
 
-                        <th>Lot Size</th>
+                        <th>Lot Size <i class="info-tip" data-tip="How large your trade was. 1 standard lot = 100,000 units. 0.01 = a micro lot. Bigger lot = bigger profit or loss per pip.">i</i>
+</th>
 
-                        <th>Profit</th>
+                        <th>Profit <i class="info-tip" data-tip="How much money this trade made or lost after it closed.">i</i>
+</th>
 
                         <th>Date</th>
 
@@ -139,22 +143,25 @@
         <section class="dashboard-grid skeleton">
 
             <div class="metric-card">
-                <h3>Total Profit</h3>
+                <h3>Total Profit <i class="info-tip" data-tip="Combined profit/loss of all trades currently visible after your filters are applied.">i</i>
+</h3>
                 <p id="totalProfit">$0</p>
             </div>
 
             <div class="metric-card">
-                <h3>Win Rate</h3>
+                <h3>Win Rate <i class="info-tip" data-tip="Percentage of currently visible trades that were profitable.">i</i>
+</h3>
                 <p id="winRate">0%</p>
             </div>
 
             <div class="metric-card">
-                <h3>Profit Factor</h3>
+                <h3>Profit Factor <i class="info-tip" data-tip="Total profits divided by total losses for the filtered trades. Above 1.0 is profitable.">i</i>
+</h3>
                 <p id="bestTrade">$0</p>
             </div>
 
             <div class="metric-card">
-                <h3>Drawdown</h3>
+                <h3>Drawdown <i class="info-tip" data-tip="The largest peak-to-trough drop in your balance across these trades.">i</i></h3>
                 <p id="worstTrade">$0</p>
             </div>
 
@@ -168,5 +175,6 @@
 <script src="../js/api.js"></script>
 <script src="../js/trades.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 </body>
 </html>
