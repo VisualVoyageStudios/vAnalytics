@@ -1,88 +1,156 @@
-import requests
-import csv
-import io
+import httpx
 from datetime import date, timedelta
 
-CFTC_URL = "https://www.cftc.gov/dea/newcot/FinFutWk.txt"
+# ── Endpoint URLs ─────────────────────────────────────────────────────
+LEGACY_URL       = "https://publicreporting.cftc.gov/resource/6dca-aqww.json"   # Forex
+DISAGGREGATED_URL= "https://publicreporting.cftc.gov/resource/72hh-3qpy.json"   # Metals
+TFF_URL          = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"   # Crypto
 
-# CFTC contract names (verified against a real pulled file) → our currency codes
+# ── Contract name → currency code maps ───────────────────────────────
 CONTRACT_MAP_FOREX = {
-    "EURO FX - CHICAGO MERCANTILE EXCHANGE":               "EUR",
-    "BRITISH POUND STERLING - CHICAGO MERCANTILE EXCHANGE":"GBP",
-    "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE":          "JPY",
-    "AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":     "AUD",
-    "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":       "CAD",
-    "SWISS FRANC - CHICAGO MERCANTILE EXCHANGE":           "CHF",
-    "NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE":    "NZD",
-    "GOLD - COMMODITY EXCHANGE INC.":                      "XAU",
-    "SILVER - COMMODITY EXCHANGE INC.":                    "XAG",
-    "PLATINUM - NEW YORK MERCANTILE EXCHANGE":             "XPT",
-    "COPPER- #1 - COMMODITY EXCHANGE INC.":                "XCU",
+    "EURO FX - CHICAGO MERCANTILE EXCHANGE":                "EUR",
+    "BRITISH POUND STERLING - CHICAGO MERCANTILE EXCHANGE": "GBP",
+    "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE":           "JPY",
+    "AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":      "AUD",
+    "CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE":        "CAD",
+    "SWISS FRANC - CHICAGO MERCANTILE EXCHANGE":            "CHF",
+    "NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE":     "NZD",
 }
 
-CONTRACT_MAP_FINANCIAL = {
-    "BITCOIN - CHICAGO MERCANTILE EXCHANGE":               "BTC",
-    "ETHER CASH SETTLED - CHICAGO MERCANTILE EXCHANGE":    "ETH",
+CONTRACT_MAP_METALS = {
+    "GOLD - COMMODITY EXCHANGE INC.":            "XAU",
+    "SILVER - COMMODITY EXCHANGE INC.":          "XAG",
+    "PLATINUM - NEW YORK MERCANTILE EXCHANGE":   "XPT",
+    "COPPER- #1 - COMMODITY EXCHANGE INC.":      "XCU",
 }
 
-# XRP has no CFTC futures — skip it
+CONTRACT_MAP_CRYPTO = {
+    "BITCOIN - CHICAGO MERCANTILE EXCHANGE":             "BTC",
+    "ETHER CASH SETTLED - CHICAGO MERCANTILE EXCHANGE":  "ETH",
+}
 
 
 def fetch_latest_cot() -> list:
-    import httpx
-
     cutoff = (date.today() - timedelta(weeks=2)).isoformat()
     rows   = []
     seen   = set()
 
     with httpx.Client(timeout=30.0) as client:
 
-        # ── Legacy futures (forex + metals) ──────────────────────────
-        res = client.get(
-            "https://publicreporting.cftc.gov/resource/6dca-aqww.json",
-            params={
-                "$where": f"report_date_as_yyyy_mm_dd >= '{cutoff}'",
-                "$limit": "100",
-                "$order": "report_date_as_yyyy_mm_dd DESC"
-            }
-        )
-        res.raise_for_status()
+        # ── 1. Forex — Legacy Futures Only ───────────────────────────
+        try:
+            res = client.get(
+                LEGACY_URL,
+                params={
+                    "$where": f"report_date_as_yyyy_mm_dd >= '{cutoff}'",
+                    "$limit": "100",
+                    "$order": "report_date_as_yyyy_mm_dd DESC"
+                }
+            )
+            res.raise_for_status()
+            for entry in res.json():
+                contract = entry.get("market_and_exchange_names", "").strip()
+                ccy      = CONTRACT_MAP_FOREX.get(contract)
+                if not ccy:
+                    continue
+                row = _parse_legacy(entry, ccy, seen)
+                if row:
+                    rows.append(row)
+            print(f"COT forex: {sum(1 for r in rows if r['currency'] in CONTRACT_MAP_FOREX.values())} rows", flush=True)
+        except Exception as e:
+            print(f"COT forex fetch failed: {e}", flush=True)
 
-        for entry in res.json():
-            contract = entry.get("market_and_exchange_names", "").strip()
-            ccy      = CONTRACT_MAP_FOREX.get(contract)
-            if not ccy:
-                continue
-            row = _parse_cot_entry(entry, ccy, seen)
-            if row:
-                rows.append(row)
+        # ── 2. Metals — Disaggregated Futures Only ───────────────────
+        # Field names differ: uses m_money_ prefix for managed money
+        try:
+            res2 = client.get(
+                DISAGGREGATED_URL,
+                params={
+                    "$where": f"report_date_as_yyyy_mm_dd >= '{cutoff}'",
+                    "$limit": "100",
+                    "$order": "report_date_as_yyyy_mm_dd DESC"
+                }
+            )
+            res2.raise_for_status()
+            metal_count = 0
+            for entry in res2.json():
+                contract = entry.get("market_and_exchange_names", "").strip()
+                ccy      = CONTRACT_MAP_METALS.get(contract)
+                if not ccy:
+                    continue
+                row = _parse_disaggregated(entry, ccy, seen)
+                if row:
+                    rows.append(row)
+                    metal_count += 1
+            print(f"COT metals: {metal_count} rows", flush=True)
+        except Exception as e:
+            print(f"COT metals fetch failed: {e}", flush=True)
 
-        # ── Financial futures (crypto) ────────────────────────────────
-        res2 = client.get(
-            "https://publicreporting.cftc.gov/resource/yw9f-hn96.json",
-            params={
-                "$where": f"report_date_as_yyyy_mm_dd >= '{cutoff}'",
-                "$limit": "50",
-                "$order": "report_date_as_yyyy_mm_dd DESC"
-            }
-        )
-        res2.raise_for_status()
+        # ── 3. Crypto — TFF Futures Only ─────────────────────────────
+        # Field names differ: uses lev_money_ prefix for leveraged money
+        try:
+            res3 = client.get(
+                TFF_URL,
+                params={
+                    "$where": f"report_date_as_yyyy_mm_dd >= '{cutoff}'",
+                    "$limit": "50",
+                    "$order": "report_date_as_yyyy_mm_dd DESC"
+                }
+            )
+            res3.raise_for_status()
+            crypto_count = 0
+            for entry in res3.json():
+                contract = entry.get("market_and_exchange_names", "").strip()
+                ccy      = CONTRACT_MAP_CRYPTO.get(contract)
+                if not ccy:
+                    continue
+                row = _parse_tff(entry, ccy, seen)
+                if row:
+                    rows.append(row)
+                    crypto_count += 1
+            print(f"COT crypto: {crypto_count} rows", flush=True)
+        except Exception as e:
+            print(f"COT crypto fetch failed: {e}", flush=True)
 
-        for entry in res2.json():
-            contract = entry.get("market_and_exchange_names", "").strip()
-            ccy      = CONTRACT_MAP_FINANCIAL.get(contract)
-            if not ccy:
-                continue
-            row = _parse_cot_entry(entry, ccy, seen)
-            if row:
-                rows.append(row)
-
-    print(f"COT fetcher: {len(rows)} rows parsed (forex + metals + crypto)", flush=True)
+    print(f"COT total: {len(rows)} rows parsed", flush=True)
     return rows
 
 
-def _parse_cot_entry(entry: dict, ccy: str, seen: set):
-    """Parse a single CFTC row into a standardised dict."""
+def _parse_legacy(entry: dict, ccy: str, seen: set):
+    """Legacy report — noncomm_positions_ fields for large speculators."""
+    return _parse_entry(
+        entry, ccy, seen,
+        long_field  = "noncomm_positions_long_all",
+        short_field = "noncomm_positions_short_all",
+        comm_long   = "comm_positions_long_all",
+        comm_short  = "comm_positions_short_all",
+    )
+
+
+def _parse_disaggregated(entry: dict, ccy: str, seen: set):
+    """Disaggregated report — m_money_ fields for managed money."""
+    return _parse_entry(
+        entry, ccy, seen,
+        long_field  = "m_money_positions_long_all",
+        short_field = "m_money_positions_short_all",
+        comm_long   = "prod_merc_positions_long_all",
+        comm_short  = "prod_merc_positions_short_all",
+    )
+
+
+def _parse_tff(entry: dict, ccy: str, seen: set):
+    """TFF report — lev_money_ fields for leveraged money (hedge funds)."""
+    return _parse_entry(
+        entry, ccy, seen,
+        long_field  = "lev_money_positions_long_all",
+        short_field = "lev_money_positions_short_all",
+        comm_long   = "asset_mgr_positions_long_all",
+        comm_short  = "asset_mgr_positions_short_all",
+    )
+
+
+def _parse_entry(entry, ccy, seen, long_field, short_field, comm_long, comm_short):
+    """Generic parser — handles all three report formats."""
     try:
         report_date = date.fromisoformat(
             entry["report_date_as_yyyy_mm_dd"][:10]
@@ -96,16 +164,10 @@ def _parse_cot_entry(entry: dict, ccy: str, seen: set):
     seen.add(key)
 
     try:
-        # Financial futures uses different field names
-        long_field  = "noncomm_positions_long_all"  if "noncomm_positions_long_all"  in entry else "lev_money_positions_long_all"
-        short_field = "noncomm_positions_short_all" if "noncomm_positions_short_all" in entry else "lev_money_positions_short_all"
-        comm_long_f = "comm_positions_long_all"     if "comm_positions_long_all"     in entry else "asset_mgr_positions_long_all"
-        comm_sht_f  = "comm_positions_short_all"    if "comm_positions_short_all"    in entry else "asset_mgr_positions_short_all"
-
         large_spec_long  = int(entry.get(long_field,  0) or 0)
         large_spec_short = int(entry.get(short_field, 0) or 0)
-        commercial_long  = int(entry.get(comm_long_f, 0) or 0)
-        commercial_short = int(entry.get(comm_sht_f,  0) or 0)
+        commercial_long  = int(entry.get(comm_long,   0) or 0)
+        commercial_short = int(entry.get(comm_short,  0) or 0)
         open_interest    = int(entry.get("open_interest_all", 0) or 0)
 
         total_rep_long   = large_spec_long  + commercial_long
@@ -126,7 +188,7 @@ def _parse_cot_entry(entry: dict, ccy: str, seen: set):
             "open_interest":     open_interest,
         }
     except (ValueError, TypeError) as e:
-        print(f"COT parse error for {ccy}: {e}")
+        print(f"COT parse error for {ccy}: {e}", flush=True)
         return None
 
 
