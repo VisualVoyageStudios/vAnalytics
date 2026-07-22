@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
 
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
@@ -68,7 +70,7 @@
     <main class="main-content">
 
         <header class="page-header">
-            <h2>Weekly Recap Card</h2>
+            <h2>Weekly Recap Card <i class="info-tip" data-tip="A shareable summary card of your week — profit, win rate, streak and best session. Download as PNG and share on Twitter or Discord.">i</i></h2>
             <div style="display:flex; gap:10px;">
                 <button class="btn-primary" id="generateBtn" style="border:none; cursor:pointer; padding:10px 18px; border-radius:10px; font-size:13px;">
                     <i class="fas fa-rotate" style="margin-right:6px;"></i>Generate
@@ -120,6 +122,7 @@
 <script src="../js/api.js"></script>
 <script src="../js/recapCard.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 <script src="../js/pgAnime.js"></script>
 </body>
 </html>
