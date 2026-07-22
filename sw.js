@@ -1,9 +1,8 @@
-const CACHE_NAME    = "voyager-v3";
+const CACHE_NAME = "voyager-v3";
 const STATIC_ASSETS = [
     "/vAnalytics/",
     "/vAnalytics/dashboard/dashboard.html",
     "/vAnalytics/dashboard/trades.html",
-    "/vAnalytics/dashboard/tradeIdeas.html",
     "/vAnalytics/dashboard/analytics.html",
     "/vAnalytics/dashboard/journal.html",
     "/vAnalytics/dashboard/accounts.html",
@@ -16,15 +15,18 @@ const STATIC_ASSETS = [
     "/vAnalytics/dashboard/aiInsights.html",
     "/vAnalytics/dashboard/reports.html",
     "/vAnalytics/dashboard/currencyStrength.html",
-    "/vAnalytics/dashboard/currencyIntelligence.html",
     "/vAnalytics/dashboard/correlationMatrix.html",
     "/vAnalytics/dashboard/economicHeatmap.html",
     "/vAnalytics/dashboard/edgeFinder.html",
+    "/vAnalytics/dashboard/macroMatrix.html",
+    "/vAnalytics/dashboard/centralBanks.html",
+    "/vAnalytics/dashboard/tradeIdeas.html",
+    "/vAnalytics/dashboard/currencyIntelligence.html",
     "/vAnalytics/dashboard/cotPositioning.html",
     "/vAnalytics/css/global.css",
     "/vAnalytics/css/dashboard.css",
+    "/vAnalytics/css/components.css",
     "/vAnalytics/css/pgAnime.css",
-    "/vAnalytics/css/calendarHeatmap.css",
     "/vAnalytics/js/api.js",
     "/vAnalytics/js/nav.js",
     "/vAnalytics/js/pgAnime.js",
@@ -39,8 +41,8 @@ const STATIC_ASSETS = [
     "/vAnalytics/js/currencyStrength.js",
     "/vAnalytics/js/edgeFinder.js",
     "/vAnalytics/js/economicHeatmap.js",
-    "/vAnalytics/icons/icon-192.png",
-    "/vAnalytics/icons/icon-512.png"
+    "/vAnalytics/icons/voyagerLogo-192.png",
+    "/vAnalytics/icons/voyagerLogo-512.png"
 ];
 
 // ── Install — cache static assets ─────────────────────────────────────
