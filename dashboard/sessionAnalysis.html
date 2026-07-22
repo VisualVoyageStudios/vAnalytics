@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="../css/dashboard.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
 
 <link rel="manifest" href="/vAnalytics/manifest.json">
 <meta name="theme-color" content="#070b14">
@@ -74,7 +76,8 @@
 
         <!-- Session Cards -->
         <div class="section-heading">
-            <i class="fas fa-clock"></i> Performance by Session
+            <i class="fas fa-clock"></i> Performance by Session <i class="info-tip" data-tip="Your trading results broken down by market session. Different sessions have different volatility and character — find which one suits your style.">i</i>
+
         </div>
 
         <div id="sessionCards" style="
@@ -116,7 +119,7 @@
 
         <!-- Hourly Breakdown -->
         <div class="section-heading" style="margin-top:32px;">
-            <i class="fas fa-chart-bar"></i> Profit by Hour (UTC)
+            <i class="fas fa-chart-bar"></i> Profit by Hour (UCT) <i class="info-tip" data-tip="Your total profit for each hour of the day (UTC). Use this to find the hours where you perform best and consider only trading during those times.">i</i>
         </div>
 
         <div class="chart-container">
@@ -130,6 +133,7 @@
 <script src="../js/api.js"></script>
 <script src="../js/pgAnime.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 <script>
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
