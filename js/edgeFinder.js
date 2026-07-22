@@ -351,22 +351,26 @@ function renderSectionTables(sections){
 
             return `
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-                    <td style="padding:12px 16px; font-size:13px; color:var(--muted);">${item.label}</td>
+                    <td style="padding:12px 16px; font-size:13px; color:var(--muted);">${item.label} <i class="info-tip" data-tip="The specific economic release being measured.">i</i>
+</td>
                     <td style="padding:12px 16px;">
                         <span style="
                             padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700;
                             background:${itemCfg.bg}; color:${itemCfg.color};
                             border:1px solid ${itemCfg.border};
-                        ">${item.bias.charAt(0).toUpperCase() + item.bias.slice(1)}</span>
+                        ">${item.bias.charAt(0).toUpperCase() + item.bias.slice(1)}</span> <i class="info-tip" data-tip="Whether this release was bullish or bearish for the currency based on how it compared to expectations.">i</i>
+
                     </td>
                     <td style="padding:12px 16px; font-size:13px; font-weight:600; color:white; text-align:right;">
-                        ${item.data?.actual || "—"}
+                        ${item.data?.actual || "—"} <i class="info-tip" data-tip="The number that was released — the real result.">i</i>
+
                     </td>
                     <td style="padding:12px 16px; font-size:13px; color:var(--muted); text-align:right;">
-                        ${item.data?.forecast || "—"}
+                        ${item.data?.forecast || "—"} <i class="info-tip" data-tip="What analysts expected before the release. Markets price in expectations, so the surprise matters more than the actual number.">i</i>
+
                     </td>
                     <td style="padding:12px 16px; font-size:13px; font-weight:700; color:${supColor}; text-align:right;">
-                        ${surprise !== null && surprise !== undefined ? `${supSign}${surprise}` : "—"}
+                        ${surprise !== null && surprise !== undefined ? `${supSign}${surprise}` : "—"} <i class="info-tip" data-tip="Actual minus forecast. A positive surprise means the result was better than expected — usually bullish. A negative surprise usually bearish.">i</i>
                     </td>
                 </tr>
             `;
