@@ -143,15 +143,15 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
 
+const ASSET_LABELS = {
+    EUR:" EUR", GBP:" GBP", JPY:" JPY",
+    AUD:"AUD", CAD:" CAD", CHF:" CHF", NZD:" NZD",
+    XAU:"Gold",  XAG:"Silver", XPT:"Platinum", XCU:" Copper",
+    BTC:"Bitcoin", ETH:"Ethereum"
+    };
+    
 async function loadCOT(){
     const grid = document.getElementById("cotGrid");
-
-    const ASSET_LABELS = {
-        EUR:" EUR", GBP:" GBP", JPY:" JPY",
-        AUD:"AUD", CAD:" CAD", CHF:" CHF", NZD:" NZD",
-        XAU:"Gold",  XAG:"Silver", XPT:"Platinum", XCU:" Copper",
-        BTC:"Bitcoin", ETH:"Ethereum"
-    };
 
     try {
         const res  = await fetch(`${API_URL}/cot/positioning`, {
