@@ -142,6 +142,7 @@ EVENT_KEYWORD_MAP = [
     (["Unemployment Rate"], "unemployment_rate"),
     (["Non-Farm", "Non-farm", "NFP", "Employment Change"], "nonfarm_payrolls"),
     (["GDP"], "gdp_growth"),
+    (["Unemployment Claims", "Jobless Claims", "Initial Claims"], "jobless_claims"),
 ]
 
 
