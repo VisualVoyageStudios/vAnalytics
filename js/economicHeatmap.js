@@ -16,25 +16,8 @@ const COUNTRIES = [
     { code: "CHF", name: "Switzerland",   flag: "🇨🇭" },
 ];
 
-const PAIR_GROUPS = {
-    major:  ["EURUSD","GBPUSD","USDJPY","USDCHF","AUDUSD","USDCAD","NZDUSD"],
-    minor:  ["EURGBP","EURJPY","GBPJPY","AUDJPY","CADJPY","EURAUD","GBPAUD"],
-    metals: ["XAUUSD","XAGUSD","US30","NAS100","SPX500"]
-};
-
-const PAIR_CURRENCIES = {
-    EURUSD: ["EUR","USD"], GBPUSD: ["GBP","USD"], USDJPY: ["USD","JPY"],
-    USDCHF: ["USD","CHF"], AUDUSD: ["AUD","USD"], USDCAD: ["USD","CAD"],
-    NZDUSD: ["NZD","USD"], EURGBP: ["EUR","GBP"], EURJPY: ["EUR","JPY"],
-    GBPJPY: ["GBP","JPY"], AUDJPY: ["AUD","JPY"], CADJPY: ["CAD","JPY"],
-    EURAUD: ["EUR","AUD"], GBPAUD: ["GBP","AUD"],
-    XAUUSD: ["SAFE","USD"], XAGUSD: ["SAFE","USD"],
-    US30:   ["USD","RISK"], NAS100: ["USD","RISK"], SPX500: ["USD","RISK"]
-};
-
 let allEvents       = [];
 let countryScores   = {};
-let activePairGroup = "major";
 let activeFilters   = { impact: "all", country: "all", surprise: "all" };
 
 
@@ -83,9 +66,7 @@ async function fetchEconomicData() {
 
         populateCountryFilter();
         computeCountryScores();
-        renderCountryScores();
         renderTable();
-        renderPairBias();
         generateAIInsight();
         updateRefreshTime();
 
@@ -190,37 +171,6 @@ function populateCountryFilter() {
     });
 }
 
-
-// ── Render country score cards ───────────────────────────────────────
-
-function renderCountryScores() {
-    const container = document.getElementById("countryScores");
-    container.innerHTML = COUNTRIES.map(c => {
-        const score = countryScores[c.code] ?? 0;
-        const cls   = sentimentClass(score);
-        const sign  = score > 0 ? "+" : "";
-        return `
-            <div class="score-card ${cls}">
-                <span class="flag">${c.flag}</span>
-                <div class="country-name">${c.code}</div>
-                <div class="score-num">${sign}${score}</div>
-                <div class="score-label">${cls}</div>
-            </div>
-        `;
-    }).join("");
-
-    container.querySelectorAll(".score-card").forEach((card, i) => {
-        card.addEventListener("click", () => {
-            const code = COUNTRIES[i].code;
-            const sel  = document.getElementById("countryFilter");
-            sel.value  = sel.value === code ? "all" : code;
-            activeFilters.country = sel.value;
-            renderTable();
-        });
-    });
-}
-
-
 // ── Render heatmap table (real data, past + upcoming) ────────────────
 
 function renderTable() {
@@ -313,42 +263,6 @@ function renderTable() {
     }).join("");
 }
 
-
-// ── Render pair bias ─────────────────────────────────────────────────
-
-function renderPairBias(group = activePairGroup) {
-    const pairs = PAIR_GROUPS[group];
-    const grid  = document.getElementById("pairImpactGrid");
-
-    grid.innerHTML = pairs.map(pair => {
-        const [base, quote] = PAIR_CURRENCIES[pair] || [];
-        let bias = 0;
-
-        if (base === "SAFE") {
-            bias = -(countryScores["USD"] ?? 0);
-        } else if (quote === "RISK") {
-            bias = countryScores["USD"] ?? 0;
-        } else {
-            bias = (countryScores[base] ?? 0) - (countryScores[quote] ?? 0);
-        }
-
-        const cls   = sentimentClass(bias);
-        const sign  = bias > 0 ? "+" : "";
-        const label = cls === "bullish" ? "Bullish" : cls === "bearish" ? "Bearish" : "Neutral";
-
-        return `
-            <div class="pair-card">
-                <div>
-                    <div class="pair-name">${pair}</div>
-                    <div class="pair-bias ${cls}">${label}</div>
-                </div>
-                <div class="pair-score-pill ${cls}">${sign}${bias.toFixed(1)}</div>
-            </div>
-        `;
-    }).join("");
-}
-
-
 // ── AI insight (based on REAL data) ──────────────────────────────────
 
 async function generateAIInsight() {
@@ -411,15 +325,6 @@ document.getElementById("surpriseFilter").addEventListener("change", e => {
 });
 
 document.getElementById("refreshBtn").addEventListener("click", fetchEconomicData);
-
-document.querySelectorAll(".pair-chip").forEach(chip => {
-    chip.addEventListener("click", () => {
-        document.querySelectorAll(".pair-chip").forEach(c => c.classList.remove("active"));
-        chip.classList.add("active");
-        activePairGroup = chip.dataset.group;
-        renderPairBias(activePairGroup);
-    });
-});
 
 
 window.onload = fetchEconomicData;
