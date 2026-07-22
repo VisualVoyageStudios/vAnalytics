@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="../css/pgAnime.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="manifest" href="/vAnalytics/manifest.json">
+<link rel="stylesheet" href="../css/tooltip.css">
 <meta name="theme-color" content="#070b14">
 <style>
 .macro-grid {
@@ -219,7 +220,8 @@ table.macro-table {
 
         <header class="page-header">
             <div>
-                <h2>Macro Matrix</h2>
+                <h2>Macro Matrix <i class="info-tip" data-tip="A scorecard of each currency's economic health. Green cells are bullish for that currency, red cells are bearish.">i</i>
+</h2>
                 <p style="color:var(--muted); font-size:13px; margin-top:4px;">
                     Fundamental macro indicators per currency — scored and ranked by overall strength
                 </p>
@@ -262,13 +264,20 @@ table.macro-table {
                 <thead>
                     <tr>
                         <th style="text-align:left;">Currency</th>
-                        <th class="has-tooltip" data-tip="Central bank policy rate">Rate</th>
-                        <th class="has-tooltip" data-tip="CB stance: hiking / hold / cutting">Stance</th>
-                        <th class="has-tooltip" data-tip="Consumer Price Index — annual % change">CPI</th>
-                        <th class="has-tooltip" data-tip="GDP growth — annual % change">GDP</th>
-                        <th class="has-tooltip" data-tip="Unemployment rate %">Unemploy.</th>
-                        <th class="has-tooltip" data-tip="Current account balance % of GDP">Curr. Acc.</th>
-                        <th class="has-tooltip" data-tip="Weighted composite macro score">Overall</th>
+                        <th class="has-tooltip" data-tip="Central bank policy rate">Rate <i class="info-tip" data-tip="The central bank's interest rate. Higher rates attract foreign investment, which tends to strengthen the currency.">i</i>
+</th>
+                        <th class="has-tooltip" data-tip="CB stance: hiking / hold / cutting">Stance <i class="info-tip" data-tip="Whether the central bank is raising rates (hiking), cutting rates, or holding steady. Hiking = bullish for currency.">i</i>
+</th>
+                        <th class="has-tooltip" data-tip="Consumer Price Index — annual % change">CPI <i class="info-tip" data-tip="Consumer Price Index — measures inflation. Too high means the CB may hike rates. On-target (1.5–3%) is healthy.">i</i>
+</th>
+                        <th class="has-tooltip" data-tip="GDP growth — annual % change">GDP <i class="info-tip" data-tip="Economic growth rate. Higher growth = stronger economy = usually stronger currency.">i</i>
+</th>
+                        <th class="has-tooltip" data-tip="Unemployment rate %">Unemploy. <i class="info-tip" data-tip="Unemployment rate. Lower unemployment means people are working and spending — a sign of a healthy economy.">i</i>
+</th>
+                        <th class="has-tooltip" data-tip="Current account balance % of GDP">Curr. Acc. <i class="info-tip" data-tip="Current account balance as % of GDP. A surplus means the country exports more than it imports — bullish for the currency.">i</i>
+</th>
+                        <th class="has-tooltip" data-tip="Weighted composite macro score">Overall <i class="info-tip" data-tip="Weighted composite score combining all macro indicators. Higher = more bullish fundamentals for that currency.">i</i>
+</th>
                     </tr>
                 </thead>
                 <tbody id="macroBody">
@@ -290,7 +299,7 @@ table.macro-table {
 
         <!-- Per-currency drilldown -->
         <div class="section-heading" style="margin-bottom:16px;">
-            <i class="fas fa-chart-bar"></i> Currency Drilldown
+            <i class="fas fa-chart-bar"></i>Currency Drilldown <i class="info-tip" data-tip="A closer look at each currency's individual indicators. Hover over any indicator label for an explanation.">i</i>
         </div>
 
         <div id="drilldownGrid" style="
@@ -306,6 +315,7 @@ table.macro-table {
 <script src="../js/api.js"></script>
 <script src="../js/pgAnime.js"></script>
 <script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
 <script>
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
