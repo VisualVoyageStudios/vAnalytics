@@ -1,3 +1,8 @@
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    window.location.href = "../login.html";
+});
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const hamburgerBtn = document.getElementById("hamburgerBtn");
