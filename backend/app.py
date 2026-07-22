@@ -2906,15 +2906,19 @@ async def debug_raw_calendar(current_user=Depends(get_current_user)):
         return {"error": f"{type(e).__name__}: {str(e)}"}
 
 #..
-@app.get("/economic/debug-ons-v3")
-async def debug_ons_v3(current_user=Depends(get_current_user)):
+@app.get("/economic/debug-ons-v4")
+async def debug_ons_v4(current_user=Depends(get_current_user)):
     try:
         async with httpx.AsyncClient() as client:
-            # Step 1: confirm the cpih01 dataset exists
             res = await client.get(
-                "https://api.beta.ons.gov.uk/v1/datasets/cpih01",
+                "https://api.beta.ons.gov.uk/v1/datasets/cpih01/editions/time-series/versions/67/observations",
+                params={
+                    "time": "*",
+                    "geography": "K02000001",   # UK
+                    "aggregate": "cpih1dim1A0",  # CPIH All Items index
+                },
                 timeout=15.0
             )
-        return {"status_code": res.status_code, "body_preview": res.text[:1500]}
+        return {"status_code": res.status_code, "body_preview": res.text[:2000]}
     except Exception as e:
         return {"error": f"{type(e).__name__}: {str(e)}"}
