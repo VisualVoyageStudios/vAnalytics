@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Text, DateTime
 from datetime import datetime
 from database import Base
 
+
 class CacheStore(Base):
     __tablename__ = "cache_store"
 
