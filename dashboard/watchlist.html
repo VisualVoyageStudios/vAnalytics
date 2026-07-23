@@ -474,7 +474,8 @@ async function loadWatchlist(){
         const res  = await fetch(`${API_URL}/watchlist`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
-        watchlistItems = await res.json();
+        const data = await res.json();
+        watchlistItems = Array.isArray(data) ? data : [];
         renderGrid();
         updateCount();
     } catch(err) {
