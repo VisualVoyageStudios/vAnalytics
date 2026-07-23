@@ -1,7 +1,7 @@
 {
     "name": "Voyager Analytics",
     "short_name": "Voyager",
-    "description": "Professional journaling and analytics dashboard",
+    "description": "Professional journaling and analytics dashboard for active traders",
     "start_url": "/vAnalytics/login.html",
     "scope": "/vAnalytics/",
     "display": "standalone",
@@ -37,18 +37,16 @@
             "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
         },
         {
+            "name": "Watchlist",
+            "short_name": "Watchlist",
+            "url": "/vAnalytics/dashboard/watchlist.html",
+            "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
+        },
+        {
             "name": "Trades",
             "short_name": "Trades",
             "url": "/vAnalytics/dashboard/trades.html",
             "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
-        },
-        {
-            "name": "Analytics",
-            "short_name": "Analytics",
-            "url": "/vAnalytics/dashboard/analytics.html",
-            "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
         }
-
-        
     ]
 }
