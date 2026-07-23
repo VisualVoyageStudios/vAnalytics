@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watchlist | Voyager Analytics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="manifest" href="/vAnalytics/manifest.json">
+<meta name="theme-color" content="#070b14">
+<style>
+/* ── Watchlist scoped styles ── */
+.wl-add-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    align-items: flex-end;
+}
+
+.wl-add-bar input,
+.wl-add-bar select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.wl-add-bar input:focus,
+.wl-add-bar select:focus {
+    border-color: var(--primary);
+}
+
+.wl-add-bar input {
+    flex: 1;
+    min-width: 140px;
+    max-width: 220px;
+    text-transform: uppercase;
+}
+
+.wl-add-bar input::placeholder {
+    text-transform: none;
+    color: var(--muted);
+}
+
+/* Symbol cards grid */
+.wl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+.wl-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    position: relative;
+}
+
+.wl-card:hover {
+    border-color: rgba(59,130,246,0.3);
+}
+
+.wl-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.wl-card-symbol {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wl-card-symbol .symbol-name {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.wl-card-symbol .symbol-cat {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: capitalize;
+    background: rgba(255,255,255,0.04);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.wl-remove-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.wl-remove-btn:hover {
+    color: var(--danger);
+    background: rgba(239,68,68,0.08);
+}
+
+/* TradingView widget container */
+.wl-chart {
+    height: 220px;
+    background: #070b14;
+}
+
+/* Active chart modal */
+.wl-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+}
+
+.wl-modal-overlay.open {
+    display: flex;
+}
+
+.wl-modal-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 960px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.wl-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+}
+
+.wl-modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.wl-modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: color 0.2s;
+}
+
+.wl-modal-close:hover { color: white; }
+
+.wl-modal-chart {
+    height: 560px;
+    flex: 1;
+}
+
+/* Category filter chips */
+.wl-filter-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.wl-chip {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wl-chip:hover,
+.wl-chip.active {
+    border-color: var(--primary);
+    background: rgba(59,130,246,0.12);
+    color: white;
+}
+
+/* Suggested symbols */
+.wl-suggestions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.wl-suggestion {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.wl-suggestion:hover {
+    border-color: var(--primary);
+    color: white;
+    background: rgba(59,130,246,0.08);
+}
+
+/* Empty state */
+.wl-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+}
+
+.wl-empty i {
+    font-size: 3rem;
+    opacity: 0.15;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.wl-empty h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.wl-empty p {
+    font-size: 14px;
+    max-width: 360px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+    .wl-grid { grid-template-columns: 1fr; }
+    .wl-modal-chart { height: 380px; }
+    .wl-add-bar input { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div></div>
+
+<!-- Topbar -->
+<header class="topnav">
+    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">Watchlist</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"            class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"             class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"               class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"            class="nav-rail-icon" title="Analytics"><i class="fas fa-chart-simple"></i></a>
+    <a href="journal.html"              class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"           class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="watchlist.html"            class="nav-rail-icon active" title="Watchlist"><i class="fas fa-star"></i></a>
+    <a href="macroMatrix.html"          class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"         class="nav-rail-icon" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="tradeIdeas.html"           class="nav-rail-icon" title="Trade Ideas"><i class="fas fa-lightbulb"></i></a>
+    <a href="currencyIntelligence.html" class="nav-rail-icon" title="Currency Intelligence"><i class="fas fa-brain"></i></a>
+    <a href="economicHeatmap.html"      class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"           class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="cotPositioning.html"       class="nav-rail-icon" title="COT Positioning"><i class="fas fa-scale-unbalanced"></i></a>
+    <a href="currencyStrength.html"     class="nav-rail-icon" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html"    class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"           class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"      class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"              class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"          class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"            class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"              class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"             class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <button class="nav-rail-icon" id="railToggle" title="Menu"><i class="fas fa-bars"></i></button>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+    <button class="nav-rail-icon" id="logoutBtn" title="Logout" style="color:var(--danger);"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</aside>
+
+<div class="dashboard-container">
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <h2>Watchlist</h2>
+                <p style="color:var(--muted); font-size:13px; margin-top:4px;">
+                    Track your favourite symbols with live charts — up to 20 symbols
+                </p>
+            </div>
+            <span id="wl-count" style="font-size:12px; color:var(--muted);">0 / 20</span>
+        </header>
+
+        <!-- Add symbol bar -->
+        <div class="wl-add-bar">
+            <input
+                type="text"
+                id="symbolInput"
+                placeholder="Symbol e.g. EURUSD"
+                maxlength="12"
+            >
+            <select id="categorySelect">
+                <option value="forex">Forex</option>
+                <option value="metals">Metals</option>
+                <option value="crypto">Crypto</option>
+                <option value="indices">Indices</option>
+                <option value="stocks">Stocks</option>
+            </select>
+            <button class="btn-primary" id="addBtn" style="
+                border:none; padding:11px 20px; border-radius:10px;
+                cursor:pointer; font-size:13px; font-weight:600;
+                display:flex; align-items:center; gap:8px;
+            ">
+                <i class="fas fa-plus"></i> Add
+            </button>
+        </div>
+
+        <!-- Quick add suggestions -->
+        <p style="font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Quick add</p>
+        <div class="wl-suggestions" id="suggestions">
+            <span class="wl-suggestion" data-symbol="EURUSD"  data-cat="forex">EUR/USD</span>
+            <span class="wl-suggestion" data-symbol="GBPUSD"  data-cat="forex">GBP/USD</span>
+            <span class="wl-suggestion" data-symbol="USDJPY"  data-cat="forex">USD/JPY</span>
+            <span class="wl-suggestion" data-symbol="XAUUSD"  data-cat="metals">Gold</span>
+            <span class="wl-suggestion" data-symbol="XAGUSD"  data-cat="metals">Silver</span>
+            <span class="wl-suggestion" data-symbol="BTCUSD"  data-cat="crypto">Bitcoin</span>
+            <span class="wl-suggestion" data-symbol="ETHUSD"  data-cat="crypto">Ethereum</span>
+            <span class="wl-suggestion" data-symbol="US30"    data-cat="indices">Dow Jones</span>
+            <span class="wl-suggestion" data-symbol="NAS100"  data-cat="indices">Nasdaq</span>
+            <span class="wl-suggestion" data-symbol="SPX500"  data-cat="indices">S&P 500</span>
+            <span class="wl-suggestion" data-symbol="USOIL"   data-cat="indices">Crude Oil</span>
+            <span class="wl-suggestion" data-symbol="AUDUSD"  data-cat="forex">AUD/USD</span>
+            <span class="wl-suggestion" data-symbol="USDCAD"  data-cat="forex">USD/CAD</span>
+            <span class="wl-suggestion" data-symbol="USDZAR"  data-cat="forex">USD/ZAR</span>
+        </div>
+
+        <div style="margin: 24px 0 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <!-- Category filters -->
+            <div class="wl-filter-chips" id="filterChips">
+                <button class="wl-chip active" data-filter="all">All</button>
+                <button class="wl-chip" data-filter="forex">Forex</button>
+                <button class="wl-chip" data-filter="metals">Metals</button>
+                <button class="wl-chip" data-filter="crypto">Crypto</button>
+                <button class="wl-chip" data-filter="indices">Indices</button>
+                <button class="wl-chip" data-filter="stocks">Stocks</button>
+            </div>
+        </div>
+
+        <!-- Watchlist grid -->
+        <div class="wl-grid" id="watchlistGrid">
+            <div class="wl-empty">
+                <i class="fas fa-star"></i>
+                <h3>Your watchlist is empty</h3>
+                <p>Add symbols above or click a quick-add suggestion to start tracking live charts.</p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Full chart modal -->
+<div class="wl-modal-overlay" id="chartModal">
+    <div class="wl-modal-content">
+        <div class="wl-modal-header">
+            <h3 id="modalSymbolLabel">Chart</h3>
+            <button class="wl-modal-close" id="closeModal">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+        <div class="wl-modal-chart" id="modalChartContainer"></div>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/pgAnime.js"></script>
+<script src="../js/nav.js"></script>
+<script>
+const token = localStorage.token;
+if(!token) window.location.href = "../login.html";
+
+let watchlistItems = [];
+let activeFilter   = "all";
+
+const CATEGORY_ICONS = {
+    forex:   "🌐",
+    metals:  "🥇",
+    crypto:  "₿",
+    indices: "📈",
+    stocks:  "🏢"
+};
+
+const CATEGORY_COLORS = {
+    forex:   "#3b82f6",
+    metals:  "#f59e0b",
+    crypto:  "#8b5cf6",
+    indices: "#22c55e",
+    stocks:  "#06b6d4"
+};
+
+// ── TradingView symbol map ────────────────────────────────────────────
+// TradingView uses exchange prefixes for some symbols
+function tvSymbol(symbol, category){
+    const map = {
+        "EURUSD":  "FX:EURUSD",
+        "GBPUSD":  "FX:GBPUSD",
+        "USDJPY":  "FX:USDJPY",
+        "AUDUSD":  "FX:AUDUSD",
+        "USDCAD":  "FX:USDCAD",
+        "NZDUSD":  "FX:NZDUSD",
+        "USDCHF":  "FX:USDCHF",
+        "EURGBP":  "FX:EURGBP",
+        "EURJPY":  "FX:EURJPY",
+        "GBPJPY":  "FX:GBPJPY",
+        "USDZAR":  "FX:USDZAR",
+        "XAUUSD":  "OANDA:XAUUSD",
+        "XAGUSD":  "OANDA:XAGUSD",
+        "XPTUSD":  "OANDA:XPTUSD",
+        "BTCUSD":  "BINANCE:BTCUSDT",
+        "ETHUSD":  "BINANCE:ETHUSDT",
+        "SOLUSD":  "BINANCE:SOLUSDT",
+        "XRPUSD":  "BINANCE:XRPUSDT",
+        "US30":    "FOREXCOM:DJI",
+        "NAS100":  "FOREXCOM:NSXUSD",
+        "SPX500":  "FOREXCOM:SPXUSD",
+        "USOIL":   "USOIL",
+        "BRENTOIL":"UKOIL",
+    };
+    return map[symbol] || symbol;
+}
+
+
+// ── Load watchlist ────────────────────────────────────────────────────
+
+async function loadWatchlist(){
+    try {
+        const res  = await fetch(`${API_URL}/watchlist`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        watchlistItems = await res.json();
+        renderGrid();
+        updateCount();
+    } catch(err) {
+        console.error(err);
+        showToast("Could not load watchlist.", "error");
+    }
+}
+
+
+// ── Render grid ───────────────────────────────────────────────────────
+
+function renderGrid(){
+    const grid = document.getElementById("watchlistGrid");
+
+    const filtered = activeFilter === "all"
+        ? watchlistItems
+        : watchlistItems.filter(i => i.category === activeFilter);
+
+    if(filtered.length === 0){
+        grid.innerHTML = `
+            <div class="wl-empty">
+                <i class="fas fa-star"></i>
+                <h3>${watchlistItems.length === 0 ? "Your watchlist is empty" : "No symbols in this category"}</h3>
+                <p>${watchlistItems.length === 0
+                    ? "Add symbols above or click a quick-add suggestion to start tracking live charts."
+                    : "Add a symbol in the selected category to see it here."
+                }</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(item => {
+        const col  = CATEGORY_COLORS[item.category] || "#94a3b8";
+        const icon = CATEGORY_ICONS[item.category]  || "🌐";
+
+        return `
+            <div class="wl-card" id="card-${item.id}">
+                <div class="wl-card-header">
+                    <div class="wl-card-symbol">
+                        <span style="font-size:18px;">${icon}</span>
+                        <div>
+                            <div class="symbol-name" style="color:white;">${item.label || item.symbol}</div>
+                            <span class="symbol-cat" style="color:${col};">${item.category}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <button
+                            class="wl-remove-btn"
+                            title="Expand chart"
+                            onclick="openFullChart('${item.symbol}', '${item.category}', '${item.label || item.symbol}')"
+                            style="color:var(--primary);"
+                        >
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button
+                            class="wl-remove-btn"
+                            title="Remove from watchlist"
+                            onclick="removeSymbol('${item.id}')"
+                        >
+                            <i class="fas fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="wl-chart" id="chart-${item.id}"></div>
+            </div>
+        `;
+    }).join("");
+
+    // Render TradingView mini charts after DOM is ready
+    requestAnimationFrame(() => {
+        filtered.forEach(item => {
+            renderMiniChart(item);
+        });
+    });
+}
+
+
+// ── TradingView mini chart ────────────────────────────────────────────
+
+function renderMiniChart(item){
+    const container = document.getElementById(`chart-${item.id}`);
+    if(!container) return;
+    container.innerHTML = "";
+
+    new TradingView.MiniWidget({
+        container_id: `chart-${item.id}`,
+        symbol:       tvSymbol(item.symbol, item.category),
+        interval:     "D",
+        width:        "100%",
+        height:       220,
+        locale:       "en",
+        dateRange:    "3M",
+        colorTheme:   "dark",
+        trendLineColor:"rgba(59,130,246,1)",
+        underLineColor:"rgba(59,130,246,0.1)",
+        underLineBottomColor:"rgba(59,130,246,0)",
+        isTransparent: true,
+        autosize:      true,
+        largeChartUrl: "",
+        noTimeScale:   false,
+    });
+}
+
+
+// ── Full chart modal ──────────────────────────────────────────────────
+
+function openFullChart(symbol, category, label){
+    const modal     = document.getElementById("chartModal");
+    const container = document.getElementById("modalChartContainer");
+    const titleEl   = document.getElementById("modalSymbolLabel");
+
+    titleEl.textContent = label || symbol;
+    container.innerHTML = "";
+    modal.classList.add("open");
+
+    // Render full advanced chart
+    new TradingView.widget({
+        container_id:   "modalChartContainer",
+        symbol:          tvSymbol(symbol, category),
+        interval:        "H1",
+        width:           "100%",
+        height:          560,
+        locale:          "en",
+        theme:           "dark",
+        style:           "1",
+        toolbar_bg:      "#070b14",
+        enable_publishing: false,
+        hide_top_toolbar:  false,
+        hide_legend:       false,
+        save_image:        false,
+        allow_symbol_change: true,
+        studies:         ["RSI@tv-basicstudies", "MACD@tv-basicstudies"],
+    });
+}
+
+document.getElementById("closeModal").addEventListener("click", () => {
+    document.getElementById("chartModal").classList.remove("open");
+    document.getElementById("modalChartContainer").innerHTML = "";
+});
+
+document.getElementById("chartModal").addEventListener("click", (e) => {
+    if(e.target.id === "chartModal"){
+        document.getElementById("chartModal").classList.remove("open");
+        document.getElementById("modalChartContainer").innerHTML = "";
+    }
+});
+
+
+// ── Add symbol ────────────────────────────────────────────────────────
+
+async function addSymbol(symbol, category){
+    symbol = symbol.toUpperCase().trim();
+    if(!symbol) return;
+
+    try {
+        const res  = await fetch(`${API_URL}/watchlist`, {
+            method: "POST",
+            headers: {
+                "Content-Type":  "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ symbol, category, label: symbol })
+        });
+        const data = await res.json();
+
+        if(!res.ok){
+            showToast(data.detail || "Could not add symbol.", "error");
+            return;
+        }
+
+        showToast(`${symbol} added to watchlist.`, "success");
+        document.getElementById("symbolInput").value = "";
+        await loadWatchlist();
+
+    } catch(err) {
+        showToast("Something went wrong.", "error");
+    }
+}
+
+
+// ── Remove symbol ─────────────────────────────────────────────────────
+
+async function removeSymbol(id){
+    try {
+        const res = await fetch(`${API_URL}/watchlist/${id}`, {
+            method:  "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if(res.ok){
+            watchlistItems = watchlistItems.filter(i => i.id !== id);
+            renderGrid();
+            updateCount();
+            showToast("Removed from watchlist.", "info");
+        }
+    } catch(err) {
+        showToast("Could not remove symbol.", "error");
+    }
+}
+
+
+// ── Count badge ───────────────────────────────────────────────────────
+
+function updateCount(){
+    document.getElementById("wl-count").textContent =
+        `${watchlistItems.length} / 20`;
+}
+
+
+// ── Event listeners ───────────────────────────────────────────────────
+
+document.getElementById("addBtn").addEventListener("click", () => {
+    const symbol   = document.getElementById("symbolInput").value;
+    const category = document.getElementById("categorySelect").value;
+    addSymbol(symbol, category);
+});
+
+document.getElementById("symbolInput").addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+        const symbol   = document.getElementById("symbolInput").value;
+        const category = document.getElementById("categorySelect").value;
+        addSymbol(symbol, category);
+    }
+});
+
+// Quick add suggestions
+document.querySelectorAll(".wl-suggestion").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const symbol   = btn.dataset.symbol;
+        const category = btn.dataset.cat;
+        addSymbol(symbol, category);
+    });
+});
+
+// Category filter chips
+document.querySelectorAll(".wl-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+        document.querySelectorAll(".wl-chip").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        activeFilter = chip.dataset.filter;
+        renderGrid();
+    });
+});
+
+
+// ── Init ─────────────────────────────────────────────────────────────
+window.onload = loadWatchlist;
+</script>
+
+<!-- TradingView widget scripts -->
+<script src="https://s3.tradingview.com/tv.js"></script>
+</body>
+</html>
