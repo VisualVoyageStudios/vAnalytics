@@ -559,27 +559,34 @@ function renderGrid(){
 function renderMiniChart(item){
     const container = document.getElementById(`chart-${item.id}`);
     if(!container) return;
-    container.innerHTML = "";
 
-    new TradingView.MiniWidget({
-        container_id: `chart-${item.id}`,
-        symbol:       tvSymbol(item.symbol, item.category),
-        interval:     "D",
-        width:        "100%",
-        height:       220,
-        locale:       "en",
-        dateRange:    "3M",
-        colorTheme:   "dark",
-        trendLineColor:"rgba(59,130,246,1)",
-        underLineColor:"rgba(59,130,246,0.1)",
-        underLineBottomColor:"rgba(59,130,246,0)",
-        isTransparent: true,
-        autosize:      true,
-        largeChartUrl: "",
-        noTimeScale:   false,
+    container.innerHTML = `
+        <div class="tradingview-widget-container" style="height:100%; width:100%;">
+            <div class="tradingview-widget-container__widget" style="height:100%; width:100%;"></div>
+        </div>
+    `;
+
+    const script = document.createElement("script");
+    script.type  = "text/javascript";
+    script.src   = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+        symbol:         tvSymbol(item.symbol, item.category),
+        width:          "100%",
+        height:         "100%",
+        locale:         "en",
+        dateRange:      "3M",
+        colorTheme:     "dark",
+        isTransparent:  true,
+        autosize:       true,
+        largeChartUrl:  "",
+        trendLineColor:      "rgba(59,130,246,1)",
+        underLineColor:       "rgba(59,130,246,0.1)",
+        underLineBottomColor: "rgba(59,130,246,0)"
     });
-}
 
+    container.querySelector(".tradingview-widget-container").appendChild(script);
+}
 
 // ── Full chart modal ──────────────────────────────────────────────────
 
