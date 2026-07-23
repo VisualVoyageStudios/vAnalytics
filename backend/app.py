@@ -14,6 +14,7 @@ from models.currency_snapshot import CurrencySnapshot
 from models.challenge import UserChallenge
 from models.journal_template import JournalTemplate
 from models.cache_store import CacheStore
+from models.watchlist import WatchlistItem
 
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -397,6 +398,82 @@ def delete_account(account_id: str, current_user=Depends(get_current_user), db: 
     db.delete(account)
     db.commit()
     return {"message": "Account deleted"}
+
+
+# ─────────────────────────────────────────
+#  WATCHLIST
+# ─────────────────────────────────────────
+MAX_WATCHLIST_ITEMS = 20
+
+@app.get("/watchlist")
+def get_watchlist(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    items = (
+        db.query(WatchlistItem)
+        .filter(WatchlistItem.user_id == current_user["user_id"])
+        .order_by(WatchlistItem.created_at.asc())
+        .all()
+    )
+    return [
+        {
+            "id":       i.id,
+            "symbol":   i.symbol,
+            "category": i.category,
+            "label":    i.label
+        }
+        for i in items
+    ]
+
+
+@app.post("/watchlist")
+def add_watchlist_item(payload: dict, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    symbol   = (payload.get("symbol") or "").strip().upper()
+    category = payload.get("category") or "forex"
+    label    = payload.get("label") or symbol
+
+    if not symbol:
+        raise HTTPException(status_code=400, detail="Symbol is required")
+
+    existing_count = db.query(WatchlistItem).filter(
+        WatchlistItem.user_id == current_user["user_id"]
+    ).count()
+
+    if existing_count >= MAX_WATCHLIST_ITEMS:
+        raise HTTPException(status_code=400, detail=f"Watchlist limit reached ({MAX_WATCHLIST_ITEMS} symbols)")
+
+    duplicate = db.query(WatchlistItem).filter(
+        WatchlistItem.user_id == current_user["user_id"],
+        WatchlistItem.symbol == symbol
+    ).first()
+
+    if duplicate:
+        raise HTTPException(status_code=400, detail=f"{symbol} is already on your watchlist")
+
+    item = WatchlistItem(
+        id=str(uuid4()),
+        user_id=current_user["user_id"],
+        symbol=symbol,
+        category=category,
+        label=label
+    )
+    db.add(item)
+    db.commit()
+
+    return {"message": "Added to watchlist", "id": item.id}
+
+
+@app.delete("/watchlist/{item_id}")
+def remove_watchlist_item(item_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    item = db.query(WatchlistItem).filter(
+        WatchlistItem.id == item_id,
+        WatchlistItem.user_id == current_user["user_id"]
+    ).first()
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Watchlist item not found")
+
+    db.delete(item)
+    db.commit()
+    return {"message": "Removed from watchlist"}
 
 # ─────────────────────────────────────────
 #  TRADES
@@ -2845,67 +2922,6 @@ def trigger_cot_backfill(db: Session = Depends(get_db), user=Depends(get_current
         "rows_found": len(rows),
         "rows_inserted": inserted
     }
-
-# ─────────────────────────────────────────
-#  TRADINGVIEW WATCHLIST
-# ─────────────────────────────────────────
-from models.watchlist import WatchlistItem
-
-class WatchlistAdd(BaseModel):
-    symbol:   str
-    label:    Optional[str] = None
-    category: Optional[str] = "forex"
-
-
-@app.get("/watchlist")
-def get_watchlist(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    items = db.query(WatchlistItem).filter(
-        WatchlistItem.user_id == current_user["user_id"]
-    ).order_by(WatchlistItem.created_at.asc()).all()
-    return items
-
-
-@app.post("/watchlist")
-def add_to_watchlist(item: WatchlistAdd, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    # check duplicate
-    existing = db.query(WatchlistItem).filter(
-        WatchlistItem.user_id == current_user["user_id"],
-        WatchlistItem.symbol  == item.symbol.upper()
-    ).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Symbol already in watchlist")
-
-    # max 20 symbols
-    count = db.query(WatchlistItem).filter(
-        WatchlistItem.user_id == current_user["user_id"]
-    ).count()
-    if count >= 20:
-        raise HTTPException(status_code=400, detail="Watchlist limit reached (20 symbols)")
-
-    new_item = WatchlistItem(
-        id=str(uuid4()),
-        user_id=current_user["user_id"],
-        symbol=item.symbol.upper(),
-        label=item.label or item.symbol.upper(),
-        category=item.category or "forex"
-    )
-    db.add(new_item)
-    db.commit()
-    return {"message": "Added to watchlist", "id": new_item.id}
-
-
-@app.delete("/watchlist/{item_id}")
-def remove_from_watchlist(item_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    item = db.query(WatchlistItem).filter(
-        WatchlistItem.id      == item_id,
-        WatchlistItem.user_id == current_user["user_id"]
-    ).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    db.delete(item)
-    db.commit()
-    return {"message": "Removed from watchlist"}
-
 
 
 
