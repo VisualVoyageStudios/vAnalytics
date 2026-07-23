@@ -155,6 +155,37 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"order_type migration skipped/failed: {e}")
 
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN subscription_type VARCHAR DEFAULT 'free'"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"subscription_type migration skipped/failed: {e}")
+
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN total_paid FLOAT DEFAULT 0"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"total_paid migration skipped/failed: {e}")
+
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN ls_subscription_id VARCHAR"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"ls_subscription_id migration skipped/failed: {e}")
+
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN ls_customer_id VARCHAR"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"ls_customer_id migration skipped/failed: {e}")
+
+
+
+
 app = FastAPI()
 
 limiter = Limiter(key_func=get_remote_address)
@@ -338,7 +369,14 @@ def login_user(request: Request, user: UserLogin, db: Session = Depends(get_db))
 @app.get("/auth/me")
 def get_me(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == current_user["user_id"]).first()
-    return {"email": user.email, "is_premium": user.is_premium}
+    remaining = max(0, LIFETIME_PRICE - (user.total_paid or 0)) if user.subscription_type == "monthly" else None
+    return {
+        "email": user.email,
+        "is_premium": user.is_premium,
+        "subscription_type": user.subscription_type,
+        "total_paid": user.total_paid,
+        "remaining_to_lifetime": remaining
+    }
 
 
 @app.post("/auth/change-password")
@@ -399,6 +437,125 @@ def delete_account(account_id: str, current_user=Depends(get_current_user), db: 
     db.commit()
     return {"message": "Account deleted"}
 
+# -- PAYMENT WEBHOOK------
+LIFETIME_PRICE   = 149.00
+MONTHLY_PRICE    = 19.99
+LS_WEBHOOK_SECRET = os.getenv("LS_WEBHOOK_SECRET")
+LS_API_KEY        = os.getenv("LS_API_KEY")
+
+import hmac, hashlib
+
+def verify_ls_signature(payload_body: bytes, signature_header: str) -> bool:
+    if not LS_WEBHOOK_SECRET:
+        return False
+    digest = hmac.new(LS_WEBHOOK_SECRET.encode(), payload_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(digest, signature_header or "")
+
+
+@app.post("/webhooks/lemonsqueezy")
+async def lemonsqueezy_webhook(request: Request, db: Session = Depends(get_db)):
+    body = await request.body()
+    signature = request.headers.get("X-Signature", "")
+
+    if not verify_ls_signature(body, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    payload    = json.loads(body)
+    event_name = payload.get("meta", {}).get("event_name")
+    data       = payload.get("data", {})
+    attrs      = data.get("attributes", {})
+
+    custom_data = payload.get("meta", {}).get("custom_data", {})
+    user_id     = custom_data.get("user_id")
+
+    if not user_id:
+        return {"status": "ignored", "reason": "no user_id in custom_data"}
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {"status": "ignored", "reason": "user not found"}
+
+    # ── Lifetime one-time purchase ──────────────────────────────────
+    if event_name == "order_created" and attrs.get("first_order_item", {}).get("variant_id") == LS_LIFETIME_VARIANT_ID:
+        user.subscription_type = "lifetime"
+        user.is_premium        = True
+        user.total_paid        = LIFETIME_PRICE
+        db.commit()
+        return {"status": "processed", "action": "lifetime_granted"}
+
+    # ── Monthly subscription — first payment ────────────────────────
+    if event_name == "subscription_created":
+        user.subscription_type  = "monthly"
+        user.is_premium         = True
+        user.ls_subscription_id = data.get("id")
+        user.ls_customer_id     = str(attrs.get("customer_id"))
+        db.commit()
+        return {"status": "processed", "action": "monthly_started"}
+
+    # ── Monthly subscription — each successful renewal ──────────────
+    if event_name == "subscription_payment_success":
+        amount_paid = attrs.get("subtotal", 0) / 100  # LS sends cents
+
+        user.total_paid = round((user.total_paid or 0) + amount_paid, 2)
+
+        if user.total_paid >= LIFETIME_PRICE:
+            overage = round(user.total_paid - LIFETIME_PRICE, 2)
+
+            # cancel future billing
+            await cancel_ls_subscription(user.ls_subscription_id)
+
+            # refund the overage so the customer pays exactly LIFETIME_PRICE
+            if overage > 0:
+                await refund_ls_payment(data.get("id"), overage)
+
+            user.subscription_type = "lifetime"
+            user.total_paid         = LIFETIME_PRICE
+            db.commit()
+            return {"status": "processed", "action": "converted_to_lifetime", "refunded": overage}
+
+        db.commit()
+        return {"status": "processed", "action": "payment_recorded", "total_paid": user.total_paid}
+
+    # ── Subscription cancelled (by user or failed payment) ──────────
+    if event_name in ("subscription_cancelled", "subscription_expired"):
+        if user.subscription_type == "monthly":
+            user.is_premium = False
+        db.commit()
+        return {"status": "processed", "action": "access_revoked"}
+
+    return {"status": "ignored", "event": event_name}
+
+
+async def cancel_ls_subscription(subscription_id: str):
+    async with httpx.AsyncClient() as client:
+        await client.patch(
+            f"https://api.lemonsqueezy.com/v1/subscriptions/{subscription_id}",
+            headers={
+                "Authorization": f"Bearer {LS_API_KEY}",
+                "Content-Type": "application/vnd.api+json",
+                "Accept": "application/vnd.api+json",
+            },
+            json={"data": {"type": "subscriptions", "id": subscription_id, "attributes": {"cancelled": True}}},
+        )
+
+
+async def refund_ls_payment(order_id: str, amount: float):
+    async with httpx.AsyncClient() as client:
+        await client.post(
+            f"https://api.lemonsqueezy.com/v1/refunds",
+            headers={
+                "Authorization": f"Bearer {LS_API_KEY}",
+                "Content-Type": "application/vnd.api+json",
+                "Accept": "application/vnd.api+json",
+            },
+            json={
+                "data": {
+                    "type": "refunds",
+                    "attributes": {"amount": int(amount * 100)},
+                    "relationships": {"order": {"data": {"type": "orders", "id": order_id}}},
+                }
+            },
+        )
 
 # ─────────────────────────────────────────
 #  WATCHLIST
