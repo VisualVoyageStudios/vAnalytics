@@ -145,7 +145,7 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"journal_templates migration skipped/failed: {e}")
 
-
+        ## MT5 trade id string
     try:
         conn.execute(text("UPDATE trades SET order_type = 'BUY' WHERE order_type = '0'"))
         conn.execute(text("UPDATE trades SET order_type = 'SELL' WHERE order_type = '1'"))
@@ -155,6 +155,7 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"order_type migration skipped/failed: {e}")
 
+        ## Subscription (free) check/ monthly payment check/ 
     try:
         conn.execute(text("ALTER TABLE users ADD COLUMN subscription_type VARCHAR DEFAULT 'free'"))
         conn.commit()
@@ -182,6 +183,29 @@ with engine.connect() as conn:
     except Exception as e:
         conn.rollback()
         print(f"ls_customer_id migration skipped/failed: {e}")
+
+
+        ## Paystack
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN payment_provider VARCHAR"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"payment_provider migration skipped/failed: {e}")
+
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN external_subscription_id VARCHAR"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"external_subscription_id migration skipped/failed: {e}")
+
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN external_customer_id VARCHAR"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"external_customer_id migration skipped/failed: {e}")
 
 
 
