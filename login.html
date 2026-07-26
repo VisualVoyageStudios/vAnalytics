@@ -1,67 +1,629 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Voyager Analytics</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voyager Analytics | Built for traders</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/landing.css" />
+    <style>
+        /* ─── Trust Carousel ─── */
+        .trust-section {
+            padding: 20px 8% 40px;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
 
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/auth.css">
+        .trust-section .section-eyebrow {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 24px;
+            display: block;
+        }
+
+        .carousel-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 24px 12px;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            padding: 8px 0;
+        }
+
+        .carousel-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 100px;
+            transition: opacity 0.2s;
+        }
+
+        .carousel-item .logo-svg {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 12px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .carousel-item:hover .logo-svg {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .carousel-item .logo-svg svg {
+            width: 100%;
+            height: 100%;
+            fill: #94a3b8;
+            transition: fill 0.2s;
+        }
+
+        .carousel-item:hover .logo-svg svg {
+            fill: #e2e8f0;
+        }
+
+        .carousel-item span {
+            font-size: 0.8rem;
+            letter-spacing: 0.3px;
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            padding: 0;
+        }
+
+        .carousel-dot.active {
+            background: #00d4ff;
+            transform: scale(1.2);
+        }
+
+        .carousel-dot:hover {
+            background: #64748b;
+        }
+
+        /* ─── Security Badge ─── */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 28px;
+            padding: 14px 32px;
+            background: rgba(0, 212, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 60px;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            transition: border-color 0.2s;
+        }
+
+        .security-badge:hover {
+            border-color: rgba(0, 212, 255, 0.35);
+        }
+
+        .security-badge .badge-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .security-badge .badge-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #00d4ff;
+        }
+
+        .security-badge .badge-divider {
+            width: 1px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .security-badge .verified-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #34d399;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(52, 211, 153, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(52, 211, 153, 0.15);
+        }
+
+        .security-badge .verified-tag svg {
+            width: 14px;
+            height: 14px;
+            fill: #34d399;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .carousel-slide {
+                gap: 24px;
+            }
+            .carousel-item {
+                min-width: 70px;
+            }
+            .carousel-item .logo-svg {
+                width: 48px;
+                height: 48px;
+                padding: 8px;
+            }
+            .security-badge {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 14px 20px;
+                gap: 10px;
+            }
+            .security-badge .badge-divider {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="auth-container">
-  <div class="auth-wrapper">
+    <!-- ─── NAVBAR ─── -->
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-rocket"></i></div>
+            VOYAGER
+        </div>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="register.html" class="btn-primary nav-cta">Get Started</a></li>
+        </ul>
+    </nav>
 
-    <a href="index.html" class="auth-brand">
-        <div class="auth-brand-icon"><i class="fas fa-rocket"></i></div>
-        <span class="auth-brand-text">VOYAGER</span>
-    </a>
+    <!-- ─── HERO ─── -->
+    <section class="hero">
+        <div class="hero-badge">
+            <i class="fas fa-circle-check"></i>
+            Start With A Free Account Today!
+        </div>
 
-    <h1 class="welcome-note">
-       <i class="fa fa-handshake">Welcome Back!</i>
-    </h1>
+        <h1>
+            Institutional Intelligence.<br />
+            <span class="accent">Built for the Retail Trader.</span>
+        </h1>
 
-
-    <div class="auth-card">
-
-        <p>Login to your Voyager account</p>
-
-        <form id="loginForm">
-
-            <input
-                type="email"
-                id="email"
-                placeholder="Email Address"
-                required
-            >
-
-            <input
-                type="password"
-                id="password"
-                placeholder="Password"
-                required
-            >
-
-            <button type="submit">
-                Login
-            </button>
-
-        </form>
-
-        <p>
-            Don't have an account?
-            <a href="register.html">
-                Register
-            </a>
+        <p class="hero-sub">
+            Connect your MetaTrader 5 account and get instant access to professional
+            analytics, COT positioning, macro intelligence, and AI-powered trade insights —
+            all in one powerful dashboard.
         </p>
 
-    </div>
+        <div class="hero-buttons">
+            <a href="register.html" class="btn-primary btn-lg">
+                Start for Free
+                <i class="fas fa-arrow-right"></i>
+            </a>
+            <a href="login.html" class="btn-secondary btn-lg">
+                Login
+            </a>
+        </div>
 
-    </div>
-</div>
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-num">Free</span>
+                <span class="stat-label">To Get Started</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">12+</span>
+                <span class="stat-label">Analytics Tools</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">Real-time</span>
+                <span class="stat-label">Market Intelligence</span>
+            </div>
+        </div>
+    </section>
 
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
+    <!-- ─── FEATURES ─── -->
+    <section id="features" class="features-section">
+        <div class="section-header">
+            <p class="section-eyebrow">Features</p>
+            <h2>Everything you need to trade with conviction</h2>
+            <p class="section-sub">
+                From institutional positioning to macro trends — Voyager gives you the edge
+                that was once reserved for the pros.
+            </p>
+        </div>
+
+        <div class="features-grid">
+
+            <!-- COT Positioning -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-users"></i></div>
+                <h3>COT Positioning</h3>
+                <p>Track institutional sentiment with live Commitments of Traders data. See exactly how commercials, specs, and retail are positioned.</p>
+                <span class="feature-tag">New</span>
+            </div>
+
+            <!-- Macro Matrix -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-globe"></i></div>
+                <h3>Macro Matrix</h3>
+                <p>At-a-glance view of global economic indicators — GDP, inflation, employment, and central bank policy — all in one matrix.</p>
+                <span class="feature-tag">New</span>
+            </div>
+
+            <!-- Correlation Matrix -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-table-cells-large"></i></div>
+                <h3>Correlation Matrix</h3>
+                <p>Visualise how currency pairs, commodities, and indices move together. Identify hedging opportunities and diversify with confidence.</p>
+                <span class="feature-tag">New</span>
+            </div>
+
+            <!-- Currency Strength -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-gauge-high"></i></div>
+                <h3>Currency Strength Meter</h3>
+                <p>Real-time strength scores for all major currencies. Know which currencies are leading and lagging at a glance.</p>
+            </div>
+
+            <!-- Economic Heatmap -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-fire"></i></div>
+                <h3>Economic Heatmap</h3>
+                <p>See which economic events are moving the markets. Colour-coded impact levels help you filter the noise.</p>
+            </div>
+
+            <!-- AI Trade Insights -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                <h3>AI Trade Insights</h3>
+                <p>Get actionable feedback on your trading patterns. AI-powered analysis of your win rate, risk management, and timing.</p>
+                <span class="feature-tag">Beta</span>
+            </div>
+
+            <!-- MT5 Auto Sync -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-rotate"></i></div>
+                <h3>MT5 Auto Sync</h3>
+                <p>One-click imports your full trade history from MetaTrader 5. No manual entry, no CSV uploads.</p>
+            </div>
+
+            <!-- Equity Curve -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-area"></i></div>
+                <h3>Equity Curve &amp; Drawdown</h3>
+                <p>See your account growth plotted over time. Understand your drawdown periods and recovery patterns.</p>
+            </div>
+
+            <!-- Trading Journal -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-book-open-reader"></i></div>
+                <h3>Trade Journal</h3>
+                <p>Log emotions, lessons, and mistakes for every trade. Build self-awareness that turns into consistent profits.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ─── HOW IT WORKS ─── -->
+    <section id="how-it-works" class="how-section">
+        <div class="section-header">
+            <p class="section-eyebrow">How It Works</p>
+            <h2>Up and running in minutes</h2>
+        </div>
+
+        <div class="steps-grid">
+
+            <div class="step">
+                <div class="step-num">01</div>
+                <h3>Create your account</h3>
+                <p>Sign up for free. No credit card, no subscription — just your email and a password.</p>
+            </div>
+
+            <div class="step-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+
+            <div class="step">
+                <div class="step-num">02</div>
+                <h3>Connect MetaTrader 5</h3>
+                <p>Download the Sync Agent from your settings page, run it once, and your trades import automatically.</p>
+            </div>
+
+            <div class="step-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+
+            <div class="step">
+                <div class="step-num">03</div>
+                <h3>Start improving</h3>
+                <p>Analyse your stats, journal your trades, and track your growth over time.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ─── PRICING ─── -->
+    <section id="pricing" class="pricing-section">
+        <div class="section-header">
+            <p class="section-eyebrow">Pricing</p>
+            <h2>Start free. Upgrade when ready.</h2>
+            <p class="section-sub">
+                All plans include the full Voyager dashboard. Monthly subscribers get
+                <strong>lifetime access</strong> after 12 consecutive payments.
+            </p>
+        </div>
+
+        <div class="pricing-grid">
+
+            <!-- Free -->
+            <div class="pricing-card">
+                <div class="pricing-tier">Free</div>
+                <div class="pricing-price">R0</div>
+                <div class="pricing-period">forever</div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> MT5 Trade Sync</li>
+                    <li><i class="fas fa-check"></i> Analytics Dashboard</li>
+                    <li><i class="fas fa-check"></i> Trading Journal</li>
+                    <li><i class="fas fa-check"></i> Calendar Heatmap</li>
+                    <li><i class="fas fa-check"></i> 1 Trading Account</li>
+                </ul>
+                <a href="register.html" class="btn-secondary pricing-btn">Get Started</a>
+            </div>
+
+            <!-- Monthly → Lifetime -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <div class="pricing-tier">Monthly</div>
+                <div class="pricing-price">R380</div>
+                <div class="pricing-period">per month · converts to lifetime after 12 months</div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> Everything in Free</li>
+                    <li><i class="fas fa-check"></i> COT Positioning</li>
+                    <li><i class="fas fa-check"></i> Macro Matrix</li>
+                    <li><i class="fas fa-check"></i> Correlation Matrix</li>
+                    <li><i class="fas fa-check"></i> Currency Strength Meter</li>
+                    <li><i class="fas fa-check"></i> Economic Heatmap</li>
+                    <li><i class="fas fa-check"></i> AI Trade Insights</li>
+                    <li><i class="fas fa-check"></i> Unlimited Trading Accounts</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> <strong style="color:#fbbf24;">Lifetime after 12 months</strong></li>
+                </ul>
+                <a href="register.html" class="btn-primary pricing-btn">Start Monthly</a>
+            </div>
+
+            <!-- Lifetime -->
+            <div class="pricing-card">
+                <div class="lifetime-badge">🔒 Lifetime Deal</div>
+                <div class="pricing-tier">Lifetime</div>
+                <div class="pricing-price">R1 499</div>
+                <div class="pricing-period">once-off · lifetime access</div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> Everything in Monthly</li>
+                    <li><i class="fas fa-check"></i> No recurring fees</li>
+                    <li><i class="fas fa-check"></i> Priority Support</li>
+                    <li><i class="fas fa-check"></i> Early Access to New Features</li>
+                    <li><i class="fas fa-check"></i> Lifetime Updates</li>
+                </ul>
+                <a href="register.html" class="btn-secondary pricing-btn">Get Lifetime Access</a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ─── TRUST CAROUSEL + SECURITY BADGE ─── -->
+    <section class="trust-section">
+        <span class="section-eyebrow">Trusted by traders worldwide</span>
+
+        <div class="carousel-wrapper">
+            <div class="carousel-track" id="trustTrack">
+                <!-- Slide 1: Payment providers -->
+                <div class="carousel-slide">
+                    <div class="carousel-item">
+                        <div class="logo-svg">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#94a3b8" stroke-width="4"/>
+                                <path d="M30 50 L44 64 L70 38" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <span>PayFast</span>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="logo-svg">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="20" y="30" width="60" height="12" rx="4" fill="#94a3b8"/>
+                                <rect x="20" y="50" width="60" height="12" rx="4" fill="#94a3b8"/>
+                                <rect x="20" y="70" width="40" height="12" rx="4" fill="#94a3b8"/>
+                                <circle cx="78" cy="76" r="8" fill="none" stroke="#94a3b8" stroke-width="3"/>
+                            </svg>
+                        </div>
+                        <span>Paystack</span>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="logo-svg">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#94a3b8" stroke-width="4"/>
+                                <path d="M50 20 L50 80 M20 50 L80 50" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M30 30 L70 70 M70 30 L30 70" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+                            </svg>
+                        </div>
+                        <span>Lemon Squeezy</span>
+                    </div>
+                </div>
+                <!-- Slide 2: Partners -->
+                <div class="carousel-slide">
+                    <div class="carousel-item">
+                        <div class="logo-svg">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#94a3b8" stroke-width="4"/>
+                                <text x="50" y="62" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#94a3b8" text-anchor="middle">E</text>
+                                <line x1="30" y1="30" x2="70" y2="70" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="70" y1="30" x2="30" y2="70" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <span>Exness</span>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="logo-svg">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20,70 40,40 60,55 80,20" stroke="#94a3b8" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="20" cy="70" r="5" fill="#94a3b8"/>
+                                <circle cx="40" cy="40" r="5" fill="#94a3b8"/>
+                                <circle cx="60" cy="55" r="5" fill="#94a3b8"/>
+                                <circle cx="80" cy="20" r="5" fill="#94a3b8"/>
+                            </svg>
+                        </div>
+                        <span>TradingView</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="carousel-dots">
+            <button class="carousel-dot active" data-slide="0"></button>
+            <button class="carousel-dot" data-slide="1"></button>
+        </div>
+
+        <!-- ─── Security Badge ─── -->
+        <div class="security-badge">
+            <span class="badge-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+                    <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0" fill="none" stroke="#00d4ff" stroke-width="2"/>
+                </svg>
+            </span>
+            <span>256-bit SSL Encrypted</span>
+            <span class="badge-divider"></span>
+            <span>PCI Compliant</span>
+            <span class="badge-divider"></span>
+            <span class="verified-tag">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+                Verified
+            </span>
+        </div>
+    </section>
+
+    <!-- ─── CTA ─── -->
+    <section class="cta-section">
+        <h2>Ready to trade smarter?</h2>
+        <p>Join traders already using Voyager to track, analyse, and improve their performance.</p>
+        <a href="register.html" class="btn-primary btn-lg">
+            Create Free Account
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer class="footer">
+        <div class="footer-logo">
+            <i class="fas fa-rocket"></i>
+            VOYAGER ANALYTICS
+        </div>
+        <p class="footer-copy">© 2026 Voyager Analytics. Built for traders.</p>
+    </footer>
+
+    <!-- ─── Carousel Script ─── -->
+    <script>
+        (function() {
+            const track = document.getElementById('trustTrack');
+            const dots = document.querySelectorAll('.carousel-dot');
+            let currentIndex = 0;
+            const totalSlides = 2;
+            let intervalId;
+
+            function goToSlide(index) {
+                if (index < 0) index = totalSlides - 1;
+                if (index >= totalSlides) index = 0;
+                currentIndex = index;
+                track.style.transform = `translateX(-${currentIndex * 100}%)`;
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentIndex);
+                });
+            }
+
+            function nextSlide() {
+                goToSlide(currentIndex + 1);
+            }
+
+            function startAutoplay() {
+                if (intervalId) clearInterval(intervalId);
+                intervalId = setInterval(nextSlide, 3500);
+            }
+
+            function stopAutoplay() {
+                if (intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                }
+            }
+
+            dots.forEach((dot, idx) => {
+                dot.addEventListener('click', function() {
+                    stopAutoplay();
+                    goToSlide(idx);
+                    startAutoplay();
+                });
+            });
+
+            const wrapper = document.querySelector('.carousel-wrapper');
+            wrapper.addEventListener('mouseenter', stopAutoplay);
+            wrapper.addEventListener('mouseleave', startAutoplay);
+
+            goToSlide(0);
+            startAutoplay();
+        })();
+    </script>
+
 </body>
 </html>
