@@ -423,6 +423,21 @@
     font-size: 1rem;
 }
 
+/* Payment logos with baked-in white backgrounds need a light chip behind them */
+.trust-item .logo-container.on-white {
+    background: white;
+    border-radius: 10px;
+    padding: 6px;
+}
+
+.trust-item .logo-container.on-white img {
+    filter: none; /* don't grayscale payment brand logos — they need to stay recognizable */
+}
+
+.trust-item:hover .logo-container.on-white img {
+    filter: none;
+}
+
 /* ─── Flagship Feature Showcases ─── */
 .showcase-section {
     padding: 60px 8%;
