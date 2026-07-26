@@ -581,6 +581,106 @@ async def refund_ls_payment(order_id: str, amount: float):
             },
         )
 
+
+## PAYSTACK
+from utils.paystack import (
+    initialize_lifetime_payment, initialize_subscription,
+    verify_transaction, disable_subscription, refund_transaction,
+    verify_paystack_signature, LIFETIME_PRICE_ZAR
+)
+
+# ── Paystack: start a lifetime purchase ─────────────────────────────────
+
+@app.post("/payments/paystack/initialize-lifetime")
+async def paystack_lifetime(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == current_user["user_id"]).first()
+    data = await initialize_lifetime_payment(user.id, user.email)
+    return {"authorization_url": data["authorization_url"], "reference": data["reference"]}
+
+
+# ── Paystack: start a monthly subscription ──────────────────────────────
+
+@app.post("/payments/paystack/initialize-subscription")
+async def paystack_subscription(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == current_user["user_id"]).first()
+    data = await initialize_subscription(user.id, user.email)
+    return {"authorization_url": data["authorization_url"], "reference": data["reference"]}
+
+
+# ── Paystack webhook ──────────────────────────────────────────────────
+
+@app.post("/webhooks/paystack")
+async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
+    body_bytes = await request.body()
+    signature  = request.headers.get("x-paystack-signature", "")
+
+    if not verify_paystack_signature(body_bytes, signature):
+        raise HTTPException(status_code=401, detail="Invalid Paystack webhook signature")
+
+    payload = json.loads(body_bytes)
+    event   = payload.get("event")
+    data    = payload.get("data", {})
+    meta    = data.get("metadata", {})
+    user_id = meta.get("user_id")
+
+    # ── One-time lifetime charge succeeded ───────────────────────────
+    if event == "charge.success" and meta.get("plan") == "lifetime":
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"status": "ignored", "reason": "user not found"}
+
+        user.subscription_type = "lifetime"
+        user.is_premium        = True
+        user.total_paid        = LIFETIME_PRICE_ZAR
+        user.payment_provider  = "paystack"
+        db.commit()
+        return {"status": "processed", "action": "lifetime_granted"}
+
+    # ── Monthly subscription — each successful renewal ───────────────
+    if event == "charge.success" and meta.get("plan") == "monthly":
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"status": "ignored", "reason": "user not found"}
+
+        amount_paid = data.get("amount", 0) / 100  # cents → ZAR
+
+        user.total_paid = round((user.total_paid or 0) + amount_paid, 2)
+        user.payment_provider = "paystack"
+        user.external_subscription_id = data.get("plan_object", {}).get("subscription_code") or user.external_subscription_id
+        user.is_premium = True
+
+        if user.total_paid >= LIFETIME_PRICE_ZAR:
+            overage = round(user.total_paid - LIFETIME_PRICE_ZAR, 2)
+
+            if user.external_subscription_id:
+                await disable_subscription(user.external_subscription_id, data.get("email_token", ""))
+            if overage > 0:
+                await refund_transaction(data.get("reference"), overage)
+
+            user.subscription_type = "lifetime"
+            user.total_paid        = LIFETIME_PRICE_ZAR
+            db.commit()
+            return {"status": "processed", "action": "converted_to_lifetime", "refunded": overage}
+
+        user.subscription_type = "monthly"
+        db.commit()
+        return {"status": "processed", "action": "payment_recorded", "total_paid": user.total_paid}
+
+    # ── Subscription disabled/cancelled ───────────────────────────────
+    if event == "subscription.disable":
+        subscription_code = data.get("subscription_code")
+        user = db.query(User).filter(User.external_subscription_id == subscription_code).first()
+        if user and user.subscription_type == "monthly":
+            user.is_premium = False
+            db.commit()
+        return {"status": "processed", "action": "access_revoked"}
+
+    return {"status": "ignored", "event": event}
+
+
+
+
+
 # ─────────────────────────────────────────
 #  WATCHLIST
 # ─────────────────────────────────────────
