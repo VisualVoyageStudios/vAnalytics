@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="css/global.css" />
     <link rel="stylesheet" href="css/landing.css" />
+    <link rel="stylesheet" href="css/ambient.css" />
     <style>
         /* ─── Trust Section ─── */
         .trust-section {
@@ -644,6 +645,13 @@
         </div>
         <p class="footer-copy">© 2026 Voyager Analytics. Built for traders.</p>
     </footer>
+    
+<script src="js/reveal.js"></script>
+<script>
+window.addEventListener("scroll", () => {
+    document.querySelector(".navbar").classList.toggle("scrolled", window.scrollY > 20);
+}, { passive: true });
+</script>
 
 </body>
 </html>
