@@ -1,0 +1,68 @@
+/* ── Ambient aurora background (reusable on any page) ── */
+.ambient-wrap {
+    position: relative;
+    overflow: hidden;
+}
+
+.ambient-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+    animation: ambient-drift 18s ease-in-out infinite alternate;
+}
+
+.ambient-blob.b1 {
+    width: 420px; height: 420px;
+    top: -120px; left: -80px;
+    background: radial-gradient(circle, #00d4ff, transparent 70%);
+    animation-duration: 20s;
+}
+
+.ambient-blob.b2 {
+    width: 480px; height: 480px;
+    top: 10%; right: -140px;
+    background: radial-gradient(circle, #7b61ff, transparent 70%);
+    animation-duration: 24s;
+    animation-delay: -6s;
+}
+
+.ambient-blob.b3 {
+    width: 360px; height: 360px;
+    bottom: -100px; left: 30%;
+    background: radial-gradient(circle, #00d4ff, transparent 70%);
+    opacity: 0.2;
+    animation-duration: 26s;
+    animation-delay: -12s;
+}
+
+@keyframes ambient-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(30px, -25px) scale(1.08); }
+    100% { transform: translate(-20px, 20px) scale(0.96); }
+}
+
+/* Faint grid overlay */
+.ambient-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+}
+
+/* Ensure real content sits above the ambient layer */
+.ambient-wrap > *:not(.ambient-blob):not(.ambient-grid) {
+    position: relative;
+    z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ambient-blob { animation: none; }
+}
