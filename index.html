@@ -406,52 +406,163 @@
             box-shadow: 0 2px 20px rgba(0,0,0,0.3);
         }
 
-        /* ─── Live Demo Section ─── */
+        /* ─── Live Demo: faithful mini app shell ─── */
         .demo-section {
             padding: 80px 8%;
             max-width: 1100px;
             margin: 0 auto;
         }
-        .demo-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 28px;
-        }
-        .demo-tab {
-            padding: 10px 20px;
-            border-radius: 24px;
-            font-size: 0.85rem;
-            font-weight: 600;
+
+        .demo-app-frame {
+            background: var(--bg);
             border: 1px solid var(--border);
-            background: rgba(255,255,255,0.02);
-            color: var(--muted);
-            cursor: pointer;
-            transition: all 0.2s;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+
+        .demo-app-frame-bar {
             display: flex;
             align-items: center;
             gap: 8px;
+            padding: 12px 16px;
+            background: #05070a;
+            border-bottom: 1px solid var(--border);
         }
-        .demo-tab:hover { border-color: rgba(0,212,255,0.3); color: var(--text); }
-        .demo-tab.active {
-            background: rgba(0,212,255,0.12);
-            border-color: #00d4ff;
+        .demo-app-frame-bar .dot {
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .demo-app-frame-bar .dot.red    { background: #ef4444; }
+        .demo-app-frame-bar .dot.yellow { background: #f59e0b; }
+        .demo-app-frame-bar .dot.green  { background: #22c55e; }
+        .demo-app-frame-url {
+            margin: 0 auto;
+            font-size: 0.75rem;
+            color: var(--muted);
+            background: rgba(255,255,255,0.03);
+            padding: 4px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .demo-app-body {
+            display: flex;
+            min-height: 440px;
+        }
+
+        /* Fake nav rail — mirrors the real .nav-rail exactly */
+        .demo-app-rail {
+            width: 64px;
+            flex-shrink: 0;
+            background: #05070a;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 6px;
+        }
+        .demo-app-rail-logo {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.25);
+            display: flex; align-items: center; justify-content: center;
+            color: #00d4ff;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .demo-app-rail-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--muted);
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .demo-app-rail-icon:hover:not(.disabled) {
+            background: rgba(59,130,246,.15);
+            color: white;
+        }
+        .demo-app-rail-icon.active {
+            background: rgba(59,130,246,.15);
             color: #00d4ff;
         }
-        .demo-panel-wrap {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 32px;
-            min-height: 240px;
+        .demo-app-rail-icon.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
+        .demo-app-rail-divider {
+            width: 28px;
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        .demo-app-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo-app-topnav {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .demo-app-hamburger { color: var(--muted); font-size: 18px; }
+        .demo-app-topnav h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            flex: 1;
+        }
+        .demo-live-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #22c55e;
+            background: rgba(34,197,94,0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+        .pulse-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            animation: livePulse 1.8s infinite;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.75); }
+        }
+
+        .demo-app-content {
+            flex: 1;
+            padding: 24px;
+            overflow: auto;
+        }
+
         .demo-panel { display: none; }
         .demo-panel.active { display: block; }
+
         .demo-loading {
             text-align: center;
             color: var(--muted);
-            padding: 40px 20px;
+            padding: 60px 20px;
             grid-column: 1 / -1;
         }
         .demo-note {
@@ -462,47 +573,28 @@
         }
 
         /* Currency strength bars */
-        .strength-list {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-        .strength-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .strength-row .ccy-code {
-            width: 50px;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
+        .strength-list { display: flex; flex-direction: column; gap: 14px; }
+        .strength-row { display: flex; align-items: center; gap: 16px; }
+        .strength-row .ccy-code { width: 50px; font-weight: 700; font-size: 0.9rem; }
         .strength-row .bar-track {
-            flex: 1;
-            height: 8px;
+            flex: 1; height: 8px;
             background: rgba(255,255,255,0.05);
             border-radius: 4px;
             overflow: hidden;
         }
-        .strength-row .bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.6s ease;
-        }
+        .strength-row .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
         .strength-row .bar-fill.bullish { background: #22c55e; }
         .strength-row .bar-fill.bearish { background: #ef4444; }
         .strength-row .bar-fill.neutral { background: #94a3b8; }
-        .strength-row .score-val {
-            width: 50px;
-            text-align: right;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
+        .strength-row .score-val { width: 50px; text-align: right; font-weight: 700; font-size: 0.85rem; }
 
-        @media (max-width: 640px) {
-            .demo-panel-wrap { padding: 20px; }
-            .demo-tabs { gap: 6px; }
-            .demo-tab { padding: 8px 14px; font-size: 0.78rem; }
+        @media (max-width: 720px) {
+            .demo-app-body { min-height: 380px; }
+            .demo-app-rail { width: 52px; }
+            .demo-app-rail-icon { width: 38px; height: 38px; font-size: 14px; }
+            .demo-app-content { padding: 16px; }
+            .demo-app-topnav { padding: 12px 16px; }
+            .demo-app-topnav h3 { font-size: 0.9rem; }
         }
     </style>
 </head>
