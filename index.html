@@ -915,60 +915,96 @@
     </section>
 
     <!-- ─── LIVE DEMO WINDOW ─── -->
+    <!-- ─── LIVE DEMO ─── -->
     <section id="live-demo" class="demo-section reveal">
         <div class="section-header">
             <p class="section-eyebrow">No Sign-Up Required</p>
-            <h2>Try it live, right now</h2>
+            <h2>This is what's waiting for you inside</h2>
             <p class="section-sub">
-                Real data, pulled live from the same sources Voyager uses every day.
-                This is a small preview — sign up free for the full picture.
+                A real look at the actual Voyager dashboard, pulling live data right now.
+                Click the icons on the left to explore.
             </p>
         </div>
 
-        <div class="demo-tabs">
-            <button class="demo-tab active" data-demo="cot">
-                <i class="fas fa-scale-unbalanced"></i> COT Positioning
-            </button>
-            <button class="demo-tab" data-demo="strength">
-                <i class="fas fa-signal"></i> Currency Strength
-            </button>
-            <button class="demo-tab" data-demo="macro">
-                <i class="fas fa-table-cells"></i> Macro Matrix
-            </button>
-        </div>
-
-        <div class="demo-panel-wrap">
-            <!-- COT panel -->
-            <div class="demo-panel active" id="demo-cot">
-                <div class="cot-grid" id="demoCotGrid">
-                    <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live CFTC data…</div>
-                </div>
+        <div class="demo-app-frame">
+            <!-- fake browser chrome -->
+            <div class="demo-app-frame-bar">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="demo-app-frame-url"><i class="fas fa-lock"></i> app.voyageranalytics.com</span>
             </div>
 
-            <!-- Currency Strength panel -->
-            <div class="demo-panel" id="demo-strength">
-                <div class="strength-list" id="demoStrengthList">
-                    <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live strength data…</div>
-                </div>
-            </div>
+            <div class="demo-app-body">
+                <!-- fake nav rail -->
+                <aside class="demo-app-rail">
+                    <div class="demo-app-rail-logo"><i class="fas fa-rocket"></i></div>
 
-            <!-- Macro Matrix panel -->
-            <div class="demo-panel" id="demo-macro">
-                <div class="showcase-visual" style="border:none; background:none; padding:0;">
-                    <table class="macro-matrix" id="demoMacroTable">
-                        <thead>
-                            <tr>
-                                <th style="text-align:left;">Currency</th>
-                                <th>Rate</th>
-                                <th>CPI</th>
-                                <th>GDP</th>
-                                <th>Overall</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td colspan="5" class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live macro data…</td></tr>
-                        </tbody>
-                    </table>
+                    <div class="demo-app-rail-icon disabled" title="Dashboard"><i class="fas fa-table-cells-large"></i></div>
+                    <div class="demo-app-rail-icon disabled" title="Trades"><i class="fas fa-chart-line"></i></div>
+                    <div class="demo-app-rail-icon disabled" title="Journal"><i class="fas fa-book-open-reader"></i></div>
+
+                    <div class="demo-app-rail-divider"></div>
+
+                    <div class="demo-app-rail-icon active" data-demo="cot" data-title="COT Positioning" title="COT Positioning">
+                        <i class="fas fa-scale-unbalanced"></i>
+                    </div>
+                    <div class="demo-app-rail-icon" data-demo="strength" data-title="Currency Strength" title="Currency Strength">
+                        <i class="fas fa-signal"></i>
+                    </div>
+                    <div class="demo-app-rail-icon" data-demo="macro" data-title="Macro Matrix" title="Macro Matrix">
+                        <i class="fas fa-table-cells"></i>
+                    </div>
+
+                    <div class="demo-app-rail-divider"></div>
+
+                    <div class="demo-app-rail-icon disabled" title="AI Insights"><i class="fas fa-microchip"></i></div>
+                    <div class="demo-app-rail-icon disabled" title="Reports"><i class="fas fa-file-pdf"></i></div>
+                </aside>
+
+                <div class="demo-app-main">
+                    <!-- fake topnav -->
+                    <div class="demo-app-topnav">
+                        <i class="fas fa-bars demo-app-hamburger"></i>
+                        <h3 id="demoPageTitle">COT Positioning</h3>
+                        <span class="demo-live-tag"><span class="pulse-dot"></span> Live Data</span>
+                    </div>
+
+                    <div class="demo-app-content">
+                        <!-- COT panel -->
+                        <div class="demo-panel active" id="demo-cot">
+                            <div class="cot-grid" id="demoCotGrid">
+                                <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live CFTC data…</div>
+                            </div>
+                        </div>
+
+                        <!-- Currency Strength panel -->
+                        <div class="demo-panel" id="demo-strength">
+                            <div class="strength-list" id="demoStrengthList">
+                                <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live strength data…</div>
+                            </div>
+                        </div>
+
+                        <!-- Macro Matrix panel -->
+                        <div class="demo-panel" id="demo-macro">
+                            <div class="showcase-visual" style="border:none; background:none; padding:0;">
+                                <table class="macro-matrix" id="demoMacroTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:left;">Currency</th>
+                                            <th>Rate</th>
+                                            <th>CPI</th>
+                                            <th>GDP</th>
+                                            <th>Overall</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="5" class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live macro data…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1184,13 +1220,14 @@
         // LIVE DEMO WINDOW //
         const DEMO_API_URL = "https://vanalytics.onrender.com";
 
-        // ── Tab switching ──
-        document.querySelectorAll(".demo-tab").forEach(tab => {
-            tab.addEventListener("click", () => {
-                document.querySelectorAll(".demo-tab").forEach(t => t.classList.remove("active"));
+        // ── Fake rail navigation ──
+        document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(icon => {
+            icon.addEventListener("click", () => {
+                document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(i => i.classList.remove("active"));
                 document.querySelectorAll(".demo-panel").forEach(p => p.classList.remove("active"));
-                tab.classList.add("active");
-                document.getElementById(`demo-${tab.dataset.demo}`).classList.add("active");
+                icon.classList.add("active");
+                document.getElementById(`demo-${icon.dataset.demo}`).classList.add("active");
+                document.getElementById("demoPageTitle").textContent = icon.dataset.title;
             });
         });
 
