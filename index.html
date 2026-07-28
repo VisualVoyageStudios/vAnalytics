@@ -405,6 +405,105 @@
             backdrop-filter: blur(12px);
             box-shadow: 0 2px 20px rgba(0,0,0,0.3);
         }
+
+        /* ─── Live Demo Section ─── */
+        .demo-section {
+            padding: 80px 8%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .demo-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+        .demo-tab {
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.02);
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .demo-tab:hover { border-color: rgba(0,212,255,0.3); color: var(--text); }
+        .demo-tab.active {
+            background: rgba(0,212,255,0.12);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        .demo-panel-wrap {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            min-height: 240px;
+        }
+        .demo-panel { display: none; }
+        .demo-panel.active { display: block; }
+        .demo-loading {
+            text-align: center;
+            color: var(--muted);
+            padding: 40px 20px;
+            grid-column: 1 / -1;
+        }
+        .demo-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 16px;
+        }
+
+        /* Currency strength bars */
+        .strength-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .strength-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .strength-row .ccy-code {
+            width: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .strength-row .bar-track {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .strength-row .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+        .strength-row .bar-fill.bullish { background: #22c55e; }
+        .strength-row .bar-fill.bearish { background: #ef4444; }
+        .strength-row .bar-fill.neutral { background: #94a3b8; }
+        .strength-row .score-val {
+            width: 50px;
+            text-align: right;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .demo-panel-wrap { padding: 20px; }
+            .demo-tabs { gap: 6px; }
+            .demo-tab { padding: 8px 14px; font-size: 0.78rem; }
+        }
     </style>
 </head>
 <body>
@@ -815,6 +914,76 @@
         </div>
     </section>
 
+    <!-- ─── LIVE DEMO WINDOW ─── -->
+    <section id="live-demo" class="demo-section reveal">
+        <div class="section-header">
+            <p class="section-eyebrow">No Sign-Up Required</p>
+            <h2>Try it live, right now</h2>
+            <p class="section-sub">
+                Real data, pulled live from the same sources Voyager uses every day.
+                This is a small preview — sign up free for the full picture.
+            </p>
+        </div>
+
+        <div class="demo-tabs">
+            <button class="demo-tab active" data-demo="cot">
+                <i class="fas fa-scale-unbalanced"></i> COT Positioning
+            </button>
+            <button class="demo-tab" data-demo="strength">
+                <i class="fas fa-signal"></i> Currency Strength
+            </button>
+            <button class="demo-tab" data-demo="macro">
+                <i class="fas fa-table-cells"></i> Macro Matrix
+            </button>
+        </div>
+
+        <div class="demo-panel-wrap">
+            <!-- COT panel -->
+            <div class="demo-panel active" id="demo-cot">
+                <div class="cot-grid" id="demoCotGrid">
+                    <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live CFTC data…</div>
+                </div>
+            </div>
+
+            <!-- Currency Strength panel -->
+            <div class="demo-panel" id="demo-strength">
+                <div class="strength-list" id="demoStrengthList">
+                    <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live strength data…</div>
+                </div>
+            </div>
+
+            <!-- Macro Matrix panel -->
+            <div class="demo-panel" id="demo-macro">
+                <div class="showcase-visual" style="border:none; background:none; padding:0;">
+                    <table class="macro-matrix" id="demoMacroTable">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">Currency</th>
+                                <th>Rate</th>
+                                <th>CPI</th>
+                                <th>GDP</th>
+                                <th>Overall</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5" class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live macro data…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <p class="demo-note" id="demoNote"></p>
+
+        <div style="text-align:center; margin-top:32px;">
+            <a href="auth.html" class="btn-primary btn-lg">
+                Unlock Full Access — It's Free
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+    
+
     <!-- ─── HOW IT WORKS ─── -->
     <section id="how-it-works" class="how-section reveal">
         <div class="section-header">
@@ -991,6 +1160,7 @@
     </footer>
 
     <script>
+        // REVEAL + DELAY//
         window.addEventListener("scroll", () => {
             document.querySelector(".navbar").classList.toggle("scrolled", window.scrollY > 20);
         }, { passive: true });
@@ -1010,6 +1180,128 @@
                 });
             }
         })();
+        
+        // LIVE DEMO WINDOW //
+        const DEMO_API_URL = "https://vanalytics.onrender.com";
+
+        // ── Tab switching ──
+        document.querySelectorAll(".demo-tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".demo-tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".demo-panel").forEach(p => p.classList.remove("active"));
+                tab.classList.add("active");
+                document.getElementById(`demo-${tab.dataset.demo}`).classList.add("active");
+            });
+        });
+
+        // ── COT sparkline (tiny inline SVG, no dependencies) ──
+        function tinySparkline(values) {
+            if (values.length < 2) return "";
+            const min = Math.min(...values), max = Math.max(...values);
+            const range = max - min || 1;
+            const points = values.map((v, i) => {
+                const x = (i / (values.length - 1)) * 100;
+                const y = 30 - ((v - min) / range) * 30;
+                return `${x},${y}`;
+            }).join(" ");
+            const color = values[values.length - 1] >= values[0] ? "#22c55e" : "#ef4444";
+            return `<svg viewBox="0 0 100 30" width="100%" height="30" preserveAspectRatio="none">
+                        <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2"/>
+                    </svg>`;
+        }
+
+        // ── Load COT demo ──
+        fetch(`${DEMO_API_URL}/public/demo/cot`)
+            .then(r => r.json())
+            .then(data => {
+                const grid = document.getElementById("demoCotGrid");
+                if (!data.positions || data.positions.length === 0) {
+                    grid.innerHTML = `<div class="demo-loading">Live data unavailable right now — check back shortly.</div>`;
+                    return;
+                }
+                grid.innerHTML = data.positions.map(p => {
+                    const isLong = p.net_position >= 0;
+                    const badgeClass = p.signal === "extreme_long" ? "badge-bearish"
+                                     : p.signal === "extreme_short" ? "badge-bullish"
+                                     : "badge-neutral";
+                    const badgeText = p.signal === "extreme_long" ? "Extreme Long"
+                                     : p.signal === "extreme_short" ? "Extreme Short"
+                                     : "Neutral";
+                    return `
+                        <div class="cot-item">
+                            <div class="symbol">${p.currency}</div>
+                            <div class="position" style="color:${isLong ? '#22c55e' : '#ef4444'};">
+                                ${isLong ? '+' : ''}${p.net_position.toLocaleString()}
+                            </div>
+                            ${tinySparkline(p.sparkline)}
+                            <div class="percentile">${p.percentile_rank !== null ? p.percentile_rank + 'th percentile' : 'Building history'}</div>
+                            <span class="badge-cont ${badgeClass}" style="margin-top:6px; display:inline-block;">${badgeText}</span>
+                        </div>
+                    `;
+                }).join("");
+                document.getElementById("demoNote").textContent = data.note;
+            })
+            .catch(() => {
+                document.getElementById("demoCotGrid").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
+            });
+
+        // ── Load Currency Strength demo ──
+        fetch(`${DEMO_API_URL}/public/demo/currency-strength`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById("demoStrengthList");
+                if (!data.scores || data.scores.length === 0) {
+                    list.innerHTML = `<div class="demo-loading">Live data warming up — check back shortly.</div>`;
+                    return;
+                }
+                const maxAbs = Math.max(...data.scores.map(s => Math.abs(s.score)), 1);
+                list.innerHTML = data.scores
+                    .sort((a, b) => b.score - a.score)
+                    .map(s => {
+                        const pct = Math.abs(s.score) / maxAbs * 100;
+                        return `
+                            <div class="strength-row">
+                                <span class="ccy-code">${s.code}</span>
+                                <div class="bar-track">
+                                    <div class="bar-fill ${s.trend}" style="width:${pct}%;"></div>
+                                </div>
+                                <span class="score-val" style="color:${s.trend === 'bullish' ? '#22c55e' : s.trend === 'bearish' ? '#ef4444' : '#94a3b8'};">
+                                    ${s.score > 0 ? '+' : ''}${s.score}
+                                </span>
+                            </div>
+                        `;
+                    }).join("");
+            })
+            .catch(() => {
+                document.getElementById("demoStrengthList").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
+            });
+
+        // ── Load Macro Matrix demo ──
+        fetch(`${DEMO_API_URL}/public/demo/macro-matrix`)
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.querySelector("#demoMacroTable tbody");
+                if (!data.rows || data.rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="demo-loading">Live data unavailable right now.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = data.rows.map(r => {
+                    const scoreColor = r.overall_score > 0.2 ? "#22c55e" : r.overall_score < -0.2 ? "#ef4444" : "#94a3b8";
+                    return `
+                        <tr>
+                            <td style="text-align:left; font-weight:700;">${r.currency}</td>
+                            <td>${r.rate !== null ? r.rate + '%' : '—'}</td>
+                            <td>${r.cpi !== null ? r.cpi + '%' : '—'}</td>
+                            <td>${r.gdp !== null ? r.gdp + '%' : '—'}</td>
+                            <td><span class="score-badge" style="background:${scoreColor}20; color:${scoreColor};">${r.overall_score > 0 ? '+' : ''}${r.overall_score}</span></td>
+                        </tr>
+                    `;
+                }).join("");
+            })
+            .catch(() => {
+                document.querySelector("#demoMacroTable tbody").innerHTML = `<tr><td colspan="5" class="demo-loading">Could not load live data. Please refresh.</td></tr>`;
+            });
+        
     </script>
 
 </body>
