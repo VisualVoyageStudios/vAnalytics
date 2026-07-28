@@ -1882,6 +1882,7 @@ def _section_bias(score: float) -> str:
     return "Neutral"
 
 
+# COT DATA
 async def _get_cot_bias(currency: str) -> dict:
     """Pull latest COT positioning from DB."""
     db = SessionLocal()
@@ -1925,6 +1926,7 @@ async def _get_cot_bias(currency: str) -> dict:
         db.close()
 
 
+# 
 async def _get_macro_score(currency: str) -> float:
     """Pull overall macro score from existing macro matrix cache."""
     try:
@@ -2963,12 +2965,11 @@ async def fetch_policy_rates() -> dict:
 
     return rates
 
+## MACRO MATRIX
 macro_matrix_cache = {"data": None, "timestamp": 0}
 MACRO_CACHE_TTL    = 12 * 3600  # 12 hours
 
-@app.get("/macro/matrix")
-async def get_macro_matrix(current_user=Depends(get_current_user)):
-
+async def _compute_macro_matrix():
     now = time.time()
 
     if macro_matrix_cache["data"] and (now - macro_matrix_cache["timestamp"]) < MACRO_CACHE_TTL:
@@ -3107,8 +3108,11 @@ async def get_macro_matrix(current_user=Depends(get_current_user)):
 
     macro_matrix_cache["data"]      = result
     macro_matrix_cache["timestamp"] = now
-
     return result
+    
+@app.get("/macro/matrix")
+async def get_macro_matrix(current_user=Depends(get_current_user)):
+    return await _compute_macro_matrix()
 
 # COT DATA
 from models.cot import COTPosition
@@ -3203,6 +3207,86 @@ def trigger_cot_backfill(db: Session = Depends(get_db), user=Depends(get_current
         "rows_found": len(rows),
         "rows_inserted": inserted
     }
+
+# ─────────────────────────────────────────
+#  PUBLIC LANDING PAGE DEMOS (no auth required)
+# ─────────────────────────────────────────
+
+PUBLIC_DEMO_COT_CURRENCIES      = ["EUR", "GBP", "USD", "BTC"]
+PUBLIC_DEMO_STRENGTH_CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD"]
+PUBLIC_DEMO_MACRO_CURRENCIES    = ["USD", "EUR", "GBP", "JPY"]
+
+
+@app.get("/public/demo/cot")
+@limiter.limit("30/minute")
+def public_demo_cot(request: Request, db: Session = Depends(get_db)):
+    results = []
+
+    for ccy in PUBLIC_DEMO_COT_CURRENCIES:
+        history = (
+            db.query(COTPosition)
+            .filter(COTPosition.currency == ccy)
+            .order_by(COTPosition.report_date.desc())
+            .limit(52)
+            .all()
+        )
+        if not history:
+            continue
+
+        history = list(reversed(history))
+        current = history[-1]
+        net_positions = [h.net_position for h in history]
+
+        percentile = None
+        signal = None
+        if len(net_positions) >= 8:
+            rank_count = sum(1 for n in net_positions if n <= current.net_position)
+            percentile = round((rank_count / len(net_positions)) * 100)
+            if percentile >= 80: signal = "extreme_long"
+            elif percentile <= 20: signal = "extreme_short"
+
+        results.append({
+            "currency":        ccy,
+            "net_position":    current.net_position,
+            "percentile_rank": percentile,
+            "signal":          signal,
+            "sparkline":       net_positions[-8:],  # shortened teaser, full site shows 52wk
+        })
+
+    return {
+        "positions": results,
+        "note": "Sample of 4 instruments, 8-week trend. Sign up for all 13 instruments and full 52-week history."
+    }
+
+
+@app.get("/public/demo/currency-strength")
+@limiter.limit("30/minute")
+def public_demo_currency_strength(request: Request):
+    cached = currency_strength_last_good["data"]
+
+    if not cached:
+        return {"scores": [], "note": "Live data is warming up — check back in a moment."}
+
+    filtered = [c for c in cached if c["code"] in PUBLIC_DEMO_STRENGTH_CURRENCIES]
+
+    return {
+        "scores": filtered,
+        "note": "Sample of 5 currencies. Sign up for the full 9-currency matrix."
+    }
+
+
+@app.get("/public/demo/macro-matrix")
+@limiter.limit("30/minute")
+async def public_demo_macro_matrix(request: Request):
+    full = await _compute_macro_matrix()
+    rows = [r for r in full["rows"] if r["currency"] in PUBLIC_DEMO_MACRO_CURRENCIES]
+
+    return {
+        "rows": rows,
+        "updated_at": full["updated_at"],
+        "note": "Sample of 4 economies. Sign up for the full 9-economy matrix with drilldowns."
+    }
+
 
 
 
