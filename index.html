@@ -1007,7 +1007,6 @@
     </section>
 
     <!-- ─── LIVE DEMO WINDOW ─── -->
-    <!-- ─── LIVE DEMO ─── -->
     <section id="live-demo" class="demo-section reveal">
         <div class="section-header">
             <p class="section-eyebrow">No Sign-Up Required</p>
@@ -1065,6 +1064,10 @@
                     <div class="demo-app-content">
                         <!-- COT panel -->
                         <div class="demo-panel active" id="demo-cot">
+                            <p class="demo-panel-intro">
+                                Weekly CFTC Commitment of Traders data for large speculators. Positioning near the top
+                                of its 52-week range is a contrarian bearish signal; near the bottom, contrarian bullish.
+                            </p>
                             <div class="cot-grid" id="demoCotGrid">
                                 <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live CFTC data…</div>
                             </div>
@@ -1072,6 +1075,7 @@
 
                         <!-- Currency Strength panel -->
                         <div class="demo-panel" id="demo-strength">
+                            <p class="demo-panel-intro"><i class="fas fa-signal" style="margin-right:6px; color:#00d4ff;"></i>Live Strength Scores</p>
                             <div class="strength-list" id="demoStrengthList">
                                 <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live strength data…</div>
                             </div>
@@ -1079,6 +1083,14 @@
 
                         <!-- Macro Matrix panel -->
                         <div class="demo-panel" id="demo-macro">
+                            <p class="demo-panel-intro">Fundamental macro indicators per currency — scored and ranked by overall strength.</p>
+                            <div class="macro-legend">
+                                <span><b style="color:#22c55e;">+2</b> Strongly bullish</span>
+                                <span><b style="color:#4ade80;">+1</b> Bullish</span>
+                                <span><b style="color:#94a3b8;">0</b> Neutral</span>
+                                <span><b style="color:#f87171;">-1</b> Bearish</span>
+                                <span><b style="color:#ef4444;">-2</b> Strongly bearish</span>
+                            </div>
                             <div class="showcase-visual" style="border:none; background:none; padding:0;">
                                 <table class="macro-matrix" id="demoMacroTable">
                                     <thead>
