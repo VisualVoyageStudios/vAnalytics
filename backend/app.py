@@ -49,6 +49,7 @@ from slowapi.errors import RateLimitExceeded
 from fastapi import Request
 
 from utils.cot_scheduler import start_cot_scheduler, refresh_cot_data
+from apscheduler.triggers.cron import CronTrigger
 
 # MT5 is Windows-only
 try:
@@ -234,7 +235,30 @@ app.add_middleware(
 # ── COT PULL DATA ON STARTUP
 cot_scheduler = start_cot_scheduler()
 
-#COT get data on start up
+def _run_currency_strength_snapshot():
+    db = SessionLocal()
+    try:
+        import asyncio
+        result = asyncio.run(_compute_currency_strength(db))
+        if result:
+            currency_strength_last_good["data"] = result
+            save_persistent_cache("currency_strength", result)
+            print("Currency strength: background snapshot refreshed", flush=True)
+        else:
+            print("Currency strength: snapshot stored, not enough history yet for a score", flush=True)
+    except Exception as e:
+        print(f"Currency strength background job failed: {e}", flush=True)
+    finally:
+        db.close()
+
+cot_scheduler.add_job(
+    _run_currency_strength_snapshot,
+    trigger=CronTrigger(hour="*/4"),  # every 4 hours — builds real 24h-apart comparisons over time
+    id="currency_strength_snapshot",
+    replace_existing=True
+)
+
+#COT get data on start up (warm up)
 @app.on_event("startup")
 def seed_cot_on_boot():
     """
@@ -250,6 +274,7 @@ def seed_cot_on_boot():
             refresh_cot_data()
     finally:
         db.close()
+        
 # calandar data get start up
 @app.on_event("startup")
 def warm_economic_calendar_cache():
@@ -259,8 +284,17 @@ def warm_economic_calendar_cache():
         economic_calendar_cache["timestamp"] = ts
         print(f"Warmed economic calendar cache from disk ({len(data)} events)")
 
-# ── AI Cache 
+ #Currency Strength Warm Start up
+@app.on_event("startup")
+def warm_currency_strength_cache():
+    data, ts = load_persistent_cache("currency_strength")
+    if data:
+        currency_strength_last_good["data"] = data
+        print(f"Warmed currency strength cache from disk ({len(data)} currencies)")
 
+
+
+# ── AI Cache 
 ai_cache = {}
 AI_CACHE_TTL = 3600
 
@@ -1601,86 +1635,67 @@ async def get_crypto_fundamentals(current_user=Depends(get_current_user)):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/currency/strength")
-async def get_currency_strength(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+## GET CURRENCY STRENGTH
+async def _compute_currency_strength(db: Session):
     currencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "NZD", "CHF", "ZAR"]
 
     async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get("https://open.er-api.com/v6/latest/USD", timeout=10.0)
+        res = await client.get("https://open.er-api.com/v6/latest/USD", timeout=10.0)
 
-            if not res.text.strip():
-                raise HTTPException(status_code=500, detail="Empty response")
+        if not res.text.strip():
+            raise Exception("Empty response from exchange rate API")
 
-            data  = res.json()
-            rates = data.get("rates", {})
-            rates["USD"] = 1.0
+        data  = res.json()
+        rates = data.get("rates", {})
+        rates["USD"] = 1.0
 
-            prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
+        prev_snapshot = _closest_snapshot(db, SNAPSHOT_TARGET_LOOKBACK)
 
-            # store this pull for future comparisons
-            db.add(CurrencySnapshot(id=str(uuid4()), rates=rates))
-            db.commit()
+        db.add(CurrencySnapshot(id=str(uuid4()), rates=rates))
+        db.commit()
 
-            if not prev_snapshot:
-                print("[currency-strength] no prev_snapshot — falling back", flush=True)
-                if currency_strength_last_good["data"]:
-                    print("[currency-strength] returning last_good cache", flush=True)
-                    return currency_strength_last_good["data"]
-                print("[currency-strength] no last_good either — returning neutral zeros", flush=True)
-                return [
-                    {"code": c, "score": 0, "raw": 0, "trend": "neutral"}
-                    for c in currencies
-                ]
+        if not prev_snapshot:
+            return None  # not enough history yet — caller decides fallback
 
-            scores     = {c: 0.0 for c in currencies}
-            pair_count = {c: 0 for c in currencies}
-            prev_rates = prev_snapshot.rates
+        scores     = {c: 0.0 for c in currencies}
+        pair_count = {c: 0 for c in currencies}
+        prev_rates = prev_snapshot.rates
 
-            for base in currencies:
-                if base not in rates or base not in prev_rates:
+        for base in currencies:
+            if base not in rates or base not in prev_rates:
+                continue
+            for target in currencies:
+                if base == target:
                     continue
-                for target in currencies:
-                    if base == target:
-                        continue
-                    if target not in rates or target not in prev_rates:
-                        continue
+                if target not in rates or target not in prev_rates:
+                    continue
 
-                    now_cross  = rates[target]      / rates[base]
-                    prev_cross = prev_rates[target]  / prev_rates[base]
+                now_cross  = rates[target]     / rates[base]
+                prev_cross = prev_rates[target] / prev_rates[base]
 
-                    if prev_cross == 0:
-                        continue
+                if prev_cross == 0:
+                    continue
 
-                    pct_change = ((now_cross - prev_cross) / prev_cross) * 100
-                    scores[base]     += pct_change
-                    pair_count[base] += 1
+                pct_change = ((now_cross - prev_cross) / prev_cross) * 100
+                scores[base]     += pct_change
+                pair_count[base] += 1
 
-            avg_scores = {
-                c: round(scores[c] / pair_count[c], 4) if pair_count[c] else 0
-                for c in currencies
+        avg_scores = {
+            c: round(scores[c] / pair_count[c], 4) if pair_count[c] else 0
+            for c in currencies
+        }
+
+        max_abs = max(abs(v) for v in avg_scores.values()) or 1
+
+        return [
+            {
+                "code":  code,
+                "score": round((avg_scores[code] / max_abs) * 100, 1),
+                "raw":   avg_scores[code],
+                "trend": "bullish" if avg_scores[code] > 0.01 else "bearish" if avg_scores[code] < -0.01 else "neutral"
             }
-
-            max_abs = max(abs(v) for v in avg_scores.values()) or 1
-
-            result = [
-                {
-                    "code":  code,
-                    "score": round((avg_scores[code] / max_abs) * 100, 1),
-                    "raw":   avg_scores[code],
-                    "trend": "bullish" if avg_scores[code] > 0.01 else "bearish" if avg_scores[code] < -0.01 else "neutral"
-                }
-                for code in currencies
-            ]
-
-            currency_strength_last_good["data"] = result
-            return result
-
-        except HTTPException:
-            raise
-        except Exception as e:
-            print(f"Currency strength error: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            for code in currencies
+        ]
 
 # ─────────────────────────────────────────
 #  ASSET SCORECARD (Enhanced Edge Finder)
