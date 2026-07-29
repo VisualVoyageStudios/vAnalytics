@@ -1,6 +1,11 @@
 const CACHE_NAME = "voyager-v23";
 const STATIC_ASSETS = [
     "/vAnalytics/",
+    "/vAnalytics/about.html",
+    "vAnalytics/terms.html",
+    "vAnalytics/privacy.html",
+    "vAnalytics/refund.html",
+    "vAnalytics/riskDisclaimer.html",
     "/vAnalytics/index.html",
     "/vAnalytics/login.html",
     "/vAnalytics/register.html",
