@@ -109,6 +109,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
         localStorage.removeItem("token");
         localStorage.removeItem("voyager_active_account");
-        window.location.href = "../login.html";
+        window.location.href = "../auth.html";
     });
 });
