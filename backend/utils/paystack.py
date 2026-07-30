@@ -4,8 +4,8 @@ import hmac
 import hashlib
 
 PAYSTACK_BASE = "https://api.paystack.co"
-LIFETIME_PRICE_ZAR = None  # set once you confirm the ZAR lifetime price — see note below
-MONTHLY_PRICE_ZAR  = None  # set once you confirm the ZAR monthly price
+LIFETIME_PRICE_ZAR = 1800.00  # set once you confirm the ZAR lifetime price — see note below
+MONTHLY_PRICE_ZAR  = 360.00  # set once you confirm the ZAR monthly price
 
 
 def _secret_key() -> str:
