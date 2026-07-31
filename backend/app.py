@@ -231,6 +231,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+ ## premium dependancy gate
+TIER_RANK = {"free": 0, "monthly": 1, "lifetime": 2}
+
+def require_tier(min_tier: str):
+    def dependency(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+        user = db.query(User).filter(User.id == current_user["user_id"]).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        user_rank     = TIER_RANK.get(user.subscription_type or "free", 0)
+        required_rank = TIER_RANK.get(min_tier, 0)
+
+        if user_rank < required_rank:
+            raise HTTPException(
+                status_code=403,
+                detail=f"This feature requires a {min_tier} subscription or higher."
+            )
+        return current_user
+    return dependency
+
 
 # ── COT PULL DATA ON STARTUP
 cot_scheduler = start_cot_scheduler()
@@ -1284,7 +1304,8 @@ def get_heatmap(
 
 
 @app.get("/analytics/day/{date}")
-def get_day_details(date: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+def get_day_details(date: str, current_user=Depends(require_tier("monthly")), ...):
+    
     account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
     return [
@@ -1294,11 +1315,8 @@ def get_day_details(date: str, current_user=Depends(get_current_user), db: Sessi
 
 
 @app.get("/analytics/monthly")
-def get_monthly_performance(
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db),
-    account_id: Optional[str] = Query(None)
-):
+def get_monthly_performance(current_user=Depends(require_tier("monthly")), ...):
+    
     all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
     trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
@@ -1325,11 +1343,8 @@ def get_monthly_performance(
 
 
 @app.get("/analytics/sessions")
-async def get_session_analysis(
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db),
-    account_id: Optional[str] = Query(None)
-):
+async def get_session_analysis(current_user=Depends(require_tier("monthly")), ...):
+    
     all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
     trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).all()
@@ -1365,11 +1380,8 @@ async def get_session_analysis(
 
 
 @app.get("/analytics/streaks")
-async def get_streaks(
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db),
-    account_id: Optional[str] = Query(None)
-):
+async def get_streaks(current_user=Depends(require_tier("monthly")), ...):
+    
     all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
     trades = db.query(Trade).filter(Trade.account_id.in_(filter_ids)).order_by(Trade.created_at.asc()).all()
@@ -2090,7 +2102,8 @@ async def ai_insight(payload: dict, current_user=Depends(get_current_user)):
 
 
 @app.get("/ai/trade-insights")
-async def ai_trade_insights(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+async def ai_trade_insights(current_user=Depends(require_tier("lifetime")), ...):
+
     account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
 
@@ -2479,10 +2492,8 @@ def pearson_correlation(x, y):
     return cov / (std_x * std_y)
 
 @app.get("/correlation/matrix")
-async def get_correlation_matrix(
-    current_user=Depends(get_current_user),
-    days: int = Query(30, ge=10, le=90)
-):
+async def get_correlation_matrix(current_user=Depends(require_tier("monthly")), ...):
+    
     print(f"=== Correlation matrix endpoint hit, days={days} ===", flush=True)
 
     cached = correlation_cache.get(days)
@@ -3126,7 +3137,7 @@ async def _compute_macro_matrix():
     return result
     
 @app.get("/macro/matrix")
-async def get_macro_matrix(current_user=Depends(get_current_user)):
+async def get_macro_matrix(current_user=Depends(require_tier("lifetime"))):
     return await _compute_macro_matrix()
 
 # COT DATA
@@ -3135,7 +3146,7 @@ from utils.cftc_fetcher import fetch_latest_cot, is_stale
 from datetime import date
 
 @app.get("/cot/positioning")
-def get_cot_positioning(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_cot_positioning(db: Session = Depends(get_db), user=Depends(require_tier("lifetime"))):
 
     all_currencies = ["EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD", "USD", "XAU", "XAG", "XPT", "XCU", "BTC", "ETH"]
 
