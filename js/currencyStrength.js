@@ -1,13 +1,13 @@
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
 
-const FLAGS = {
+const FLAGS ={
     USD: "🇺🇸", EUR: "🇪🇺", GBP: "🇬🇧", JPY: "🇯🇵",
     AUD: "🇦🇺", CAD: "🇨🇦", NZD: "🇳🇿", CHF: "🇨🇭",
     ZAR: "🇿🇦"
 };
 
-const PAIRS = [
+const PAIRS =[
     "EURUSD","GBPUSD","USDJPY","USDCHF",
     "AUDUSD","USDCAD","NZDUSD","GBPJPY",
     "EURJPY","EURGBP","AUDJPY","CADJPY",
