@@ -1304,7 +1304,13 @@ def get_heatmap(
 
 
 @app.get("/analytics/day/{date}")
-def get_day_details(date: str, current_user=Depends(require_tier("monthly")), ...):
+def get_day_details(date: str, current_user=Depends(require_tier("monthly")), db: Session = Depends(get_db)):
+    account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
+    trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
+    return [
+        {"symbol": t.symbol, "profit": t.profit, "ticket": t.ticket}
+        for t in trades if t.created_at.date().isoformat() == date
+    ]
     
     account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
@@ -1315,7 +1321,11 @@ def get_day_details(date: str, current_user=Depends(require_tier("monthly")), ..
 
 
 @app.get("/analytics/monthly")
-def get_monthly_performance(current_user=Depends(require_tier("monthly")), ...):
+def get_monthly_performance(
+    current_user=Depends(require_tier("monthly")),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
     
     all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
@@ -1343,7 +1353,11 @@ def get_monthly_performance(current_user=Depends(require_tier("monthly")), ...):
 
 
 @app.get("/analytics/sessions")
-async def get_session_analysis(current_user=Depends(require_tier("monthly")), ...):
+async def get_session_analysis(
+    current_user=Depends(require_tier("monthly")),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
     
     all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
@@ -1380,7 +1394,11 @@ async def get_session_analysis(current_user=Depends(require_tier("monthly")), ..
 
 
 @app.get("/analytics/streaks")
-async def get_streaks(current_user=Depends(require_tier("monthly")), ...):
+async def get_streaks(
+    current_user=Depends(require_tier("monthly")),
+    db: Session = Depends(get_db),
+    account_id: Optional[str] = Query(None)
+):
     
     all_account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     filter_ids = [account_id] if account_id and account_id in all_account_ids else all_account_ids
@@ -1708,6 +1726,29 @@ async def _compute_currency_strength(db: Session):
             }
             for code in currencies
         ]
+
+
+
+@app.get("/currency/strength")
+async def get_currency_strength(current_user=Depends(require_tier("monthly")), db: Session = Depends(get_db)):
+    try:
+        result = await _compute_currency_strength(db)
+
+        if result is None:
+            if currency_strength_last_good["data"]:
+                return currency_strength_last_good["data"]
+            return [{"code": c, "score": 0, "raw": 0, "trend": "neutral"} for c in ["USD","EUR","GBP","JPY","AUD","CAD","NZD","CHF","ZAR"]]
+
+        currency_strength_last_good["data"] = result
+        save_persistent_cache("currency_strength", result)
+        return result
+
+    except Exception as e:
+        print(f"Currency strength error: {str(e)}")
+        if currency_strength_last_good["data"]:
+            return currency_strength_last_good["data"]
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ─────────────────────────────────────────
 #  ASSET SCORECARD (Enhanced Edge Finder)
@@ -2102,7 +2143,7 @@ async def ai_insight(payload: dict, current_user=Depends(get_current_user)):
 
 
 @app.get("/ai/trade-insights")
-async def ai_trade_insights(current_user=Depends(require_tier("lifetime")), ...):
+async def ai_trade_insights(current_user=Depends(require_tier("lifetime")), db: Session = Depends(get_db)):
 
     account_ids = [a.id for a in db.query(Account).filter(Account.user_id == current_user["user_id"]).all()]
     trades      = db.query(Trade).filter(Trade.account_id.in_(account_ids)).all()
@@ -2492,7 +2533,10 @@ def pearson_correlation(x, y):
     return cov / (std_x * std_y)
 
 @app.get("/correlation/matrix")
-async def get_correlation_matrix(current_user=Depends(require_tier("monthly")), ...):
+async def get_correlation_matrix(
+    current_user=Depends(require_tier("monthly")),
+    days: int = Query(30, ge=10, le=90)
+):
     
     print(f"=== Correlation matrix endpoint hit, days={days} ===", flush=True)
 
@@ -3147,10 +3191,8 @@ from datetime import date
 
 @app.get("/cot/positioning")
 def get_cot_positioning(db: Session = Depends(get_db), user=Depends(require_tier("lifetime"))):
-
+    
     all_currencies = ["EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD", "USD", "XAU", "XAG", "XPT", "XCU", "BTC", "ETH"]
-
-    # rest of the endpoint stays exactly the same...
     results = []
 
     for ccy in all_currencies:
