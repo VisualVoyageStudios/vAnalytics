@@ -171,7 +171,7 @@ table.macro-table {
 }
 </style>
 </head>
-<body>
+<body data-min-tier= "lifetime">
 
 <div id="loader"><div class="spinner"></div></div>
 
@@ -317,6 +317,7 @@ table.macro-table {
 <script src="../js/pgAnime.js"></script>
 <script src="../js/nav.js"></script>
 <script src="../js/tooltip.js"></script>
+<script src="../js/tierGate.js"></script>
 <script>
 const token = localStorage.token;
 if(!token) window.location.href = "../login.html";
