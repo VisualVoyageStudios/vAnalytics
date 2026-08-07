@@ -165,7 +165,7 @@
     // instead of faking a flow. Replace the email below with your real support address.
     document.getElementById('forgotPasswordLink')?.addEventListener('click', function(e) {
         e.preventDefault();
-        showToast('info', 'Need a password reset?', 'Email support@voyageranalytics.com from your account email and we\'ll help you reset it.');
+        showToast('info', 'Need a password reset?', 'Email visualvoyagerbsn@gmail.com from your account email and we\'ll help you reset it.');
     });
 
     // ─── Remember Me / Welcome Back (email convenience only — not a security feature) ───
