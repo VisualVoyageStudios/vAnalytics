@@ -310,7 +310,7 @@
                 localStorage.setItem('token', loginResult.token);
                 setTimeout(() => window.location.href = 'dashboard/dashboard.html', 700);
             } else {
-                setTimeout(() => window.location.href = 'login.html', 900);
+                setTimeout(() => window.location.href = 'auth.html', 900);
             }
         } catch (err) {
             console.error(err);
