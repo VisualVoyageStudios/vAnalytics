@@ -88,7 +88,7 @@ self.addEventListener("fetch", event => {
     const url = new URL(event.request.url);
 
     // API requests — network first
-    if(url.hostname === "vanalytics.onrender.com"){
+    if(url.hostname === "https://vanalytics-1.onrender.com"){
         event.respondWith(
             fetch(event.request)
                 .then(res => {
