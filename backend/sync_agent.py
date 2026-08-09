@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-API_URL = "https://vanalytics.onrender.com"
+API_URL = "https://vanalytics-1.onrender.com"
 
 
 @app.get("/status")
