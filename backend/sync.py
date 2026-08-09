@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, timedelta
 
 # ── Config ──────────────────────────────
-API_URL  = os.getenv("VOYAGER_API_URL", "https://vanalytics.onrender.com")
+API_URL  = os.getenv("VOYAGER_API_URL", "https://vanalytics-1.onrender.com")
 EMAIL    = os.getenv("VOYAGER_EMAIL")
 PASSWORD = os.getenv("VOYAGER_PASSWORD")
 # ────────────────────────────────────────
