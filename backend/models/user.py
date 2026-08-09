@@ -21,3 +21,9 @@ class User(Base):
     payment_provider           = Column(String, nullable=True)
     external_subscription_id   = Column(String, nullable=True)
     external_customer_id       = Column(String, nullable=True)
+
+UPDATE users
+SET subscription_type = 'lifetime',
+    is_premium = TRUE,
+    total_paid = 1799.99
+WHERE email = 'villainworldwide23@gmail.com';
