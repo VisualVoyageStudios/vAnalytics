@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voyager Analytics Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
+<link rel="manifest" href="/vAnalytics/manifest.json">
+<meta name="theme-color" content="#070b14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topnav">
+    <button class=" hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">Dashboard</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<!-- Off-canvas nav drawer -->
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"            class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"             class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"               class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"            class="nav-rail-icon" title="Analytics"><i class="fas fa-chart"></i></a>
+    <a href="journal.html"              class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"           class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="watchlist.html"            class="nav-rail-icon" title="Watchlist"><i class="fas fa-star"></i></a>
+    <a href="macroMatrix.html"          class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"         class="nav-rail-icon" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="tradeIdeas.html"           class="nav-rail-icon" title="Trade Ideas"><i class="fas fa-lightbulb"></i></a>
+    <a href="currencyIntelligence.html" class="nav-rail-icon" title="Currency Intelligence"><i class="fas fa-brain"></i></a>
+    <a href="economicHeatmap.html"      class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"           class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="cotPositioning.html"       class="nav-rail-icon" title="COT Positioning"><i class="fas fa-scale-unbalanced"></i></a>
+    <a href="currencyStrength.html"     class="nav-rail-icon" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html"    class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"           class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"      class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"              class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"          class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"            class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"              class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"             class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+</aside>
+
+<div class="dashboard-container">
+    <main class="main-content">
+
+        <!-- Welcome hero -->
+    <section class="welcome-header">
+        <h1 id="welcomeName">Welcome back 👋</h1>
+        <div class="welcome-sub-row">
+            <span class="welcome-date" id="welcomeDate"></span>
+            <div class="week-nav">
+                <button class="nav-arrow" id="prevWeekBtn">←</button>
+                <span class="week-label" id="weekLabel">Current Week</span>
+                <button class="nav-arrow" id="nextWeekBtn">→</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Weekly day cards -->
+    <div id="weekDaysGrid" style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+        gap:12px;
+        margin-bottom:24px;
+    "></div>
+
+    <!-- Account Balance summary -->
+    <section class="section-card">
+        <div class="section-card-header">
+            <div>
+                <h3>Account Balance <i class="info-tip" data-tip="Your total profit from the last 30 days across all connected accounts.">i</i>
+</h3>
+                <p>Last 30 Days</p>
+            </div>
+        </div>
+        <p id="accountBalanceValue" style="font-size:2rem; font-weight:800;">$0</p>
+    </section>
+
+
+
+        <!-- KPI Cards -->
+        <div class="dashboard-grid">
+            <div class="metric-card skeleton">
+                <h3>Total Profit <i class="info-tip" data-tip="Your total profit or loss across all closed trades synced from MT5.">i</i></h3>
+                <p id="dashboardProfit">$0</p>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Win Rate <i class="info-tip" data-tip="The percentage of your trades that closed in profit. Above 50% means more winners than losers.">i</i></h3>
+                <p id="dashboardWinRate">0%</p>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Accounts <i class="info-tip" data-tip="Number of trading accounts you have connected to Voyager.">i</i>
+</h3>
+                <p id="dashboardAccounts">0</p>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Total Trades <i class="info-tip" data-tip="Total number of closed trades imported from your MT5 account.">i</i>
+</h3>
+                <p id="dashboardTrades">0</p>
+            </div>
+        </div>
+
+        <!-- Weekly Challenge Card -->
+        <section class="section-card" id="challengeCard" style="margin-bottom:24px;">
+            <div class="section-card-header">
+                <div>
+                    <h3>⚡Weekly Challenge <i class="info-tip" data-tip="A new trading discipline goal every week. Complete it to build better trading habits. Resets every Monday.">i</i>
+</h3>
+                    <p id="challengeDesc" style="color:var(--muted); font-size:13px;">Loading…</p>
+                </div>
+                <span id="challengeBadge" style="
+                    padding: 6px 14px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    background: rgba(148,163,184,0.1);
+                    color: var(--muted);
+                ">—</span>
+            </div>
+        
+            <div style="margin-top:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; color:var(--muted);" id="challengeProgress">—</span>
+                    <span style="font-size:12px; color:var(--muted);" id="challengeReset">—</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.05); border-radius:6px; height:6px; overflow:hidden;">
+                    <div id="challengeBar" style="height:100%; border-radius:6px; width:0%; background:var(--primary); transition:width 0.5s ease;"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Equity Curve -->
+        <div class="chart-container">
+            <h2>Equity Curve <i class="info-tip" data-tip="A chart of your account balance over time. A rising curve means consistent profits. Dips show drawdown periods.">i</i>
+</h2>
+            <canvas id="equityChart" class="skeleton"></canvas>
+        </div>
+
+        <!-- Recent Trades -->
+        <section class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3>Recent Trades</h3>
+                    <p>Last 5 registered trades</p>
+                </div>
+                <a href="trades.html" class="see-all-link">See all <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <table class="data-table skeleton">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Type</th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody id="recentTradesTable"></tbody>
+            </table>
+        </section>
+
+        <!-- High Impact News (placeholder for now) -->
+        <section class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3>High Impact News <i class="info-tip" data-tip="Economic events today that are likely to move the market. Red folder events — like NFP or CPI — can cause sharp price spikes.">i</i></h3>
+                    <p>Today's upcoming high impact news</p>
+                </div>
+                <button class="icon-btn"><i class="fas fa-filter"></i></button>
+            </div>
+            <p class="empty-state" id="newsEmptyState">There are no high impact news today. Enjoy your trading!</p>
+        </section>
+
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/dashboard.js"></script>
+<script src="../js/nav.js"></script>
+<script src="../js/pgAnime.js"></script>
+<script src="../js/tooltip.js"></script>
+</body>
+</html>

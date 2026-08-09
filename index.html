@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voyager Analytics | Built for traders</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/landing.css" />
+    <link rel="stylesheet" href="css/ambient.css" />
+    <style>
+        /* ─── Trust Section ─── */
+        .trust-section {
+            padding: 20px 8% 40px;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .trust-section .section-eyebrow {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 24px;
+            display: block;
+        }
+        .trust-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .trust-row:last-of-type { margin-bottom: 0; }
+        .trust-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 14px 20px;
+            min-width: 100px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: border-color 0.2s, background 0.2s;
+            flex: 0 1 auto;
+        }
+        .trust-item:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+        .trust-item .logo-container {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+        .trust-item .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: brightness(0.7) grayscale(0.3);
+            transition: filter 0.2s;
+        }
+        .trust-item:hover .logo-container img {
+            filter: brightness(1) grayscale(0);
+        }
+        .trust-item .logo-container i {
+            font-size: 2.6rem;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+        .trust-item:hover .logo-container i {
+            color: #e2e8f0;
+        }
+        .trust-item span {
+            font-size: 0.7rem;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        /* ─── Security Badge ─── */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 32px;
+            padding: 14px 32px;
+            background: rgba(0, 212, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 60px;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            transition: border-color 0.2s;
+        }
+        .security-badge:hover { border-color: rgba(0, 212, 255, 0.35); }
+        .security-badge .badge-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .security-badge .badge-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: #00d4ff;
+        }
+        .security-badge .badge-divider {
+            width: 1px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .security-badge .verified-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #34d399;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(52, 211, 153, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(52, 211, 153, 0.15);
+        }
+        .security-badge .verified-tag svg {
+            width: 14px;
+            height: 14px;
+            fill: #34d399;
+        }
+
+        /* ─── Showcase Enhancements ─── */
+        .showcase-section {
+            padding: 80px 8% 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .showcase-row {
+            display: flex;
+            align-items: stretch;
+            gap: 40px;
+            margin-bottom: 80px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 40px;
+            transition: border-color 0.2s;
+        }
+        .showcase-row:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+        .showcase-row.reverse {
+            flex-direction: row-reverse;
+        }
+        .showcase-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .showcase-text .feature-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c5ce7;
+            background: rgba(108, 92, 231, 0.12);
+            padding: 2px 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+        .showcase-text h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .showcase-text p {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+        .showcase-points {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .showcase-points li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+        .showcase-points li i {
+            color: #00d4ff;
+            margin-top: 4px;
+        }
+
+        .showcase-visual {
+            flex: 1.2;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+        .showcase-visual table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            color: var(--text);
+        }
+        .showcase-visual table th,
+        .showcase-visual table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+            white-space: nowrap;
+        }
+        .showcase-visual table th {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .showcase-visual table td:first-child {
+            font-weight: 600;
+        }
+        .showcase-visual .badge-cont {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-bullish { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .badge-bearish { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .badge-neutral { background: rgba(255, 255, 255, 0.05); color: var(--muted); }
+        .badge-extreme { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+
+        .cot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .cot-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+        }
+        .cot-item .symbol {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .cot-item .position {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 4px 0;
+        }
+        .cot-item .percentile {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+        .cot-item .signal {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .ai-insight-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .ai-insight-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 14px 16px;
+            border-left: 3px solid #00d4ff;
+        }
+        .ai-insight-card .tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #f59e0b;
+        }
+        .ai-insight-card .tag.weak { color: #ef4444; }
+        .ai-insight-card .tag.strong { color: #22c55e; }
+        .ai-insight-card .tag.opportunity { color: #3b82f6; }
+        .ai-insight-card .tag.warning { color: #f59e0b; }
+        .ai-insight-card h4 {
+            font-size: 0.9rem;
+            margin: 4px 0 2px;
+        }
+        .ai-insight-card p {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .macro-matrix {
+            font-size: 0.75rem;
+        }
+        .macro-matrix td {
+            text-align: center;
+        }
+        .macro-matrix .score-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 992px) {
+            .showcase-row,
+            .showcase-row.reverse {
+                flex-direction: column;
+                padding: 24px;
+            }
+            .showcase-visual {
+                flex: 1;
+                width: 100%;
+            }
+            .cot-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+        }
+        @media (max-width: 640px) {
+            .showcase-row { padding: 16px; }
+            .showcase-visual { padding: 12px; }
+            .showcase-visual table { font-size: 0.65rem; }
+            .showcase-visual table th,
+            .showcase-visual table td { padding: 4px 6px; }
+        }
+        /* ─── Reveal ─── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-stagger > * {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal-stagger.visible > *:nth-child(1) { transition-delay: 0.05s; }
+        .reveal-stagger.visible > *:nth-child(2) { transition-delay: 0.10s; }
+        .reveal-stagger.visible > *:nth-child(3) { transition-delay: 0.15s; }
+        .reveal-stagger.visible > *:nth-child(4) { transition-delay: 0.20s; }
+        .reveal-stagger.visible > *:nth-child(5) { transition-delay: 0.25s; }
+        .reveal-stagger.visible > *:nth-child(6) { transition-delay: 0.30s; }
+        .reveal-stagger.visible > *:nth-child(7) { transition-delay: 0.35s; }
+        .reveal-stagger.visible > *:nth-child(8) { transition-delay: 0.40s; }
+        .reveal-stagger.visible > *:nth-child(9) { transition-delay: 0.45s; }
+        .reveal-stagger.visible > * {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .showcase-row .showcase-text,
+        .showcase-row .showcase-visual {
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .showcase-row.visible .showcase-text {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .showcase-row.visible .showcase-visual {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .showcase-row .showcase-text { transform: translateX(-30px); }
+        .showcase-row .showcase-visual { transform: translateX(30px); }
+        .showcase-row.reverse .showcase-text { transform: translateX(30px); }
+        .showcase-row.reverse .showcase-visual { transform: translateX(-30px); }
+        .showcase-row.visible .showcase-text,
+        .showcase-row.visible .showcase-visual {
+            transform: translateX(0);
+        }
+
+        .navbar.scrolled {
+            background: rgba(11, 14, 20, 0.92);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ─── Live Demo: faithful mini app shell ─── */
+        .demo-panel-intro {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .macro-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+        
+        .demo-section {
+            padding: 80px 8%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .demo-app-frame {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+
+        .demo-app-frame-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #05070a;
+            border-bottom: 1px solid var(--border);
+        }
+        .demo-app-frame-bar .dot {
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .demo-app-frame-bar .dot.red    { background: #ef4444; }
+        .demo-app-frame-bar .dot.yellow { background: #f59e0b; }
+        .demo-app-frame-bar .dot.green  { background: #22c55e; }
+        .demo-app-frame-url {
+            margin: 0 auto;
+            font-size: 0.75rem;
+            color: var(--muted);
+            background: rgba(255,255,255,0.03);
+            padding: 4px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .demo-app-body {
+            display: flex;
+            min-height: 440px;
+        }
+
+        /* Fake nav rail — mirrors the real .nav-rail exactly */
+        .demo-app-rail {
+            width: 64px;
+            flex-shrink: 0;
+            background: #05070a;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 6px;
+        }
+        .demo-app-rail-logo {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.25);
+            display: flex; align-items: center; justify-content: center;
+            color: #00d4ff;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .demo-app-rail-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--muted);
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .demo-app-rail-icon:hover:not(.disabled) {
+            background: rgba(59,130,246,.15);
+            color: white;
+        }
+        .demo-app-rail-icon.active {
+            background: rgba(59,130,246,.15);
+            color: #00d4ff;
+        }
+        .demo-app-rail-icon.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .demo-app-rail-divider {
+            width: 28px;
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        .demo-app-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo-app-topnav {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .demo-app-hamburger { color: var(--muted); font-size: 18px; }
+        .demo-app-topnav h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            flex: 1;
+        }
+        .demo-live-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #22c55e;
+            background: rgba(34,197,94,0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+        .pulse-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            animation: livePulse 1.8s infinite;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.75); }
+        }
+
+        .demo-app-content {
+            flex: 1;
+            padding: 24px;
+            overflow: auto;
+        }
+
+        .demo-panel { display: none; }
+        .demo-panel.active { display: block; }
+
+        .demo-loading {
+            text-align: center;
+            color: var(--muted);
+            padding: 60px 20px;
+            grid-column: 1 / -1;
+        }
+        .demo-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 16px;
+        }
+
+        /* Currency strength bars */
+        .strength-list { display: flex; flex-direction: column; gap: 14px; }
+        .strength-row { display: flex; align-items: center; gap: 16px; }
+        .strength-row .ccy-code { width: 50px; font-weight: 700; font-size: 0.9rem; }
+        .strength-row .bar-track {
+            flex: 1; height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .strength-row .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+        .strength-row .bar-fill.bullish { background: #22c55e; }
+        .strength-row .bar-fill.bearish { background: #ef4444; }
+        .strength-row .bar-fill.neutral { background: #94a3b8; }
+        .strength-row .score-val { width: 50px; text-align: right; font-weight: 700; font-size: 0.85rem; }
+
+        @media (max-width: 720px) {
+            .demo-app-body { min-height: 380px; }
+            .demo-app-rail { width: 52px; }
+            .demo-app-rail-icon { width: 38px; height: 38px; font-size: 14px; }
+            .demo-app-content { padding: 16px; }
+            .demo-app-topnav { padding: 12px 16px; }
+            .demo-app-topnav h3 { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── NAVBAR ─── -->
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-rocket"></i></div>
+            VOYAGER
+        </div>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#showcase">Showcase</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="auth.html">Login</a></li>
+            <li><a href="auth.html" class="btn-primary nav-cta">Get Started</a></li>
+        </ul>
+    </nav>
+
+    <!-- ─── HERO ─── -->
+    <section class="hero ambient-wrap">
+        <div class="ambient-blob b1"></div>
+        <div class="ambient-blob b2"></div>
+        <div class="ambient-blob b3"></div>
+        <div class="ambient-grid"></div>
+
+        <div class="hero-badge">
+            <i class="fas fa-circle-check"></i>
+            Start With A Free Account Today!
+        </div>
+
+        <h1>
+            Institutional Intelligence.<br />
+            <span class="accent">Built for the Retail Trader.</span>
+        </h1>
+
+        <p class="hero-sub">
+            Connect your MetaTrader 5 account and get instant access to professional
+            analytics, COT positioning, macro intelligence, and AI-powered trade insights —
+            all in one powerful dashboard.
+        </p>
+
+        <div class="hero-buttons">
+            <a href="auth.html" class="btn-primary btn-lg">
+                Start for Free
+                <i class="fas fa-arrow-right"></i>
+            </a>
+            <a href="auth.html" class="btn-secondary btn-lg">
+                Login
+            </a>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-num">Free</span>
+                <span class="stat-label">To Get Started</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">12+</span>
+                <span class="stat-label">Analytics Tools</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">Real-time</span>
+                <span class="stat-label">Market Intelligence</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── FEATURES ─── -->
+    <section id="features" class="features-section reveal">
+        <div class="section-header">
+            <p class="section-eyebrow">Features</p>
+            <h2>Everything you need to trade with conviction</h2>
+            <p class="section-sub">
+                From institutional positioning to macro trends — Voyager gives you the edge
+                that was once reserved for the pros.
+            </p>
+        </div>
+
+        <div class="features-grid reveal-stagger">
+            <!-- COT Positioning -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-users"></i></div>
+                <h3>COT Positioning</h3>
+                <p>Track institutional sentiment with live Commitments of Traders data. See exactly how commercials, specs, and retail are positioned.</p>
+                <span class="feature-tag">Beta</span>
+            </div>
+            <!-- Macro Matrix -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-globe"></i></div>
+                <h3>Macro Matrix</h3>
+                <p>At-a-glance view of global economic indicators — GDP, inflation, employment, and central bank policy — all in one matrix.</p>
+                <span class="feature-tag">Beta</span>
+            </div>
+            <!-- Correlation Matrix -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-table-cells-large"></i></div>
+                <h3>Correlation Matrix</h3>
+                <p>Visualise how currency pairs, commodities, and indices move together. Identify hedging opportunities and diversify with confidence.</p>
+                <span class="feature-tag">New</span>
+            </div>
+            <!-- Currency Strength -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-gauge-high"></i></div>
+                <h3>Currency Strength Meter</h3>
+                <p>Real-time strength scores for all major currencies. Know which currencies are leading and lagging at a glance.</p>
+            </div>
+            <!-- Economic Heatmap -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-fire"></i></div>
+                <h3>Economic Heatmap</h3>
+                <p>See which economic events are moving the markets. Colour-coded impact levels help you filter the noise.</p>
+            </div>
+            <!-- AI Trade Insights -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                <h3>AI Trade Insights</h3>
+                <p>Get actionable feedback on your trading patterns. AI-powered analysis of your win rate, risk management, and timing.</p>
+                <span class="feature-tag">New</span>
+            </div>
+            <!-- MT5 Auto Sync -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-rotate"></i></div>
+                <h3>MT5 Auto Sync</h3>
+                <p>One-click imports your full trade history from MetaTrader 5. No manual entry, no CSV uploads.</p>
+            </div>
+            <!-- Equity Curve -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-area"></i></div>
+                <h3>Equity Curve &amp; Drawdown</h3>
+                <p>See your account growth plotted over time. Understand your drawdown periods and recovery patterns.</p>
+            </div>
+            <!-- Trading Journal -->
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-book-open-reader"></i></div>
+                <h3>Trade Journal</h3>
+                <p>Log emotions, lessons, and mistakes for every trade. Build self-awareness that turns into consistent profits.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── FLAGSHIP SHOWCASES ─── -->
+    <section id="showcase" class="showcase-section">
+        <div class="section-header reveal">
+            <p class="section-eyebrow">A Closer Look</p>
+            <h2>The tools that set Voyager apart</h2>
+        </div>
+
+        <!-- 1. COT Positioning -->
+        <div class="showcase-row reveal">
+            <div class="showcase-text">
+                <span class="feature-tag">New</span>
+                <h3>See what institutions are actually doing</h3>
+                <p>
+                    Every Friday, the CFTC publishes exactly how hedge funds and large speculators
+                    are positioned across major currencies, metals, and Bitcoin futures. Voyager
+                    pulls it automatically and turns raw contract data into something you can act on.
+                </p>
+                <ul class="showcase-points">
+                    <li><i class="fas fa-check-circle"></i> 52-week percentile rank shows when positioning is at a real extreme</li>
+                    <li><i class="fas fa-check-circle"></i> Contrarian signal badges flag when the crowd may be about to reverse</li>
+                    <li><i class="fas fa-check-circle"></i> Covers EUR, GBP, JPY, AUD, CAD, CHF, NZD, ZAR, Gold, Silver, Platinum, Copper, and Bitcoin</li>
+                </ul>
+            </div>
+            <div class="showcase-visual">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-weight:700; font-size:1.1rem;">COT Positioning</span>
+                    <span style="font-size:0.7rem; color:var(--muted);">Data: 26 Jul 2026</span>
+                </div>
+                <div class="cot-grid">
+                    <div class="cot-item">
+                        <div class="symbol">EUR</div>
+                        <div class="position" style="color:#ef4444;">-53,691</div>
+                        <div class="percentile">7th percentile</div>
+                        <div class="signal" style="color:#22c55e;">⚡ Extreme Short — Bullish</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">GBP</div>
+                        <div class="position" style="color:#22c55e;">+28,541</div>
+                        <div class="percentile">100th percentile</div>
+                        <div class="signal" style="color:#ef4444;">⚡ Extreme Long — Bearish</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">JPY</div>
+                        <div class="position" style="color:#ef4444;">-90,461</div>
+                        <div class="percentile">79th percentile</div>
+                        <div class="signal" style="color:var(--muted);">Neutral</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">AUD</div>
+                        <div class="position" style="color:#22c55e;">+27,222</div>
+                        <div class="percentile">43rd percentile</div>
+                        <div class="signal" style="color:var(--muted);">Neutral</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">CAD</div>
+                        <div class="position" style="color:#ef4444;">-92,771</div>
+                        <div class="percentile">50th percentile</div>
+                        <div class="signal" style="color:#ef4444;">⚡ Extreme Long — Bearish</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">CHF</div>
+                        <div class="position" style="color:#22c55e;">-9,500</div>
+                        <div class="percentile">100th percentile</div>
+                        <div class="signal" style="color:#ef4444;">⚡ Extreme Long — Bearish</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">NZD</div>
+                        <div class="position" style="color:#ef4444;">-29,002</div>
+                        <div class="percentile">93rd percentile</div>
+                        <div class="signal" style="color:var(--muted);">Neutral</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">Gold</div>
+                        <div class="position" style="color:#22c55e;">+120,779</div>
+                        <div class="percentile">100th percentile</div>
+                        <div class="signal" style="color:#ef4444;">⚡ Extreme Long — Bearish</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">Silver</div>
+                        <div class="position" style="color:#22c55e;">+11,501</div>
+                        <div class="percentile">100th percentile</div>
+                        <div class="signal" style="color:#ef4444;">⚡ Extreme Long — Bearish</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">Platinum</div>
+                        <div class="position" style="color:#22c55e;">+8,266</div>
+                        <div class="percentile">100th percentile</div>
+                        <div class="signal" style="color:#ef4444;">⚡ Extreme Long — Bearish</div>
+                    </div>
+                    <div class="cot-item">
+                        <div class="symbol">Copper</div>
+                        <div class="position" style="color:#22c55e;">+60,185</div>
+                        <div class="percentile">100th percentile</div>
+                        <div class="signal" style="color:#ef4444;">⚡ Extreme Long — Bearish</div>
+                    </div>
+                </div>
+                <div style="margin-top:12px; font-size:0.7rem; color:var(--muted); text-align:right;">
+                    <span class="badge-bullish" style="padding:2px 10px; border-radius:12px;">🟢 Contrarian Bullish</span>
+                    <span class="badge-bearish" style="padding:2px 10px; border-radius:12px; margin-left:6px;">🔴 Contrarian Bearish</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Macro Matrix -->
+        <div class="showcase-row reverse reveal">
+            <div class="showcase-text">
+                <span class="feature-tag">Beta</span>
+                <h3>Every economy, scored side by side</h3>
+                <p>
+                    Interest rates, GDP growth, inflation, unemployment, and current account balance
+                    for every major economy — pulled from official central bank and World Bank sources,
+                    scored, and ranked so you can see at a glance which currencies fundamentals actually favour.
+                </p>
+                <ul class="showcase-points">
+                    <li><i class="fas fa-check-circle"></i> Live policy rates auto-fetched from the Fed, ECB, and Bank of England</li>
+                    <li><i class="fas fa-check-circle"></i> One overall score per currency — no more juggling five different data tabs</li>
+                    <li><i class="fas fa-check-circle"></i> Updated automatically, so you're never trading on stale fundamentals</li>
+                </ul>
+            </div>
+            <div class="showcase-visual">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-weight:700; font-size:1.1rem;">Macro Matrix</span>
+                    <span style="font-size:0.7rem; color:var(--muted);">Data: 26 Jul 2026</span>
+                </div>
+                <table class="macro-matrix">
+                    <thead>
+                        <tr>
+                            <th>Currency</th>
+                            <th>Rate</th>
+                            <th>Stance</th>
+                            <th>CPI</th>
+                            <th>GDP</th>
+                            <th>Unemp.</th>
+                            <th>Curr.Acc.</th>
+                            <th>Overall</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>JPY</td><td>0.5%</td><td><span class="badge-bullish">Hiking</span></td><td>3.17%</td><td>1.19%</td><td>2.45%</td><td>4.86%</td><td><span class="score-badge badge-bullish">+0.6</span></td></tr>
+                        <tr><td>USD</td><td>3.75%</td><td><span class="badge-neutral">Hold</span></td><td>2.16%</td><td>4.2%</td><td>-3.63%</td><td>-</td><td><span class="score-badge badge-bullish">+0.5</span></td></tr>
+                        <tr><td>EUR</td><td>2.25%</td><td><span class="badge-neutral">Hold</span></td><td>2.47%</td><td>1.41%</td><td>6.28%</td><td>+0.6</td><td><span class="score-badge badge-bullish">+0.6</span></td></tr>
+                        <tr><td>AUD</td><td>3.85%</td><td><span class="badge-bearish">Cutting</span></td><td>2.87%</td><td>1.35%</td><td>4.09%</td><td>-2.68%</td><td><span class="score-badge badge-bullish">+0.4</span></td></tr>
+                        <tr><td>CAD</td><td>2.75%</td><td><span class="badge-neutral">Hold</span></td><td>2.07%</td><td>1.74%</td><td>6.91%</td><td>-0.95%</td><td><span class="score-badge badge-bullish">+0.4</span></td></tr>
+                        <tr><td>NZD</td><td>3.25%</td><td><span class="badge-bearish">Cutting</span></td><td>2.84%</td><td>0.46%</td><td>5.08%</td><td>-3.62%</td><td><span class="score-badge badge-bullish">+0.4</span></td></tr>
+                        <tr><td>CHF</td><td>0%</td><td><span class="badge-neutral">Hold</span></td><td>0.15%</td><td>1.3%</td><td>4.87%</td><td>6.98%</td><td><span class="score-badge badge-bullish">+0.4</span></td></tr>
+                        <tr><td>GBP</td><td>4.25%</td><td><span class="badge-bearish">Cutting</span></td><td>3.88%</td><td>1.39%</td><td>4.75%</td><td>-2.43%</td><td><span class="score-badge badge-bullish">+0.2</span></td></tr>
+                        <tr><td>ZAR</td><td>7.5%</td><td><span class="badge-bearish">Cutting</span></td><td>3.21%</td><td>1.11%</td><td>32.39%</td><td>-0.42%</td><td><span class="score-badge badge-bearish">-0.2</span></td></tr>
+                    </tbody>
+                </table>
+                <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; font-size:0.7rem;">
+                    <span><span class="badge-bullish" style="padding:2px 8px;">+2 Strongly Bullish</span></span>
+                    <span><span class="badge-neutral" style="padding:2px 8px;">0 Neutral</span></span>
+                    <span><span class="badge-bearish" style="padding:2px 8px;">-2 Strongly Bearish</span></span>
+                </div>
+                <div style="margin-top:8px; font-size:0.6rem; color:var(--muted);">GDP, CPI and Unemployment sourced from World Bank (annual). Policy rates maintained manually. Scores are indicative, not financial advice.</div>
+            </div>
+        </div>
+
+        <!-- 3. Correlation Matrix -->
+        <div class="showcase-row reveal">
+            <div class="showcase-text">
+                <span class="feature-tag">New</span>
+                <h3>Know when you're secretly doubling your risk</h3>
+                <p>
+                    Trading EURUSD and GBPUSD at the same time feels like diversifying — but if they move
+                    together 88% of the time, you're really just doubling one bet. Voyager calculates real
+                    correlation from actual price history and warns you when your open positions overlap.
+                </p>
+                <ul class="showcase-points">
+                    <li><i class="fas fa-check-circle"></i> Full pair-by-pair correlation matrix, calculated from real daily closes</li>
+                    <li><i class="fas fa-check-circle"></i> Automatic overlap warnings based on what you've actually traded</li>
+                    <li><i class="fas fa-check-circle"></i> Single-currency view shows how one currency correlates with every other major</li>
+                </ul>
+            </div>
+            <div class="showcase-visual">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-weight:700; font-size:1.1rem;">Correlation Matrix</span>
+                    <span style="font-size:0.7rem; color:var(--muted);">30-day rolling</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px; margin-bottom:12px; font-size:0.7rem; color:var(--muted);">
+                    <span class="badge-bullish" style="padding:2px 6px;">+1 moves together</span>
+                    <span class="badge-bearish" style="padding:2px 6px; margin-left:6px;">-1 moves opposite</span>
+                    <span class="badge-neutral" style="padding:2px 6px; margin-left:6px;">0 little relationship</span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table style="font-size:0.65rem; min-width:600px;">
+                        <thead>
+                            <tr><th></th><th>EURUSD</th><th>GBPUSD</th><th>USDJPY</th><th>USDCHF</th><th>AUDUSD</th><th>USDCAD</th><th>NZDUSD</th><th>EURGBP</th><th>EURJPY</th><th>GBPJPY</th><th>USDZAR</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>EURUSD</td><td>1.00</td><td class="badge-bullish">0.89</td><td>-0.47</td><td class="badge-bearish">-0.88</td><td>0.77</td><td>-0.74</td><td>0.73</td><td>-0.17</td><td>0.63</td><td>0.66</td><td>-0.58</td></tr>
+                            <tr><td>GBPUSD</td><td>0.89</td><td>1.00</td><td>-0.55</td><td class="badge-bearish">-0.86</td><td>0.71</td><td>-0.74</td><td>0.70</td><td>-0.60</td><td>0.45</td><td>0.73</td><td>-0.58</td></tr>
+                            <tr><td>USDJPY</td><td>-0.47</td><td>-0.55</td><td>1.00</td><td>0.65</td><td>-0.27</td><td>0.38</td><td>-0.38</td><td>0.35</td><td>0.39</td><td>0.17</td><td>0.32</td></tr>
+                            <tr><td>USDCHF</td><td class="badge-bearish">-0.88</td><td class="badge-bearish">-0.86</td><td>0.65</td><td>1.00</td><td>-0.56</td><td>0.73</td><td>-0.61</td><td>0.31</td><td>-0.34</td><td>-0.48</td><td>0.51</td></tr>
+                            <tr><td>AUDUSD</td><td>0.77</td><td>0.71</td><td>-0.27</td><td>-0.56</td><td>1.00</td><td>-0.55</td><td>0.79</td><td>-0.17</td><td>0.57</td><td>0.62</td><td>-0.54</td></tr>
+                            <tr><td>USDCAD</td><td>-0.74</td><td>-0.74</td><td>0.38</td><td>0.73</td><td>-0.55</td><td>1.00</td><td>-0.65</td><td>0.29</td><td>-0.44</td><td>-0.56</td><td>0.33</td></tr>
+                            <tr><td>NZDUSD</td><td>0.73</td><td>0.70</td><td>-0.38</td><td>-0.61</td><td>0.79</td><td>-0.65</td><td>1.00</td><td>-0.23</td><td>0.43</td><td>0.51</td><td>-0.35</td></tr>
+                            <tr><td>EURGBP</td><td>-0.17</td><td>-0.60</td><td>0.35</td><td>0.31</td><td>-0.17</td><td>0.29</td><td>-0.23</td><td>1.00</td><td>0.14</td><td>-0.41</td><td>0.23</td></tr>
+                            <tr><td>EURJPY</td><td>0.63</td><td>0.45</td><td>0.39</td><td>-0.34</td><td>0.57</td><td>-0.44</td><td>0.43</td><td>0.14</td><td>1.00</td><td class="badge-bullish">0.84</td><td>-0.31</td></tr>
+                            <tr><td>GBPJPY</td><td>0.66</td><td>0.73</td><td>0.17</td><td>-0.48</td><td>0.62</td><td>-0.56</td><td>0.51</td><td>-0.41</td><td class="badge-bullish">0.84</td><td>1.00</td><td>-0.42</td></tr>
+                            <tr><td>USDZAR</td><td>-0.58</td><td>-0.58</td><td>0.32</td><td>0.51</td><td>-0.54</td><td>0.33</td><td>-0.35</td><td>0.23</td><td>-0.31</td><td>-0.42</td><td>1.00</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:12px; background:rgba(255,255,255,0.03); border-radius:8px; padding:8px; font-size:0.7rem; border-left:3px solid #fbbf24;">
+                    <strong style="color:#fbbf24;">⚠️ Overlap detected</strong>
+                    <span style="color:var(--muted);"> USDCHF ↔ USDCAD (0.73), EURUSD ↔ USDCHF (-0.88), EURUSD ↔ AUDUSD (0.77)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. AI Trade Insights -->
+        <div class="showcase-row reverse reveal">
+            <div class="showcase-text">
+                <span class="feature-tag">New</span>
+                <h3>A coach that's actually read your trade history</h3>
+                <p>
+                    Not generic trading tips — AI analysis built from your real symbols, your real win rate,
+                    your real timing patterns. It tells you what's actually working, what's quietly costing
+                    you money, and where your next edge is likely hiding.
+                </p>
+                <ul class="showcase-points">
+                    <li><i class="fas fa-check-circle"></i> Insights generated from your own trade and journal data — never hallucinated</li>
+                    <li><i class="fas fa-check-circle"></i> Flags recurring mistakes patterns pulled straight from your journal entries</li>
+                    <li><i class="fas fa-check-circle"></i> Breaks down performance by symbol, session, and day of week</li>
+                </ul>
+            </div>
+            <div class="showcase-visual">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-weight:700; font-size:1.1rem;">AI Trade Insights</span>
+                    <span style="font-size:0.7rem; color:var(--muted);">Personalised</span>
+                </div>
+                <div style="display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap;">
+                    <div><span style="color:var(--muted);">Total Trades</span> <strong>41</strong></div>
+                    <div><span style="color:var(--muted);">Total Profit</span> <strong style="color:#22c55e;">+$67.43</strong></div>
+                    <div><span style="color:var(--muted);">Win Rate</span> <strong>65.9%</strong></div>
+                </div>
+                <div class="ai-insight-grid">
+                    <div class="ai-insight-card">
+                        <span class="tag weak">WEAKNESS</span>
+                        <h4>Improve performance in EURUSDc</h4>
+                        <p>The current win rate is 0.0%, resulting in a total loss of $17.31 from 2 trades. Review strategies and adjust entry points.</p>
+                    </div>
+                    <div class="ai-insight-card" style="border-left-color:#22c55e;">
+                        <span class="tag strong">STRENGTH</span>
+                        <h4>Focus on profitable symbols</h4>
+                        <p>XAUUSDc, USDCADc, ETHUSDc, USDCHEc show an average win rate of 86.4% and total profit of $99.87 from 21 trades.</p>
+                    </div>
+                    <div class="ai-insight-card" style="border-left-color:#3b82f6;">
+                        <span class="tag opportunity">OPPORTUNITY</span>
+                        <h4>Monitor weekend trading</h4>
+                        <p>Saturday trades: 100% win rate (+$13.47). Sunday: 50% win rate. Keep an eye on weekend performance.</p>
+                    </div>
+                    <div class="ai-insight-card" style="border-left-color:#f59e0b;">
+                        <span class="tag warning">WARNING</span>
+                        <h4>Manage risk with BTCUSDc</h4>
+                        <p>12 trades, 66.7% win rate, but net loss of -$3.25. Implement effective risk management.</p>
+                    </div>
+                </div>
+                <div style="margin-top:10px; text-align:right; font-size:0.7rem; color:var(--muted);">
+                    <i class="fas fa-rotate" style="margin-right:4px;"></i> Refreshed 26 Jul 2026
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── LIVE DEMO WINDOW ─── -->
+    <section id="live-demo" class="demo-section reveal">
+        <div class="section-header">
+            <p class="section-eyebrow">No Sign-Up Required</p>
+            <h2>This is what's waiting for you inside</h2>
+            <p class="section-sub">
+                A real look at the actual Voyager dashboard, pulling live data right now.
+                Click the icons on the left to explore.
+            </p>
+        </div>
+
+        <div class="demo-app-frame">
+            <!-- fake browser chrome -->
+            <div class="demo-app-frame-bar">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="demo-app-frame-url"><i class="fas fa-lock"></i> Voyager Analytics</span>
+            </div>
+
+            <div class="demo-app-body">
+                <!-- fake nav rail -->
+                <aside class="demo-app-rail">
+                    <div class="demo-app-rail-logo"><i class="fas fa-rocket"></i></div>
+
+                    <div class="demo-app-rail-icon disabled" title="Dashboard"><i class="fas fa-table-cells-large"></i></div>
+                    <div class="demo-app-rail-icon disabled" title="Trades"><i class="fas fa-chart-line"></i></div>
+                    <div class="demo-app-rail-icon disabled" title="Journal"><i class="fas fa-book-open-reader"></i></div>
+
+                    <div class="demo-app-rail-divider"></div>
+
+                    <div class="demo-app-rail-icon active" data-demo="cot" data-title="COT Positioning" title="COT Positioning">
+                        <i class="fas fa-scale-unbalanced"></i>
+                    </div>
+                    <div class="demo-app-rail-icon" data-demo="strength" data-title="Currency Strength" title="Currency Strength">
+                        <i class="fas fa-signal"></i>
+                    </div>
+                    <div class="demo-app-rail-icon" data-demo="macro" data-title="Macro Matrix" title="Macro Matrix">
+                        <i class="fas fa-table-cells"></i>
+                    </div>
+
+                    <div class="demo-app-rail-divider"></div>
+
+                    <div class="demo-app-rail-icon disabled" title="AI Insights"><i class="fas fa-microchip"></i></div>
+                    <div class="demo-app-rail-icon disabled" title="Reports"><i class="fas fa-file-pdf"></i></div>
+
+                    <div class="demo-app-rail-icon" data-demo="heatmap" data-title="Economic Heatmap" title="Economic Heatmap">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div class="demo-app-rail-icon" data-demo="recap" data-title="Recap Card" title="Recap Card">
+                        <i class="fas fa-share-nodes"></i>
+                    </div>
+                    
+                </aside>
+
+                <div class="demo-app-main">
+                    <!-- fake topnav -->
+                    <div class="demo-app-topnav">
+                        <i class="fas fa-bars demo-app-hamburger"></i>
+                        <h3 id="demoPageTitle">COT Positioning</h3>
+                        <span class="demo-live-tag"><span class="pulse-dot"></span> Live Data</span>
+                    </div>
+
+                    <div class="demo-app-content">
+                        <!-- COT panel -->
+                        <div class="demo-panel active" id="demo-cot">
+                            <p class="demo-panel-intro">
+                                Weekly CFTC Commitment of Traders data for large speculators. Positioning near the top
+                                of its 52-week range is a contrarian bearish signal; near the bottom, contrarian bullish.
+                            </p>
+                            <div class="cot-grid" id="demoCotGrid">
+                                <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live CFTC data…</div>
+                            </div>
+                        </div>
+
+                        <!-- Currency Strength panel -->
+                        <div class="demo-panel" id="demo-strength">
+                            <p class="demo-panel-intro"><i class="fas fa-signal" style="margin-right:6px; color:#00d4ff;"></i>Live Strength Scores</p>
+                            <div class="strength-list" id="demoStrengthList">
+                                <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live strength data…</div>
+                            </div>
+                    </div>
+
+                        <!-- Macro Matrix panel -->
+                        <div class="demo-panel" id="demo-macro">
+                            <p class="demo-panel-intro">Fundamental macro indicators per currency — scored and ranked by overall strength.</p>
+                            <div class="macro-legend">
+                                <span><b style="color:#22c55e;">+2</b> Strongly bullish</span>
+                                <span><b style="color:#4ade80;">+1</b> Bullish</span>
+                                <span><b style="color:#94a3b8;">0</b> Neutral</span>
+                                <span><b style="color:#f87171;">-1</b> Bearish</span>
+                                <span><b style="color:#ef4444;">-2</b> Strongly bearish</span>
+                            </div>
+                            <div class="showcase-visual" style="border:none; background:none; padding:0;">
+                                <table class="macro-matrix" id="demoMacroTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:left;">Currency</th>
+                                            <th>Rate</th>
+                                            <th>CPI</th>
+                                            <th>GDP</th>
+                                            <th>Overall</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="5" class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live macro data…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="demo-note" id="demoNote"></p>
+
+        <div style="text-align:center; margin-top:32px;">
+            <a href="auth.html" class="btn-primary btn-lg">
+                Unlock Full Access — It's Free
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+    
+
+    <!-- ─── HOW IT WORKS ─── -->
+    <section id="how-it-works" class="how-section reveal">
+        <div class="section-header">
+            <p class="section-eyebrow">How It Works</p>
+            <h2>Up and running in minutes</h2>
+        </div>
+
+        <div class="steps-grid reveal-stagger">
+            <div class="step">
+                <div class="step-num">01</div>
+                <h3>Create your account</h3>
+                <p>Sign up for free. No credit card, no subscription — just your email and a password.</p>
+            </div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <h3>Connect MetaTrader 5</h3>
+                <p>Download the Sync Agent from your settings page, run it once, and your trades import automatically.</p>
+            </div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <h3>Start improving</h3>
+                <p>Analyse your stats, journal your trades, and track your growth over time.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── PRICING ─── -->
+    <section id="pricing" class="pricing-section reveal">
+        <div class="section-header">
+            <p class="section-eyebrow">Pricing</p>
+            <h2>Start free. Own it eventually.</h2>
+            <p class="section-sub">
+                All plans include the full Voyager dashboard. Every monthly payment counts toward
+                <strong>lifetime access</strong> — once you've paid R1 799.99 in total, it's yours forever and billing stops automatically.
+            </p>
+        </div>
+
+        <div class="pricing-grid reveal-stagger">
+            <!-- Free -->
+            <div class="pricing-card">
+                <div class="pricing-tier">Free</div>
+                <div class="pricing-price">R0</div>
+                <div class="pricing-period">forever</div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> MT5 Trade Sync</li>
+                    <li><i class="fas fa-check"></i> Dashboard & Trade History</li>
+                    <li><i class="fas fa-check"></i> Trading Journal</li>
+                    <li><i class="fas fa-check"></i> Risk/Reward Tracking</li>
+                    <li><i class="fas fa-check"></i> Economic Heatmap</li>
+                    <li><i class="fas fa-check"></i> Recap Card</li>
+                    <li><i class="fas fa-check"></i> Goal Tracker</li>
+                    <li><i class="fas fa-check"></i> 1 Trading Account</li>
+                </ul>
+                <a href="auth.html" class="btn-secondary pricing-btn">Get Started</a>
+            </div>
+
+            <!-- Monthly → Lifetime -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <div class="pricing-tier">Monthly</div>
+                <div class="pricing-price">R359.99</div>
+                <div class="pricing-period">per month · converts to lifetime automatically</div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> Everything in Free</li>
+                    <li><i class="fas fa-check"></i> Full Analytics (monthly breakdown & drilldowns)</li>
+                    <li><i class="fas fa-check"></i> Currency Strength Meter</li>
+                    <li><i class="fas fa-check"></i> Correlation Matrix</li>
+                    <li><i class="fas fa-check"></i> Session Analysis</li>
+                    <li><i class="fas fa-check"></i> Streak Tracker</li>
+                    <li><i class="fas fa-check"></i> Unlimited Trading Accounts</li>
+                    <li><i class="fas fa-check" style="color:#fbbf24;"></i> <strong style="color:#fbbf24;">Every payment counts toward lifetime</strong></li>
+                </ul>
+                <a href="auth.html" class="btn-primary pricing-btn">Start Monthly</a>
+            </div>
+
+            <!-- Lifetime -->
+            <div class="pricing-card">
+                <div class="lifetime-badge">🔒 Lifetime Deal</div>
+                <div class="pricing-tier">Lifetime</div>
+                <div class="pricing-price">R1 799.99</div>
+                <div class="pricing-period">once-off · lifetime access</div>
+                <ul class="pricing-features">
+                    <li><i class="fas fa-check"></i> Everything in Monthly</li>
+                    <li><i class="fas fa-check"></i> COT Positioning</li>
+                    <li><i class="fas fa-check"></i> Macro Matrix</li>
+                    <li><i class="fas fa-check"></i> AI Trade Insights</li>
+                    <li><i class="fas fa-check"></i> Reports (PDF Export)</li>
+                    <li><i class="fas fa-check"></i> No recurring fees, ever</li>
+                    <li><i class="fas fa-check"></i> Priority Support</li>
+                </ul>
+                <a href="auth.html" class="btn-secondary pricing-btn">Get Lifetime Access</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── TRUST ROWS + SSL BADGE ─── -->
+    <section class="trust-section reveal">
+        <span class="section-eyebrow">Trusted by traders worldwide</span>
+
+        <div class="trust-row reveal-stagger">
+            <div class="trust-item">
+                <div class="logo-container on-white">
+                    <img src="assets/paystack2.jpg" alt="Paystack" />
+                </div>
+                <span>Paystack</span>
+            </div>
+            <div class="trust-item">
+                <div class="logo-container">
+                    <img src="assets/lemonsq.webp" alt="Lemon Squeezy" />
+                </div>
+                <span>Lemon Squeezy</span>
+            </div>
+            <div class="trust-item">
+                <div class="logo-container">
+                    <i class="fab fa-cc-visa"></i>
+                </div>
+                <span>Visa</span>
+            </div>
+            <div class="trust-item">
+                <div class="logo-container">
+                    <i class="fab fa-cc-mastercard"></i>
+                </div>
+                <span>Mastercard</span>
+            </div>
+        </div>
+
+        <div class="trust-row reveal-stagger">
+            <div class="trust-item">
+                <div class="logo-container">
+                    <img src="assets/tradingview.webp" alt="TradingView" />
+                </div>
+                <span>TradingView</span>
+            </div>
+            <div class="trust-item">
+                <div class="logo-container">
+                    <img src="assets/MT5LOGO.png" alt="MT5" />
+                </div>
+                <span>MetaTrader 5</span>
+            </div>
+        </div>
+
+        <div class="security-badge">
+            <span class="badge-icon">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#00d4ff" stroke-width="1.5">
+                    <rect x="5" y="11" width="14" height="9" rx="2"/>
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                </svg>
+            </span>
+            <span class="badge-divider"></span>
+            <span>256-bit SSL Encrypted</span>
+            <span class="badge-divider"></span>
+            <span class="verified-tag">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                Secure
+            </span>
+        </div>
+    </section>
+
+    <!-- ─── CTA ─── -->
+    <section class="cta-section reveal">
+        <h2>Ready to trade smarter?</h2>
+        <p>Join traders already using Voyager to track, analyse, and improve their performance.</p>
+        <a href="auth.html" class="btn-primary btn-lg">
+            Create Free Account
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-logo">
+                <span class="footer-logo-mark" aria-hidden="true">
+                    <svg viewBox="0 0 22 22"><polyline points="2,13 6,8 10,15 14,5 18,11 20,11"/></svg>
+                </span>
+                Voyager Analytics
+            </div>
+            <div class="footer-right">
+                <nav class="footer-links" aria-label="Legal">
+                    <a href="terms.html">Terms</a>
+                    <a href="privacy.html">Privacy</a>
+                    <a href="refund.html">Refund Policy</a>
+                    <a href="risk.html">Risk Disclaimer</a>
+                    <a href="about.html">About</a>
+                </nav>
+                <p class="footer-copy">© 2026 Voyager Analytics. Trading involves risk — no tool guarantees results.</p>
+            </div>
+        </div>
+    </footer>    
+    <script>
+        // REVEAL + DELAY//
+        window.addEventListener("scroll", () => {
+            document.querySelector(".navbar").classList.toggle("scrolled", window.scrollY > 20);
+        }, { passive: true });
+
+        (function() {
+            if (typeof IntersectionObserver !== 'undefined') {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                        }
+                    });
+                }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+                document.querySelectorAll('.reveal, .reveal-stagger, .showcase-row').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+        })();
+        
+        // LIVE DEMO WINDOW //
+        const DEMO_API_URL = "https://vanalytics.onrender.com";
+
+        // ── Fake rail navigation ──
+        document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(icon => {
+            icon.addEventListener("click", () => {
+                document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(i => i.classList.remove("active"));
+                document.querySelectorAll(".demo-panel").forEach(p => p.classList.remove("active"));
+                icon.classList.add("active");
+                document.getElementById(`demo-${icon.dataset.demo}`).classList.add("active");
+                document.getElementById("demoPageTitle").textContent = icon.dataset.title;
+            });
+        });
+
+        // ── COT sparkline (tiny inline SVG, no dependencies) ──
+        function tinySparkline(values) {
+            if (values.length < 2) return "";
+            const min = Math.min(...values), max = Math.max(...values);
+            const range = max - min || 1;
+            const points = values.map((v, i) => {
+                const x = (i / (values.length - 1)) * 100;
+                const y = 30 - ((v - min) / range) * 30;
+                return `${x},${y}`;
+            }).join(" ");
+            const color = values[values.length - 1] >= values[0] ? "#22c55e" : "#ef4444";
+            return `<svg viewBox="0 0 100 30" width="100%" height="30" preserveAspectRatio="none">
+                        <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2"/>
+                    </svg>`;
+        }
+
+        // ── Load COT demo ──
+        fetch(`${DEMO_API_URL}/public/demo/cot`)
+            .then(r => r.json())
+            .then(data => {
+                const grid = document.getElementById("demoCotGrid");
+                if (!data.positions || data.positions.length === 0) {
+                    grid.innerHTML = `<div class="demo-loading">Live data unavailable right now — check back shortly.</div>`;
+                    return;
+                }
+                grid.innerHTML = data.positions.map(p => {
+                    const isLong = p.net_position >= 0;
+                    const badgeClass = p.signal === "extreme_long" ? "badge-bearish"
+                                     : p.signal === "extreme_short" ? "badge-bullish"
+                                     : "badge-neutral";
+                    const badgeText = p.signal === "extreme_long" ? "Extreme Long"
+                                     : p.signal === "extreme_short" ? "Extreme Short"
+                                     : "Neutral";
+                    return `
+                        <div class="cot-item">
+                            <div class="symbol">${p.currency}</div>
+                            <div class="position" style="color:${isLong ? '#22c55e' : '#ef4444'};">
+                                ${isLong ? '+' : ''}${p.net_position.toLocaleString()}
+                            </div>
+                            ${tinySparkline(p.sparkline)}
+                            <div class="percentile">${p.percentile_rank !== null ? p.percentile_rank + 'th percentile' : 'Building history'}</div>
+                            <span class="badge-cont ${badgeClass}" style="margin-top:6px; display:inline-block;">${badgeText}</span>
+                        </div>
+                    `;
+                }).join("");
+                document.getElementById("demoNote").textContent = data.note;
+            })
+            .catch(() => {
+                document.getElementById("demoCotGrid").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
+            });
+
+        // ── Load Currency Strength demo ──
+        fetch(`${DEMO_API_URL}/public/demo/currency-strength`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById("demoStrengthList");
+                if (!data.scores || data.scores.length === 0) {
+                    list.innerHTML = `<div class="demo-loading">Live data warming up — check back shortly.</div>`;
+                    return;
+                }
+                const maxAbs = Math.max(...data.scores.map(s => Math.abs(s.score)), 1);
+                list.innerHTML = data.scores
+                    .sort((a, b) => b.score - a.score)
+                    .map(s => {
+                        const pct = Math.abs(s.score) / maxAbs * 100;
+                        return `
+                            <div class="strength-row">
+                                <span class="ccy-code">${s.code}</span>
+                                <div class="bar-track">
+                                    <div class="bar-fill ${s.trend}" style="width:${pct}%;"></div>
+                                </div>
+                                <span class="score-val" style="color:${s.trend === 'bullish' ? '#22c55e' : s.trend === 'bearish' ? '#ef4444' : '#94a3b8'};">
+                                    ${s.score > 0 ? '+' : ''}${s.score}
+                                </span>
+                            </div>
+                        `;
+                    }).join("");
+            })
+            .catch(() => {
+                document.getElementById("demoStrengthList").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
+            });
+
+        // ── Load Macro Matrix demo ──
+        fetch(`${DEMO_API_URL}/public/demo/macro-matrix`)
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.querySelector("#demoMacroTable tbody");
+                if (!data.rows || data.rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="demo-loading">Live data unavailable right now.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = data.rows.map(r => {
+                    const scoreColor = r.overall_score > 0.2 ? "#22c55e" : r.overall_score < -0.2 ? "#ef4444" : "#94a3b8";
+                    return `
+                        <tr>
+                            <td style="text-align:left; font-weight:700;">${r.currency}</td>
+                            <td>${r.rate !== null ? r.rate + '%' : '—'}</td>
+                            <td>${r.cpi !== null ? r.cpi + '%' : '—'}</td>
+                            <td>${r.gdp !== null ? r.gdp + '%' : '—'}</td>
+                            <td><span class="score-badge" style="background:${scoreColor}20; color:${scoreColor};">${r.overall_score > 0 ? '+' : ''}${r.overall_score}</span></td>
+                        </tr>
+                    `;
+                }).join("");
+            })
+            .catch(() => {
+                document.querySelector("#demoMacroTable tbody").innerHTML = `<tr><td colspan="5" class="demo-loading">Could not load live data. Please refresh.</td></tr>`;
+            });
+        
+    </script>
+</body>
+</html>

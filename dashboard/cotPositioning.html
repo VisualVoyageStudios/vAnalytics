@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COT Positioning | Voyager Analytics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
+<link rel="manifest" href="/vAnalytics/manifest.json">
+<meta name="theme-color" content="#070b14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body data-min-tier= "lifetime">
+
+<div id="loader"><div class="spinner"></div></div>
+
+<!-- Persistent icon rail -->
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"            class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"             class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"               class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"            class="nav-rail-icon" title="Analytics"><i class="fas fa-chart-simple"></i></a>
+    <a href="journal.html"              class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"           class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="watchlist.html"            class="nav-rail-icon" title="Watchlist"><i class="fas fa-star"></i></a>
+    <a href="macroMatrix.html"          class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"         class="nav-rail-icon" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="tradeIdeas.html"           class="nav-rail-icon" title="Trade Ideas"><i class="fas fa-lightbulb"></i></a>
+    <a href="currencyIntelligence.html" class="nav-rail-icon" title="Currency Intelligence"><i class="fas fa-brain"></i></a>
+    <a href="economicHeatmap.html"      class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"           class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="cotPositioning.html"       class="nav-rail-icon" title="COT Positioning"><i class="fas fa-scale-unbalanced"></i></a>
+    <a href="currencyStrength.html"     class="nav-rail-icon" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html"    class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"           class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"      class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"              class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"          class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"            class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"              class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"             class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+</aside>
+
+<!-- Topbar -->
+<header class="topnav">
+    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">COT Positioning</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<aside class="nav-drawer" id="navDrawer">
+    <div class="drawer-brand">
+        <i class="fas fa-rocket"></i>
+        <div>
+            <p class="brand-name">Voyager</p>
+            <p class="brand-plan">ANALYTICS</p>
+        </div>
+    </div>
+
+    <div class="drawer-section-label">Journaling</div>
+    <nav class="drawer-nav">
+        <a href="dashboard.html"><i class="fas fa-table-cells-large"></i>Dashboard</a>
+        <a href="accounts.html"><i class="fas fa-briefcase"></i>Accounts</a>
+        <a href="trades.html"><i class="fas fa-chart-line"></i>Trades</a>
+        <a href="analytics.html"><i class="fas fa-chart-simple"></i>Analytics</a>
+        <a href="journal.html"><i class="fas fa-book-open-reader"></i>Journal</a>
+    </nav>
+
+    <div class="drawer-section-label">Market Tools</div>
+    <nav class="drawer-nav">
+        <a href="economicHeatmap.html"><i class="fas fa-globe"></i>Economic Heatmap <span class="nav-premium-badge">Elite</span></a>
+        <a href="edgeFinder.html"><i class="fas fa-crosshairs"></i>Edge Finder <span class="nav-premium-badge">Elite</span></a>
+        <a href="currencyStrength.html"><i class="fas fa-signal"></i>Currency Strength <span class="nav-premium-badge">Elite</span></a>
+        <a href="correlationMatrix.html"><i class="fas fa-table-cells"></i>Correlation Matrix <span class="nav-premium-badge">Elite</span></a>
+        <a href="cotPositioning.html" class="active"><i class="fas fa-scale-unbalanced"></i>COT Positioning <span class="nav-premium-badge">Elite</span></a>
+    </nav>
+
+    <div class="drawer-section-label">Premium</div>
+    <nav class="drawer-nav">
+        <a href="aiInsights.html"><i class="fas fa-microchip"></i>AI Insights <span class="nav-premium-badge">Pro</span></a>
+        <a href="sessionAnalysis.html"><i class="fas fa-clock"></i>Session Analysis <span class="nav-premium-badge">Starter</span></a>
+        <a href="streaks.html"><i class="fas fa-fire"></i>Streak Tracker <span class="nav-premium-badge">Starter</span></a>
+        <a href="goalTracker.html"><i class="fas fa-bullseye"></i>Goal Tracker <span class="nav-premium-badge">Starter</span></a>
+        <a href="reports.html"><i class="fas fa-file-pdf"></i>Reports <span class="nav-premium-badge">Elite</span></a>
+    </nav>
+
+    <div class="drawer-section-label">Account</div>
+    <nav class="drawer-nav">
+        <a href="settings.html"><i class="fas fa-gears"></i>Settings</a>
+    </nav>
+
+    <div class="drawer-footer">
+        <div class="drawer-user">
+            <div class="drawer-avatar" id="drawerAvatar">V</div>
+            <div>
+                <p class="drawer-user-name">voyager</p>
+                <p class="drawer-user-email" id="drawerEmail">—</p>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<div class="dashboard-container">
+    <main class="main-content">
+
+        <header class="page-header">
+            <h2>COT Positioning <i class="info-tip" data-tip="The CFTC Commitment of Traders report shows what large hedge funds and institutions are doing in the futures market. Published every Friday — data is from the previous Tuesday.">i</i>
+</h2>
+            <span id="lastUpdated" style="font-size:12px; color:var(--muted);"></span>
+            <!-- tooltip-->
+           
+        </header>
+
+        <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:720px;">
+            Weekly CFTC Commitment of Traders data for large speculators. Positioning near the top of its
+            52-week range is a contrarian bearish signal; near the bottom, contrarian bullish — crowded
+            positioning often precedes a reversal.
+        </p>
+
+        <div id="cotGrid" style="
+            display:grid;
+            grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+            gap:16px;
+        ">
+            <div style="color:var(--muted); padding:60px 20px; text-align:center; grid-column:1/-1;">
+                <i class="fas fa-spinner fa-spin" style="font-size:2rem; display:block; margin-bottom:16px; opacity:0.3;"></i>
+                Loading positioning data…
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/pgAnime.js"></script>
+<script src="../js/nav.js"></script>
+<script src="../js/tierGate.js"></script>
+<script src="../js/tooltip.js"></script>
+<script>
+const token = localStorage.token;
+if(!token) window.location.href = "../login.html";
+
+const ASSET_LABELS = {
+    EUR:" EUR", GBP:" GBP", JPY:" JPY", USD:" USD",
+    AUD:"AUD", CAD:" CAD", CHF:" CHF", NZD:" NZD",
+    XAU:"Gold",  XAG:"Silver", XPT:"Platinum", XCU:" Copper",
+    BTC:"Bitcoin", ETH:"Ethereum"
+    };
+    
+async function loadCOT(){
+    const grid = document.getElementById("cotGrid");
+
+    try {
+        const res  = await fetch(`${API_URL}/cot/positioning`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        document.getElementById("lastUpdated").textContent =
+            `Report date: ${data.positions.find(p => p.has_data)?.report_date || "—"}`;
+
+        renderGrid(data.positions);
+
+    } catch(err) {
+        console.error(err);
+        grid.innerHTML = `
+            <div style="color:var(--muted); padding:60px 20px; text-align:center; grid-column:1/-1;">
+                <i class="fas fa-triangle-exclamation" style="font-size:2rem; display:block; margin-bottom:16px; opacity:0.3;"></i>
+                Could not load COT data. Please refresh.
+            </div>
+        `;
+    }
+}
+
+function sparklinePath(values, w, h){
+    if(values.length < 2) return { path: "", high: null, low: null, highY: 0, lowY: 0 };
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+
+    const points = values.map((v, i) => ({
+        x: (i / (values.length - 1)) * w,
+        y: h - ((v - min) / range) * h,
+        v
+    }));
+
+    const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+
+    const highPoint = points.reduce((a, b) => (b.v > a.v ? b : a));
+    const lowPoint  = points.reduce((a, b) => (b.v < a.v ? b : a));
+
+    return { path, highPoint, lowPoint };
+}
+
+function renderGrid(positions){
+    const grid = document.getElementById("cotGrid");
+
+    grid.innerHTML = positions.map(p => {
+        if(!p.has_data){
+            return `
+                <div class="metric-card">
+                    <h3>${p.currency}</h3>
+                    <p style="color:var(--muted); font-size:13px; margin-top:8px;">No data yet</p>
+                </div>
+            `;
+        }
+
+        const isLong   = p.net_position >= 0;
+        const barColor = isLong ? "var(--success)" : "var(--danger)";
+        const barPct   = Math.min(100, Math.abs(p.net_position) / (p.open_interest || 1) * 100 * 3);
+
+        let badge = "";
+        if(p.signal === "extreme_long"){
+            badge = `<span style="background:rgba(239,68,68,0.12); color:var(--danger); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;">
+                        <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i>Extreme Long — Contrarian Bearish <i class="info-tip" data-tip="Hedge funds are more long than 80% of the time over the past year. Crowded positioning like this often precedes a reversal as there are fewer buyers left.">i</i>
+                      </span>`;
+        } else if(p.signal === "extreme_short"){
+            badge = `<span style="background:rgba(34,197,94,0.12); color:var(--success); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;">
+                        <i class="fas fa-triangle-exclamation" style="margin-right:4px;"></i>Extreme Short — Contrarian Bullish <i class="info-tip" data-tip="Hedge funds are more short than 80% of the time over the past year. When everyone is already short, a squeeze higher becomes more likely.">i</i>
+                      </span>`;
+        } else if(p.weeks_of_history < 8){
+            badge = `<span style="background:rgba(148,163,184,0.1); color:var(--muted); font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px;">
+                        <i class="fas fa-clock" style="margin-right:4px;"></i>Building history (${p.weeks_of_history}/8 weeks)
+                      </span>`;
+        }
+
+        const spark = sparklinePath(p.sparkline, 260, 40);
+        const sparkColor = isLong ? "#22c55e" : "#ef4444";
+
+        return `
+            <div class="metric-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                    <h3 style="font-size:16px; opacity:1;">${ASSET_LABELS[p.currency] || p.currency}</h3>
+                    <span style="font-weight:700; color:${barColor}; font-size:14px;">
+                        ${isLong ? "+" : ""}${p.net_position.toLocaleString()} <i class="info-tip" data-tip="Long contracts minus short contracts held by large speculators. Positive = more bullish bets than bearish. Negative = more bearish bets.">i</i>
+                    </span>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.05); border-radius:6px; height:8px; overflow:hidden; margin-bottom:8px;">
+                    <div style="width:${barPct}%; height:100%; background:${barColor}; border-radius:6px;"></div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:14px;">
+                    <span>${p.percentile_rank !== null ? `${p.percentile_rank}th percentile (52wk)` : "Collecting weekly data…"} <i class="info-tip" data-tip="Where current positioning sits relative to the last 52 weeks. 90th percentile means they are more long than 90% of the time — a contrarian bearish warning. 10th percentile is the opposite.">i</i></span>
+                    <span>OI: ${p.open_interest.toLocaleString()}</span>
+                </div>
+                
+                <svg width="100%" height="40" viewBox="0 0 260 40" preserveAspectRatio="none" style="margin-bottom:12px; overflow:visible;">
+                    ${spark.highPoint ? `
+                        <line x1="0" y1="${spark.highPoint.y}" x2="260" y2="${spark.highPoint.y}"
+                              stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+                    ` : ""}
+                    ${spark.lowPoint ? `
+                        <line x1="0" y1="${spark.lowPoint.y}" x2="260" y2="${spark.lowPoint.y}"
+                              stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+                    ` : ""}
+                    <path d="${spark.path}" fill="none" stroke="${sparkColor}" stroke-width="2" vector-effect="non-scaling-stroke"/>
+                    ${spark.highPoint ? `
+                        <circle cx="${spark.highPoint.x}" cy="${spark.highPoint.y}" r="3" fill="#22c55e"/>
+                    ` : ""}
+                    ${spark.lowPoint ? `
+                        <circle cx="${spark.lowPoint.x}" cy="${spark.lowPoint.y}" r="3" fill="#ef4444"/>
+                    ` : ""}
+                </svg>
+
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-bottom:12px;">
+                    <span>52wk low: ${spark.lowPoint ? p.sparkline[p.sparkline.indexOf(Math.min(...p.sparkline))].toLocaleString() : "—"}</span>
+                    <span>52wk high: ${spark.highPoint ? p.sparkline[p.sparkline.indexOf(Math.max(...p.sparkline))].toLocaleString() : "—"}</span>
+                </div>
+
+                ${badge}
+            </div>
+        `;
+    }).join("");
+}
+
+window.onload = loadCOT;
+</script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Voyager Analytics Dashboard</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/calendarHeatmap.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
+<link rel="manifest" href="/vAnalytics/manifest.json">
+<meta name="theme-color" content="#070b14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+</head>
+
+<body data-min-tier= "monthly">
+
+<!-- Topbar -->
+<header class="topnav">
+    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">Analytics</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<!-- Off-canvas nav drawer -->
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"            class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"             class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"               class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"            class="nav-rail-icon" title="Analytics"><i class="fas fa-chart-simple"></i></a>
+    <a href="journal.html"              class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"           class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="watchlist.html"            class="nav-rail-icon" title="Watchlist"><i class="fas fa-star"></i></a>
+    <a href="macroMatrix.html"          class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"         class="nav-rail-icon" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="tradeIdeas.html"           class="nav-rail-icon" title="Trade Ideas"><i class="fas fa-lightbulb"></i></a>
+    <a href="currencyIntelligence.html" class="nav-rail-icon" title="Currency Intelligence"><i class="fas fa-brain"></i></a>
+    <a href="economicHeatmap.html"      class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"           class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="cotPositioning.html"       class="nav-rail-icon" title="COT Positioning"><i class="fas fa-scale-unbalanced"></i></a>
+    <a href="currencyStrength.html"     class="nav-rail-icon" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html"    class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"           class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"      class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"              class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"          class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"            class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"              class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"             class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+</aside>
+
+<div class="dashboard-container">
+
+    <main class="main-content">
+
+        <!-- Account Info-->
+        <section class="kpi-grid">
+
+            <div class="kpi-card skeleton">
+                <h4>Total Profit <i class="info-tip" data-tip="Sum of all your closed trade profits and losses. Your overall P&L.">i</i></h4>
+                <span id="totalProfit">$0</span>
+            </div>
+
+            <div class="kpi-card skeleton">
+                <h4>Win Rate <i class="info-tip" data-tip="Percentage of trades that made money. 50% means half your trades won.">i</i></h4>
+                <span id="winRate">0%</span>
+            </div>
+
+            <div class="kpi-card skeleton">
+                <h4>Best Trade <i class="info-tip" data-tip="Your single most profitable closed trade.">i</i></h4>
+                <span id="bestTrade">$0</span>
+            </div>
+
+            <div class="kpi-card skeleton">
+                <h4>Worst Trade <i class="info-tip" data-tip="Your single biggest losing trade. Knowing this helps you evaluate your risk per trade.">i</i>
+</h4>
+                <span id="worstTrade">$0</span>
+            </div>
+        </section>
+
+            <h3 class="h3"> Personal Review</h3>
+
+        <section class="kpi-grid skeleton">
+            <!--bottom row-->
+            <div class="metric-card">
+                <h3>Profit Factor <i class="info-tip" data-tip="Total profits divided by total losses. Above 1.0 means you make more than you lose. Above 1.5 is considered good.">i</i></h3>
+                <span id="profitFactor">0%</span>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Average Win <i class="info-tip" data-tip="The average profit on your winning trades.">i</i></h3>
+                <span id="averageWin">$0</span>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Average Loss <i class="info-tip" data-tip="The average loss on your losing trades. Compare this to your average win to see your risk/reward ratio.">i</i></h3>
+                <span id="averageLoss">$0</span>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Expectancy <i class="info-tip" data-tip="The average amount you expect to make per trade over the long run. Positive means your strategy is profitable on average.">i</i>
+</h3>
+                <span id="expectancy">$0</span>
+                <tooltip>
+                    <p> </p>
+                </tooltip>
+            </div>
+        </section>
+
+        <section class="bottom-grid">
+            <!-- Average trade and drawdown-->
+            <div class="metric-card skeleton">
+                <h3>Average Trade <i class="info-tip" data-tip="Average profit or loss per trade. A positive number means you make money on average per trade.">i</i></h3>
+                <span id="averageTrade">$0</span>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Max Drawdown <i class="info-tip" data-tip="The biggest drop from a peak in your account balance before it recovered. Lower is better — shows how much pain your strategy puts you through.">i</i></h3>
+                <span id="maxDrawdown">$0</span>
+            </div>
+        </section>
+
+        <!-- Yearly Performance (new, TradesPad-style) -->
+        <section class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3>Yearly Performance <i class="info-tip" data-tip="Your profit or loss broken down by month. Green means profitable month, red means losing month.">i</i>
+</h3>
+                    <p>Select a month to view its performance</p>
+                </div>
+                <select id="yearSelect" style="background:var(--card); color:white; border:1px solid var(--border); border-radius:10px; padding:8px 14px;">
+                    <option>All years</option>
+                </select>
+            </div>
+
+            <div id="yearlyGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(90px, 1fr)); gap:12px;">
+                <!-- month cells populated by JS later -->
+                <div class="metric-card" style="text-align:center; padding:16px;"><p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Jan</p><span>—</span></div>
+                <div class="metric-card" style="text-align:center; padding:16px;"><p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Feb</p><span>—</span></div>
+                <div class="metric-card" style="text-align:center; padding:16px;"><p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Mar</p><span>—</span></div>
+                <div class="metric-card" style="text-align:center; padding:16px;"><p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Apr</p><span>—</span></div>
+                <div class="metric-card" style="text-align:center; padding:16px;"><p style="font-size:13px; color:var(--muted); margin-bottom:6px;">May</p><span>—</span></div>
+                <div class="metric-card" style="text-align:center; padding:16px;"><p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Jun</p><span>—</span></div>
+                <div class="metric-card" style="text-align:center; padding:16px; background:rgba(59,130,246,.1); border-color:var(--primary);">
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">YTD</p>
+                    <span id="ytdPercent" style="font-size:1.3rem; font-weight:700;">0%</span>
+                    <p style="font-size:11px; color:var(--muted); margin-top:4px;" id="ytdTrades">0 trades</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calendar heatmap -->
+        <div id="monthlySummary" class="summary-card skeleton">
+
+            <h3>Monthly Summary</h3>
+
+            <p id="monthProfit">$0</p>
+
+            <p id="monthTrades">0</p>
+
+            <p id="monthDays">0</p>
+
+            <p id="monthWinRate">0%</p>
+
+        </div>
+
+        <div class="heatmap-card">
+
+            <div class="heatmap-card-header">
+                <h3><i class="fas fa-fire" style="color:var(--primary); margin-right:8px;"></i>Trading Heatmap <i class="info-tip" data-tip="A calendar view of your trading results. Dark green = big win day, dark red = big loss day. Click any day to see the individual trades.">i</i></h3>
+                <div class="heatmap-legend">
+                    <span><span class="heatmap-legend-dot" style="background:#16a34a;"></span>Big win day</span>
+                    <span><span class="heatmap-legend-dot" style="background:rgba(34,197,94,0.35);"></span>Profit</span>
+                    <span><span class="heatmap-legend-dot" style="background:rgba(239,68,68,0.35);"></span>Loss</span>
+                    <span><span class="heatmap-legend-dot" style="background:#b91c1c;"></span>Big loss day</span>
+                    <span><span class="heatmap-legend-dot" style="background:rgba(148,163,184,0.15);"></span>No trades</span>
+                </div>
+            </div>
+
+            <div class="heatmap-nav">
+                <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                <h3 id="monthTitle"></h3>
+                <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div class="heatmap-weekdays">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+
+            <div id="heatmap" class="skeleton"></div>
+
+        </div>
+
+        <!-- Day click modal — uses the dedicated day-modal classes, separate from the shared .modal used elsewhere -->
+        <div id="dayModalOverlay" class="day-modal-overlay">
+            <div class="day-modal-content">
+                <div class="day-modal-header">
+                    <h3 id="modalDate"></h3>
+                    <button id="closeModal"><i class="fas fa-xmark"></i></button>
+                </div>
+                <div id="modalTrades"></div>
+            </div>
+        </div>
+
+        <!--monthly Review-->
+        <table id="monthlyTable">
+        <thead>
+                <tr>
+
+                    <th>Month</th>
+
+                    <th>Profit</th>
+
+                    <th>Trades</th>
+
+                    <th>Win Rate</th>
+
+                </tr>
+            </thead>
+            <tbody class="skeleton"></tbody>
+        </table>
+
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/analytics.js"></script>
+<script src="../js/nav.js"></script>
+<script src="../js/tierGate.js"></script>
+<script src="../js/pgAnime.js"></script>
+<script src="../js/tooltip.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recap Card | Voyager Analytics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
+
+<link rel="manifest" href="/vAnalytics/manifest.json">
+<meta name="theme-color" content="#070b14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body data-min-tier= "lifetime">
+
+<div id="loader"><div class="spinner"></div></div>
+
+<!-- Topbar -->
+<header class="topnav">
+    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">Weekly Recap Card</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<!-- Off-canvas nav drawer -->
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"            class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"             class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"               class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"            class="nav-rail-icon" title="Analytics"><i class="fas fa-chart-simple"></i></a>
+    <a href="journal.html"              class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"           class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="watchlist.html"            class="nav-rail-icon" title="Watchlist"><i class="fas fa-star"></i></a>
+    <a href="macroMatrix.html"          class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"         class="nav-rail-icon" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="tradeIdeas.html"           class="nav-rail-icon" title="Trade Ideas"><i class="fas fa-lightbulb"></i></a>
+    <a href="currencyIntelligence.html" class="nav-rail-icon" title="Currency Intelligence"><i class="fas fa-brain"></i></a>
+    <a href="economicHeatmap.html"      class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"           class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="cotPositioning.html"       class="nav-rail-icon" title="COT Positioning"><i class="fas fa-scale-unbalanced"></i></a>
+    <a href="currencyStrength.html"     class="nav-rail-icon" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html"    class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"           class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"      class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"              class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"          class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"            class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"              class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"             class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+</aside>
+
+<div class="dashboard-container">
+    <main class="main-content">
+
+        <header class="page-header">
+            <h2>Weekly Recap Card <i class="info-tip" data-tip="A shareable summary card of your week — profit, win rate, streak and best session. Download as PNG and share on social media.">i</i></h2>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-primary" id="generateBtn" style="border:none; cursor:pointer; padding:10px 18px; border-radius:10px; font-size:13px;">
+                    <i class="fas fa-rotate" style="margin-right:6px;"></i>Generate
+                </button>
+                <button id="downloadBtn" style="
+                    background: var(--card);
+                    border: 1px solid var(--border);
+                    color: white;
+                    padding: 10px 18px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 13px;
+                    display: none;
+                ">
+                    <i class="fas fa-download" style="margin-right:6px;"></i>Download PNG
+                </button>
+            </div>
+        </header>
+
+        <p style="color:var(--muted); font-size:13px; margin-bottom:28px; max-width:600px;">
+            Generate a shareable weekly performance card. Download it and share on Twitter, Discord, or anywhere you post your trading updates.
+        </p>
+
+        <!-- Preview area -->
+        <div id="previewArea" style="
+            display: flex;
+            justify-content: center;
+            margin-bottom: 32px;
+        ">
+            <div style="
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                padding: 60px 40px;
+                text-align: center;
+                color: var(--muted);
+                max-width: 500px;
+                width: 100%;
+            " id="placeholder">
+                <i class="fas fa-share-nodes" style="font-size:2.5rem; opacity:0.2; display:block; margin-bottom:16px;"></i>
+                <p style="font-size:14px;">Click Generate to create your weekly recap card</p>
+            </div>
+            <canvas id="recapCanvas" style="display:none; border-radius:16px; max-width:100%;"></canvas>
+        </div>
+
+    </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/recapCard.js"></script>
+<script src="../js/nav.js"></script>
+<script src="../js/tooltip.js"></script>
+<script src="../js/pgAnime.js"></script>
+<script src="../js/tierGate.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk / Reward | Voyager Analytics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/pgAnime.css">
+<link rel="stylesheet" href="../css/tooltip.css">
+
+<link rel="manifest" href="/vAnalytics/manifest.json">
+<meta name="theme-color" content="#070b14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body data-min-tier= "monthly">
+
+<div id="loader"><div class="spinner"></div></div>
+
+<!-- Topbar -->
+<header class="topnav">
+    <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+    <h2 class="topnav-title">Risk / Reward</h2>
+    <button class="icon-btn" id="logoutBtn" title="Logout"><i class="fas fa-arrow-right-from-bracket"></i></button>
+</header>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<!-- Off-canvas nav drawer -->
+<aside class="nav-rail">
+    <div class="nav-rail-logo"><i class="fas fa-rocket"></i></div>
+    <a href="dashboard.html"            class="nav-rail-icon" title="Dashboard"><i class="fas fa-table-cells-large"></i></a>
+    <a href="accounts.html"             class="nav-rail-icon" title="Accounts"><i class="fas fa-briefcase"></i></a>
+    <a href="trades.html"               class="nav-rail-icon" title="Trades"><i class="fas fa-chart-line"></i></a>
+    <a href="analytics.html"            class="nav-rail-icon" title="Analytics"><i class="fas fa-chart-simple"></i></a>
+    <a href="journal.html"              class="nav-rail-icon" title="Journal"><i class="fas fa-book-open-reader"></i></a>
+    <a href="riskReward.html"           class="nav-rail-icon" title="Risk / Reward"><i class="fas fa-scale-balanced"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="watchlist.html"            class="nav-rail-icon" title="Watchlist"><i class="fas fa-star"></i></a>
+    <a href="macroMatrix.html"          class="nav-rail-icon" title="Macro Matrix"><i class="fas fa-table-cells"></i></a>
+    <a href="centralBanks.html"         class="nav-rail-icon" title="Central Banks"><i class="fas fa-landmark"></i></a>
+    <a href="tradeIdeas.html"           class="nav-rail-icon" title="Trade Ideas"><i class="fas fa-lightbulb"></i></a>
+    <a href="currencyIntelligence.html" class="nav-rail-icon" title="Currency Intelligence"><i class="fas fa-brain"></i></a>
+    <a href="economicHeatmap.html"      class="nav-rail-icon" title="Economic Heatmap"><i class="fas fa-globe"></i></a>
+    <a href="edgeFinder.html"           class="nav-rail-icon" title="Edge Finder"><i class="fas fa-crosshairs"></i></a>
+    <a href="cotPositioning.html"       class="nav-rail-icon" title="COT Positioning"><i class="fas fa-scale-unbalanced"></i></a>
+    <a href="currencyStrength.html"     class="nav-rail-icon" title="Currency Strength"><i class="fas fa-signal"></i></a>
+    <a href="correlationMatrix.html"    class="nav-rail-icon" title="Correlation Matrix"><i class="fas fa-grip"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="aiInsights.html"           class="nav-rail-icon" title="AI Insights"><i class="fas fa-microchip"></i></a>
+    <a href="sessionAnalysis.html"      class="nav-rail-icon" title="Session Analysis"><i class="fas fa-clock"></i></a>
+    <a href="streaks.html"              class="nav-rail-icon" title="Streaks"><i class="fas fa-fire"></i></a>
+    <a href="goalTracker.html"          class="nav-rail-icon" title="Goals"><i class="fas fa-bullseye"></i></a>
+    <a href="recapCard.html"            class="nav-rail-icon" title="Recap Card"><i class="fas fa-share-nodes"></i></a>
+    <a href="reports.html"              class="nav-rail-icon" title="Reports"><i class="fas fa-file-pdf"></i></a>
+    <div class="nav-rail-divider"></div>
+    <a href="settings.html"             class="nav-rail-icon" title="Settings"><i class="fas fa-gears"></i></a>
+    <div class="nav-rail-spacer"></div>
+    <div class="nav-rail-avatar" id="railAvatar">V</div>
+</aside>
+
+<div class="dashboard-container">
+
+    <main class="main-content">
+
+        <header class="page-header">
+            <h2>Risk / Reward Tracker</h2>
+        </header>
+
+        <p style="color:var(--muted); font-size:13px; margin-bottom:24px; max-width:700px;">
+            Planned R:R compares your stop loss and take profit distance at entry.
+            Realized R:R compares your stop distance to what the trade actually moved.
+            Only trades with a stop loss recorded are included below —
+            add one when logging a trade to start tracking this.
+        </p>
+
+        <!-- Summary cards -->
+        <div class="dashboard-grid" id="summaryGrid">
+            <div class="metric-card skeleton">
+                <h3>Avg. Planned R:R <i class="info-tip" data-tip="On average, how much did you aim to make for every dollar you risked? 2:1 means targeting $2 profit for every $1 risked.">i</i>
+</h3>
+                <p id="avgPlannedRR">—</p>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Win Rate on Tracked Trades <i class="info-tip" data-tip="Win rate only for trades where you set a stop loss and take profit — the trades where you actually planned your risk.">i</i>
+</h3>
+                <p id="winRateRR">—</p>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Trades With R:R Set <i class="info-tip" data-tip="Number of trades where you set both a stop loss and take profit before entering — the foundation of proper risk management.">i</i>
+</h3>
+                <p id="trackedCount">—</p>
+            </div>
+
+            <div class="metric-card skeleton">
+                <h3>Total Trades</h3>
+                <p id="totalCount">—</p>
+            </div>
+        </div>
+
+        <!-- Trade breakdown -->
+        <section class="section-card" style="margin-top:28px;">
+            <div class="section-card-header">
+                <div>
+                    <h3>Trade Breakdown</h3>
+                    <p>Planned R:R <i class="info-tip" data-tip="Your intended reward-to-risk ratio based on where you placed your stop loss and take profit before the trade.">i</i>
+ vs. Realized R:R <i class="info-tip" data-tip="The actual reward-to-risk based on where price moved compared to your stop distance. May differ from planned if you moved your stop.">i</i> per trade</p>
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Profit</th>
+                        <th>Planned R:R</th>
+                        <th>Realized R:R</th>
+                        <th>Outcome</th>
+                    </tr>
+                </thead>
+                <tbody id="riskRewardTable">
+                    <tr>
+                        <td colspan="5" style="text-align:center; color:var(--muted); padding:40px 20px;">
+                            <i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>
+                            Loading trades…
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/riskReward.js"></script>
+<script src="../js/nav.js"></script>
+<script src="../js/pgAnime.js"></script>
+<script src="../js/tierGate.js"></script>
+<script src="../js/tooltip.js"></script>
+</body>
+</html>
