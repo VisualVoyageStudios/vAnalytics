@@ -1,5 +1,5 @@
 // switch from local to live host
-const API_URL = "https://vanalytics.onrender.com";
+const API_URL = "https://vanalytics-1.onrender.com";
 
 // ── Client-side response cache 
 // Prevents redundant API calls when navigating between pages.
