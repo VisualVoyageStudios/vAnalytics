@@ -51,8 +51,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {}
     }
 
+    // log out logic
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
         localStorage.removeItem("token");
-        window.location.href = "../login.html";
+        window.location.href = "../auth.html";
     });
+
+    document.getElementById("logoutBtnRail")?.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.href = "../auth.html";
+    });
+
+    
 });
