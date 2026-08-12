@@ -11,4 +11,5 @@ httpx
 slowapi
 apscheduler
 requests
-
+beautifulsoup4
+websockets
