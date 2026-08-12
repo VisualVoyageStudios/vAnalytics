@@ -52,6 +52,12 @@ from utils.cot_scheduler import start_cot_scheduler, refresh_cot_data
 from utils.fred_actuals import fetch_usd_actuals, match_event_to_metric
 from apscheduler.triggers.cron import CronTrigger
 
+from utils.deriv_sync import fetch_deriv_trades
+from utils.mt4_parser import parse_mt4_report
+from utils.ctrader_oauth import build_ctrader_auth_url, exchange_ctrader_code, CTRADER_CLIENT_ID
+from fastapi import UploadFile, File
+from fastapi.responses import RedirectResponse
+
 # MT5 is Windows-only
 try:
     import MetaTrader5 as mt5
@@ -186,7 +192,6 @@ with engine.connect() as conn:
         conn.rollback()
         print(f"ls_customer_id migration skipped/failed: {e}")
 
-
         ## Paystack
     try:
         conn.execute(text("ALTER TABLE users ADD COLUMN payment_provider VARCHAR"))
@@ -208,6 +213,21 @@ with engine.connect() as conn:
     except Exception as e:
         conn.rollback()
         print(f"external_customer_id migration skipped/failed: {e}")
+
+        ## ctrader/ mt4/ mt5 api 
+    try:
+        conn.execute(text("ALTER TABLE accounts ADD COLUMN platform VARCHAR DEFAULT 'mt5'"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"platform migration skipped/failed: {e}")
+
+    try:
+        conn.execute(text("ALTER TABLE accounts ADD COLUMN api_token VARCHAR"))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"api_token migration skipped/failed: {e}")
 
 
 
@@ -296,7 +316,7 @@ def seed_cot_on_boot():
     finally:
         db.close()
         
-# calandar data get start up
+# calandar data warm-up
 @app.on_event("startup")
 def warm_economic_calendar_cache():
     data, ts = load_persistent_cache("economic_calendar")
@@ -1567,6 +1587,183 @@ def sync_mt5_trades(current_user=Depends(get_current_user), db: Session = Depend
     db.commit()
     mt5.shutdown()
     return {"status": "success", "imported": imported}
+
+
+# ─────────────────────────────────────────
+#  DERIV SYNC
+# ─────────────────────────────────────────
+
+@app.post("/deriv/connect")
+def connect_deriv(payload: dict, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    api_token = (payload.get("api_token") or "").strip()
+    if not api_token:
+        raise HTTPException(status_code=400, detail="API token is required")
+
+    new_account = Account(
+        id=str(uuid4()),
+        user_id=current_user["user_id"],
+        broker="Deriv",
+        account_number=payload.get("account_number", "Deriv Account"),
+        server="", investor_password="",
+        platform="deriv",
+        api_token=api_token
+    )
+    db.add(new_account)
+    db.commit()
+    return {"message": "Deriv account connected", "id": new_account.id}
+
+
+@app.post("/deriv/sync/{account_id}")
+async def sync_deriv(account_id: str, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    account = db.query(Account).filter(
+        Account.id == account_id,
+        Account.user_id == current_user["user_id"],
+        Account.platform == "deriv"
+    ).first()
+
+    if not account or not account.api_token:
+        raise HTTPException(status_code=404, detail="Deriv account not found or not connected")
+
+    try:
+        transactions = await fetch_deriv_trades(account.api_token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Deriv sync failed: {str(e)}")
+
+    imported = 0
+    for t in transactions:
+        ticket = str(t.get("transaction_id") or t.get("contract_id"))
+        if db.query(Trade).filter(Trade.ticket == ticket).first():
+            continue
+
+        profit = float(t.get("sell_price", 0)) - float(t.get("buy_price", 0))
+
+        # Deriv trades are options contracts (rise/fall, touch/no-touch etc),
+        # not directional BUY/SELL forex positions — this is an approximation
+        # based on outcome, not a literal position direction.
+        trade = Trade(
+            id=str(uuid4()),
+            account_id=account.id,
+            symbol=t.get("shortcode", t.get("underlying_symbol", "UNKNOWN")),
+            order_type="BUY" if profit >= 0 else "SELL",
+            lot_size=1.0,
+            open_price=float(t.get("buy_price", 0)),
+            close_price=float(t.get("sell_price", 0)),
+            profit=round(profit, 2),
+            ticket=ticket,
+            created_at=datetime.fromtimestamp(t.get("sell_time", t.get("purchase_time", time.time())))
+        )
+        db.add(trade)
+        imported += 1
+
+    db.commit()
+    return {"status": "success", "imported": imported}
+
+
+# ─────────────────────────────────────────
+#  MT4 REPORT IMPORT
+# ─────────────────────────────────────────
+
+@app.post("/mt4/import")
+async def import_mt4_report(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    content      = await file.read()
+    html_content = content.decode("utf-8", errors="ignore")
+    parsed       = parse_mt4_report(html_content)
+
+    if not parsed:
+        raise HTTPException(status_code=400, detail="No trades found — check this is a valid MT4 account history report")
+
+    mt4_account = db.query(Account).filter(
+        Account.user_id == current_user["user_id"],
+        Account.platform == "mt4"
+    ).first()
+
+    if not mt4_account:
+        mt4_account = Account(
+            id=str(uuid4()), user_id=current_user["user_id"],
+            broker="MT4 Import", account_number="MT4 Account",
+            server="", investor_password="", platform="mt4"
+        )
+        db.add(mt4_account)
+        db.commit()
+        db.refresh(mt4_account)
+
+    imported = 0
+    for t in parsed:
+        if db.query(Trade).filter(Trade.ticket == t["ticket"]).first():
+            continue
+        trade = Trade(
+            id=str(uuid4()), account_id=mt4_account.id,
+            symbol=t["symbol"], order_type=t["order_type"],
+            lot_size=t["lot_size"], open_price=t["open_price"],
+            close_price=t["close_price"], profit=t["profit"],
+            ticket=t["ticket"], created_at=datetime.fromtimestamp(t["time"])
+        )
+        db.add(trade)
+        imported += 1
+
+    db.commit()
+    return {"status": "success", "imported": imported, "total_parsed": len(parsed)}
+
+
+# ─────────────────────────────────────────
+#  CTRADER (OAuth scaffold)
+# ─────────────────────────────────────────
+
+@app.get("/ctrader/connect")
+def ctrader_connect_url(current_user=Depends(get_current_user)):
+    if not CTRADER_CLIENT_ID:
+        raise HTTPException(status_code=503, detail="cTrader integration is not configured yet")
+    return {"authorization_url": build_ctrader_auth_url(current_user["user_id"])}
+
+
+@app.get("/ctrader/callback")
+async def ctrader_callback(code: str, state: str, db: Session = Depends(get_db)):
+    token_data = await exchange_ctrader_code(code)
+
+    if "accessToken" not in token_data:
+        raise HTTPException(status_code=400, detail="cTrader authorization failed")
+
+    account = Account(
+        id=str(uuid4()), user_id=state,
+        broker="cTrader", account_number="Pending",
+        server="", investor_password="",
+        platform="ctrader", api_token=token_data["accessToken"]
+    )
+    db.add(account)
+    db.commit()
+
+    return RedirectResponse(
+        url="https://visualvoyagestudios.github.io/vAnalytics/dashboard/settings.html?ctrader=connected"
+    )
+
+# ─────────────────────────────────────────
+#  PUBLIC PRICING (for the dedicated pricing page)
+# ─────────────────────────────────────────
+
+@app.get("/public/pricing")
+def public_pricing():
+    try:
+        from utils.paystack import LIFETIME_PRICE_ZAR
+    except ImportError:
+        LIFETIME_PRICE_ZAR = None
+    try:
+        from utils.paystack import MONTHLY_PRICE_ZAR
+    except ImportError:
+        MONTHLY_PRICE_ZAR = None  # add this constant to utils/paystack.py if it isn't there yet
+
+    return {
+        "lifetime_zar": LIFETIME_PRICE_ZAR,
+        "monthly_zar":  MONTHLY_PRICE_ZAR,
+        "lifetime_usd": LIFETIME_PRICE,
+        "monthly_usd":  MONTHLY_PRICE,
+    }
+
 
 # ─────────────────────────────────────────
 #  FUNDAMENTALS
