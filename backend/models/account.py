@@ -54,3 +54,8 @@ class Account(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+
+     # ── New: multi-platform support ──────────────────────
+    platform  = Column(String, default="mt5")   # mt5, mt4, ctrader, deriv
+    api_token = Column(String, nullable=True)   # Deriv token / cTrader access token
