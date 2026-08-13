@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/global.css" />
     <link rel="stylesheet" href="css/landing.css" />
     <link rel="stylesheet" href="css/ambient.css" />
+    <link rel="stylesheet" href="css/economicHeatmap.css">
     <style>
         /* ─── Trust Section ─── */
         .trust-section {
@@ -1132,80 +1133,41 @@
                             </div>
                         </div>
 
-                        <!-- Economic Heatmap panel (illustrative preview — not live) -->
+                       <!-- Economic Heatmap panel (live) -->
                         <div class="demo-panel" id="demo-heatmap">
                             <p class="demo-panel-intro">
                                 Real ForexFactory calendar data — actual vs forecast, colour-coded by surprise direction, with country
-                                fundamental scores derived from released events. <em>Static example shown here — sign up to see today's real releases.</em>
+                                fundamental scores derived from released events.
                             </p>
-                            <div class="cot-grid" style="margin-bottom:16px;">
-                                <div class="cot-item">
-                                    <div class="symbol">🇺🇸 USD</div>
-                                    <div class="position" style="color:#22c55e;">+0.8</div>
-                                    <div class="percentile">Bullish surprise bias</div>
-                                </div>
-                                <div class="cot-item">
-                                    <div class="symbol">🇬🇧 GBP</div>
-                                    <div class="position" style="color:#ef4444;">-0.4</div>
-                                    <div class="percentile">Bearish surprise bias</div>
-                                </div>
-                                <div class="cot-item">
-                                    <div class="symbol">🇯🇵 JPY</div>
-                                    <div class="position" style="color:#94a3b8;">0.1</div>
-                                    <div class="percentile">Neutral</div>
-                                </div>
-                                <div class="cot-item">
-                                    <div class="symbol">🇪🇺 EUR</div>
-                                    <div class="position" style="color:#22c55e;">+0.3</div>
-                                    <div class="percentile">Mildly bullish</div>
-                                </div>
+                            <div class="country-scores" id="demoHeatmapScores" style="margin-bottom:20px;">
+                                <div class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading live calendar data…</div>
                             </div>
-                            <div class="showcase-visual" style="border:none; background:none; padding:0;">
-                                <table class="macro-matrix">
+                            <div class="heatmap-table-wrapper">
+                                <table class="heatmap-table">
                                     <thead>
-                                        <tr><th style="text-align:left;">Event</th><th>Country</th><th>Actual</th><th>Forecast</th><th>Surprise</th></tr>
+                                        <tr>
+                                            <th>Event</th>
+                                            <th>Country</th>
+                                            <th>Impact</th>
+                                            <th style="text-align:right;">Actual</th>
+                                            <th style="text-align:right;">Forecast</th>
+                                        </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr><td style="text-align:left;">Non-Farm Payrolls</td><td>USD</td><td style="color:#22c55e;">210K</td><td>180K</td><td style="color:#22c55e;">+30K</td></tr>
-                                        <tr><td style="text-align:left;">CPI y/y</td><td>GBP</td><td style="color:#ef4444;">2.1%</td><td>2.4%</td><td style="color:#ef4444;">-0.3%</td></tr>
-                                        <tr><td style="text-align:left;">Retail Sales m/m</td><td>EUR</td><td style="color:#22c55e;">0.6%</td><td>0.4%</td><td style="color:#22c55e;">+0.2%</td></tr>
+                                    <tbody id="demoHeatmapTable">
+                                        <tr><td colspan="5" class="demo-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                         
-                        <!-- Recap Card panel (illustrative preview — not live) -->
+                        <!-- Recap Card panel (rendered with the exact same canvas code as the real feature) -->
                         <div class="demo-panel" id="demo-recap">
                             <p class="demo-panel-intro">
-                                A shareable weekly performance card — generated from your real trade history, downloadable as a PNG
-                                to post wherever you share your results. <em>Static mockup shown here — yours is built from your own data.</em>
+                                A shareable weekly performance card generated from your real trade history — downloadable as a PNG.
+                                This is rendered with the exact same code as your real card, just using example numbers.
                             </p>
-                            <div class="showcase-visual" style="max-width:420px; margin:0 auto;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                                    <span style="font-weight:800; letter-spacing:1px; color:#00d4ff; font-size:0.8rem;">VOYAGER ANALYTICS</span>
-                                    <div style="width:32px; height:32px; border-radius:50%; background:#3b82f6; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">V</div>
-                                </div>
-                                <div style="font-size:0.7rem; color:var(--muted); margin-bottom:18px;">Weekly Recap · 21–27 Jul 2026</div>
-                                <div style="font-size:2.4rem; font-weight:800; color:#22c55e; margin-bottom:4px;">+$412.60</div>
-                                <div style="font-size:0.7rem; color:var(--muted); margin-bottom:20px; text-transform:uppercase; letter-spacing:0.5px;">Weekly P&amp;L</div>
-                                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
-                                    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:12px;">
-                                        <div style="font-weight:700; font-size:1.1rem;">14</div>
-                                        <div style="font-size:0.65rem; color:var(--muted);">TRADES</div>
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:12px;">
-                                        <div style="font-weight:700; font-size:1.1rem;">71%</div>
-                                        <div style="font-size:0.65rem; color:var(--muted);">WIN RATE</div>
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:12px;">
-                                        <div style="font-weight:700; font-size:1.1rem;">🔥 5</div>
-                                        <div style="font-size:0.65rem; color:var(--muted);">WIN STREAK</div>
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:12px;">
-                                        <div style="font-weight:700; font-size:1.1rem;">London</div>
-                                        <div style="font-size:0.65rem; color:var(--muted);">BEST SESSION</div>
-                                    </div>
-                                </div>
+                            <div style="display:flex; justify-content:center;">
+                                <canvas id="demoRecapCanvas" style="border-radius:16px; max-width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.4);"></canvas>
                             </div>
                         </div>
 
@@ -1364,166 +1326,375 @@
         </div>
     </footer>    
     <script>
-        // REVEAL + DELAY//
-        window.addEventListener("scroll", () => {
-            document.querySelector(".navbar").classList.toggle("scrolled", window.scrollY > 20);
-        }, { passive: true });
+    // REVEAL + DELAY //
+    window.addEventListener("scroll", () => {
+        document.querySelector(".navbar").classList.toggle("scrolled", window.scrollY > 20);
+    }, { passive: true });
 
-        (function() {
-            if (typeof IntersectionObserver !== 'undefined') {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('visible');
-                        }
-                    });
-                }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
-
-                document.querySelectorAll('.reveal, .reveal-stagger, .showcase-row').forEach(el => {
-                    observer.observe(el);
+    (function() {
+        if (typeof IntersectionObserver !== 'undefined') {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
                 });
-            }
-        })();
-        
-        // LIVE DEMO WINDOW //
-        const DEMO_API_URL = "https://vanalytics-1.onrender.com";
-    
-        // ── Fake rail navigation ──
-        document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(icon => {
-            icon.addEventListener("click", () => {
-                document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(i => i.classList.remove("active"));
-                document.querySelectorAll(".demo-panel").forEach(p => p.classList.remove("active"));
-                icon.classList.add("active");
-    
-                const panel = document.getElementById(`demo-${icon.dataset.demo}`);
-                if (panel) panel.classList.add("active");
-    
-                document.getElementById("demoPageTitle").textContent = icon.dataset.title;
-    
-                // swap Live/Preview badge depending on whether this panel pulls real data
-                const badge = document.querySelector(".demo-live-tag");
-                if (icon.dataset.live === "false") {
-                    badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block;"></span> Example Preview`;
-                    badge.style.color = "#94a3b8";
-                    badge.style.background = "rgba(148,163,184,0.1)";
-                    badge.style.borderColor = "rgba(148,163,184,0.2)";
-                } else {
-                    badge.innerHTML = `<span class="pulse-dot"></span> Live Data`;
-                    badge.style.color = "#22c55e";
-                    badge.style.background = "rgba(34,197,94,0.1)";
-                    badge.style.borderColor = "rgba(34,197,94,0.2)";
-                }
+            }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+            document.querySelectorAll('.reveal, .reveal-stagger, .showcase-row').forEach(el => {
+                observer.observe(el);
             });
+        }
+    })();
+
+    // LIVE DEMO WINDOW //
+    const DEMO_API_URL = "https://vanalytics.onrender.com";
+    let demoRecapRendered = false;
+
+    // ── Fake rail navigation ──
+    document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(icon => {
+        icon.addEventListener("click", () => {
+            document.querySelectorAll(".demo-app-rail-icon[data-demo]").forEach(i => i.classList.remove("active"));
+            document.querySelectorAll(".demo-panel").forEach(p => p.classList.remove("active"));
+            icon.classList.add("active");
+
+            const panel = document.getElementById(`demo-${icon.dataset.demo}`);
+            if (panel) panel.classList.add("active");
+
+            document.getElementById("demoPageTitle").textContent = icon.dataset.title;
+
+            const badge = document.querySelector(".demo-live-tag");
+            if (icon.dataset.live === "false") {
+                badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block;"></span> Example Preview`;
+                badge.style.color = "#94a3b8";
+                badge.style.background = "rgba(148,163,184,0.1)";
+                badge.style.borderColor = "rgba(148,163,184,0.2)";
+            } else {
+                badge.innerHTML = `<span class="pulse-dot"></span> Live Data`;
+                badge.style.color = "#22c55e";
+                badge.style.background = "rgba(34,197,94,0.1)";
+                badge.style.borderColor = "rgba(34,197,94,0.2)";
+            }
+
+            // lazily render the recap canvas the first time its tab opens —
+            // must wait until visible, since a hidden canvas has 0 width to scale against
+            if (icon.dataset.demo === "recap" && !demoRecapRendered) {
+                renderDemoRecapCard();
+                demoRecapRendered = true;
+            }
+        });
+    });
+
+    // ── COT sparkline (tiny inline SVG, no dependencies) ──
+    function tinySparkline(values) {
+        if (values.length < 2) return "";
+        const min = Math.min(...values), max = Math.max(...values);
+        const range = max - min || 1;
+        const points = values.map((v, i) => {
+            const x = (i / (values.length - 1)) * 100;
+            const y = 30 - ((v - min) / range) * 30;
+            return `${x},${y}`;
+        }).join(" ");
+        const color = values[values.length - 1] >= values[0] ? "#22c55e" : "#ef4444";
+        return `<svg viewBox="0 0 100 30" width="100%" height="30" preserveAspectRatio="none">
+                    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2"/>
+                </svg>`;
+    }
+
+    // ── Load COT demo ──
+    fetch(`${DEMO_API_URL}/public/demo/cot`)
+        .then(r => r.json())
+        .then(data => {
+            const grid = document.getElementById("demoCotGrid");
+            if (!data.positions || data.positions.length === 0) {
+                grid.innerHTML = `<div class="demo-loading">Live data unavailable right now — check back shortly.</div>`;
+                return;
+            }
+            grid.innerHTML = data.positions.map(p => {
+                const isLong = p.net_position >= 0;
+                const badgeClass = p.signal === "extreme_long" ? "badge-bearish"
+                                 : p.signal === "extreme_short" ? "badge-bullish"
+                                 : "badge-neutral";
+                const badgeText = p.signal === "extreme_long" ? "Extreme Long"
+                                 : p.signal === "extreme_short" ? "Extreme Short"
+                                 : "Neutral";
+                return `
+                    <div class="cot-item">
+                        <div class="symbol">${p.currency}</div>
+                        <div class="position" style="color:${isLong ? '#22c55e' : '#ef4444'};">
+                            ${isLong ? '+' : ''}${p.net_position.toLocaleString()}
+                        </div>
+                        ${tinySparkline(p.sparkline)}
+                        <div class="percentile">${p.percentile_rank !== null ? p.percentile_rank + 'th percentile' : 'Building history'}</div>
+                        <span class="badge-cont ${badgeClass}" style="margin-top:6px; display:inline-block;">${badgeText}</span>
+                    </div>
+                `;
+            }).join("");
+            document.getElementById("demoNote").textContent = data.note;
+        })
+        .catch(() => {
+            document.getElementById("demoCotGrid").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
         });
 
-        // ── COT sparkline (tiny inline SVG, no dependencies) ──
-        function tinySparkline(values) {
-            if (values.length < 2) return "";
-            const min = Math.min(...values), max = Math.max(...values);
-            const range = max - min || 1;
-            const points = values.map((v, i) => {
-                const x = (i / (values.length - 1)) * 100;
-                const y = 30 - ((v - min) / range) * 30;
-                return `${x},${y}`;
-            }).join(" ");
-            const color = values[values.length - 1] >= values[0] ? "#22c55e" : "#ef4444";
-            return `<svg viewBox="0 0 100 30" width="100%" height="30" preserveAspectRatio="none">
-                        <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2"/>
-                    </svg>`;
-        }
-
-        // ── Load COT demo ──
-        fetch(`${DEMO_API_URL}/public/demo/cot`)
-            .then(r => r.json())
-            .then(data => {
-                const grid = document.getElementById("demoCotGrid");
-                if (!data.positions || data.positions.length === 0) {
-                    grid.innerHTML = `<div class="demo-loading">Live data unavailable right now — check back shortly.</div>`;
-                    return;
-                }
-                grid.innerHTML = data.positions.map(p => {
-                    const isLong = p.net_position >= 0;
-                    const badgeClass = p.signal === "extreme_long" ? "badge-bearish"
-                                     : p.signal === "extreme_short" ? "badge-bullish"
-                                     : "badge-neutral";
-                    const badgeText = p.signal === "extreme_long" ? "Extreme Long"
-                                     : p.signal === "extreme_short" ? "Extreme Short"
-                                     : "Neutral";
+    // ── Load Currency Strength demo ──
+    fetch(`${DEMO_API_URL}/public/demo/currency-strength`)
+        .then(r => r.json())
+        .then(data => {
+            const list = document.getElementById("demoStrengthList");
+            if (!data.scores || data.scores.length === 0) {
+                list.innerHTML = `<div class="demo-loading">Live data warming up — check back shortly.</div>`;
+                return;
+            }
+            const maxAbs = Math.max(...data.scores.map(s => Math.abs(s.score)), 1);
+            list.innerHTML = data.scores
+                .sort((a, b) => b.score - a.score)
+                .map(s => {
+                    const pct = Math.abs(s.score) / maxAbs * 100;
                     return `
-                        <div class="cot-item">
-                            <div class="symbol">${p.currency}</div>
-                            <div class="position" style="color:${isLong ? '#22c55e' : '#ef4444'};">
-                                ${isLong ? '+' : ''}${p.net_position.toLocaleString()}
+                        <div class="strength-row">
+                            <span class="ccy-code">${s.code}</span>
+                            <div class="bar-track">
+                                <div class="bar-fill ${s.trend}" style="width:${pct}%;"></div>
                             </div>
-                            ${tinySparkline(p.sparkline)}
-                            <div class="percentile">${p.percentile_rank !== null ? p.percentile_rank + 'th percentile' : 'Building history'}</div>
-                            <span class="badge-cont ${badgeClass}" style="margin-top:6px; display:inline-block;">${badgeText}</span>
+                            <span class="score-val" style="color:${s.trend === 'bullish' ? '#22c55e' : s.trend === 'bearish' ? '#ef4444' : '#94a3b8'};">
+                                ${s.score > 0 ? '+' : ''}${s.score}
+                            </span>
                         </div>
                     `;
                 }).join("");
-                document.getElementById("demoNote").textContent = data.note;
-            })
-            .catch(() => {
-                document.getElementById("demoCotGrid").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
-            });
+        })
+        .catch(() => {
+            document.getElementById("demoStrengthList").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
+        });
 
-        // ── Load Currency Strength demo ──
-        fetch(`${DEMO_API_URL}/public/demo/currency-strength`)
-            .then(r => r.json())
-            .then(data => {
-                const list = document.getElementById("demoStrengthList");
-                if (!data.scores || data.scores.length === 0) {
-                    list.innerHTML = `<div class="demo-loading">Live data warming up — check back shortly.</div>`;
-                    return;
-                }
-                const maxAbs = Math.max(...data.scores.map(s => Math.abs(s.score)), 1);
-                list.innerHTML = data.scores
-                    .sort((a, b) => b.score - a.score)
-                    .map(s => {
-                        const pct = Math.abs(s.score) / maxAbs * 100;
-                        return `
-                            <div class="strength-row">
-                                <span class="ccy-code">${s.code}</span>
-                                <div class="bar-track">
-                                    <div class="bar-fill ${s.trend}" style="width:${pct}%;"></div>
-                                </div>
-                                <span class="score-val" style="color:${s.trend === 'bullish' ? '#22c55e' : s.trend === 'bearish' ? '#ef4444' : '#94a3b8'};">
-                                    ${s.score > 0 ? '+' : ''}${s.score}
-                                </span>
-                            </div>
-                        `;
-                    }).join("");
-            })
-            .catch(() => {
-                document.getElementById("demoStrengthList").innerHTML = `<div class="demo-loading">Could not load live data. Please refresh.</div>`;
-            });
+    // ── Load Macro Matrix demo ──
+    fetch(`${DEMO_API_URL}/public/demo/macro-matrix`)
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.querySelector("#demoMacroTable tbody");
+            if (!data.rows || data.rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="demo-loading">Live data unavailable right now.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.rows.map(r => {
+                const scoreColor = r.overall_score > 0.2 ? "#22c55e" : r.overall_score < -0.2 ? "#ef4444" : "#94a3b8";
+                return `
+                    <tr>
+                        <td style="text-align:left; font-weight:700;">${r.currency}</td>
+                        <td>${r.rate !== null ? r.rate + '%' : '—'}</td>
+                        <td>${r.cpi !== null ? r.cpi + '%' : '—'}</td>
+                        <td>${r.gdp !== null ? r.gdp + '%' : '—'}</td>
+                        <td><span class="score-badge" style="background:${scoreColor}20; color:${scoreColor};">${r.overall_score > 0 ? '+' : ''}${r.overall_score}</span></td>
+                    </tr>
+                `;
+            }).join("");
+        })
+        .catch(() => {
+            document.querySelector("#demoMacroTable tbody").innerHTML = `<tr><td colspan="5" class="demo-loading">Could not load live data. Please refresh.</td></tr>`;
+        });
 
-        // ── Load Macro Matrix demo ──
-        fetch(`${DEMO_API_URL}/public/demo/macro-matrix`)
-            .then(r => r.json())
-            .then(data => {
-                const tbody = document.querySelector("#demoMacroTable tbody");
-                if (!data.rows || data.rows.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="demo-loading">Live data unavailable right now.</td></tr>`;
-                    return;
-                }
-                tbody.innerHTML = data.rows.map(r => {
-                    const scoreColor = r.overall_score > 0.2 ? "#22c55e" : r.overall_score < -0.2 ? "#ef4444" : "#94a3b8";
-                    return `
-                        <tr>
-                            <td style="text-align:left; font-weight:700;">${r.currency}</td>
-                            <td>${r.rate !== null ? r.rate + '%' : '—'}</td>
-                            <td>${r.cpi !== null ? r.cpi + '%' : '—'}</td>
-                            <td>${r.gdp !== null ? r.gdp + '%' : '—'}</td>
-                            <td><span class="score-badge" style="background:${scoreColor}20; color:${scoreColor};">${r.overall_score > 0 ? '+' : ''}${r.overall_score}</span></td>
-                        </tr>
-                    `;
-                }).join("");
-            })
-            .catch(() => {
-                document.querySelector("#demoMacroTable tbody").innerHTML = `<tr><td colspan="5" class="demo-loading">Could not load live data. Please refresh.</td></tr>`;
-            });
-        
-    </script>
+    // ── Load Economic Heatmap demo ──
+    fetch(`${DEMO_API_URL}/public/demo/economic-calendar`)
+        .then(r => r.json())
+        .then(data => {
+            const scoresEl = document.getElementById("demoHeatmapScores");
+            const tbody    = document.getElementById("demoHeatmapTable");
+            const FLAGS    = { USD:"🇺🇸", EUR:"🇪🇺", GBP:"🇬🇧", JPY:"🇯🇵" };
+
+            if (!data.scores || data.scores.length === 0) {
+                scoresEl.innerHTML = `<div class="demo-loading">Live data warming up — check back shortly.</div>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="demo-loading">Live data warming up.</td></tr>`;
+                return;
+            }
+
+            scoresEl.innerHTML = data.scores.map(s => {
+                const sign = s.score > 0 ? "+" : "";
+                return `
+                    <div class="score-card ${s.sentiment}">
+                        <span class="flag">${FLAGS[s.code] || "🌐"}</span>
+                        <div class="country-name">${s.code}</div>
+                        <div class="score-num">${sign}${s.score}</div>
+                        <div class="score-label">${s.sentiment}</div>
+                    </div>
+                `;
+            }).join("");
+
+            if (!data.events || data.events.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="demo-loading">No recent releases for these economies.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.events.map(ev => `
+                <tr>
+                    <td><div class="event-name">${ev.event}</div></td>
+                    <td><div class="event-country">${ev.country}</div></td>
+                    <td><span class="impact-badge impact-${ev.impact}">${ev.impact === "high" ? "●" : "◐"} ${ev.impact.charAt(0).toUpperCase() + ev.impact.slice(1)}</span></td>
+                    <td class="num-cell val-actual">${ev.actual || "—"}</td>
+                    <td class="num-cell val-forecast">${ev.forecast || "—"}</td>
+                </tr>
+            `).join("");
+        })
+        .catch(() => {
+            document.getElementById("demoHeatmapScores").innerHTML = `<div class="demo-loading">Could not load live data.</div>`;
+            document.getElementById("demoHeatmapTable").innerHTML = `<tr><td colspan="5" class="demo-loading">Could not load live data.</td></tr>`;
+        });
+
+    // ── Recap Card demo — same canvas renderer as the real feature, example numbers ──
+    function renderDemoRecapCard(){
+        const CARD_W = 800, CARD_H = 450;
+        const canvas = document.getElementById("demoRecapCanvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+
+        const container = canvas.parentElement;
+        const maxW  = Math.min(CARD_W, container.clientWidth - 32);
+        const scale = maxW / CARD_W;
+
+        canvas.width  = CARD_W;
+        canvas.height = CARD_H;
+        canvas.style.width  = `${maxW}px`;
+        canvas.style.height = `${Math.round(CARD_H * scale)}px`;
+
+        function roundRect(x, y, w, h, r){
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        const data = {
+            weekRange:   "21 Jul – 27 Jul",
+            weekProfit:  412.60,
+            weekTrades:  14,
+            winRate:     71,
+            streak:      5,
+            streakType:  "win",
+            bestSession: { session: "London" },
+            userInitial: "V",
+            analytics:   { win_rate: 64.2, trade_count: 187, total_profit: 2140.85 }
+        };
+
+        ctx.fillStyle = "#070b14";
+        ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+        const grad = ctx.createRadialGradient(150, 100, 0, 150, 100, 400);
+        grad.addColorStop(0, "rgba(0,212,255,0.06)");
+        grad.addColorStop(1, "transparent");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+        const grad2 = ctx.createRadialGradient(CARD_W - 100, CARD_H, 0, CARD_W - 100, CARD_H, 350);
+        grad2.addColorStop(0, "rgba(123,97,255,0.06)");
+        grad2.addColorStop(1, "transparent");
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+        const accentGrad = ctx.createLinearGradient(0, 0, CARD_W, 0);
+        accentGrad.addColorStop(0, "#00d4ff");
+        accentGrad.addColorStop(1, "#7b61ff");
+        ctx.fillStyle = accentGrad;
+        ctx.fillRect(0, 0, CARD_W, 3);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.07)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0.5, 0.5, CARD_W - 1, CARD_H - 1);
+
+        ctx.fillStyle = "#00d4ff";
+        ctx.font = "bold 13px Inter, sans-serif";
+        ctx.fillText("VOYAGER ANALYTICS", 32, 42);
+
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        ctx.font = "12px Inter, sans-serif";
+        ctx.fillText(`Weekly Recap  •  ${data.weekRange}`, 32, 62);
+
+        ctx.fillStyle = "#3b82f6";
+        ctx.beginPath();
+        ctx.arc(CARD_W - 52, 42, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "white";
+        ctx.font = "bold 18px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(data.userInitial, CARD_W - 52, 49);
+        ctx.textAlign = "left";
+
+        ctx.strokeStyle = "rgba(255,255,255,0.07)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(32, 82);
+        ctx.lineTo(CARD_W - 32, 82);
+        ctx.stroke();
+
+        const profitColor = data.weekProfit >= 0 ? "#22c55e" : "#ef4444";
+        const profitSign  = data.weekProfit >= 0 ? "+" : "";
+        ctx.fillStyle = profitColor;
+        ctx.font = "bold 64px Inter, sans-serif";
+        ctx.fillText(`${profitSign}$${data.weekProfit.toFixed(2)}`, 32, 168);
+
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.font = "13px Inter, sans-serif";
+        ctx.fillText("WEEKLY P&L", 32, 192);
+
+        const stats = [
+            { label: "TRADES",       value: String(data.weekTrades) },
+            { label: "WIN RATE",     value: `${data.winRate}%` },
+            { label: "STREAK",       value: `${data.streak} ${data.streakType === "win" ? "🔥" : "❄️"}` },
+            { label: "BEST SESSION", value: data.bestSession.session },
+        ];
+
+        const boxW = 160, boxH = 80, startX = 32, startY = 220, gap = 16;
+
+        stats.forEach((stat, i) => {
+            const x = startX + i * (boxW + gap);
+            const y = startY;
+
+            ctx.fillStyle = "rgba(255,255,255,0.04)";
+            ctx.strokeStyle = "rgba(255,255,255,0.07)";
+            ctx.lineWidth = 1;
+            roundRect(x, y, boxW, boxH, 10);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = "white";
+            ctx.font = "bold 24px Inter, sans-serif";
+            ctx.fillText(stat.value, x + 14, y + 36);
+
+            ctx.fillStyle = "rgba(255,255,255,0.35)";
+            ctx.font = "10px Inter, sans-serif";
+            ctx.fillText(stat.label, x + 14, y + 56);
+        });
+
+        const barY = 330;
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        ctx.font = "11px Inter, sans-serif";
+        ctx.fillText(`ALL-TIME WIN RATE  ${data.analytics.win_rate}%`, 32, barY);
+
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        roundRect(32, barY + 10, CARD_W - 64, 8, 4);
+        ctx.fill();
+
+        const fillW = (data.analytics.win_rate / 100) * (CARD_W - 64);
+        const barGrad = ctx.createLinearGradient(32, 0, 32 + fillW, 0);
+        barGrad.addColorStop(0, "#00d4ff");
+        barGrad.addColorStop(1, "#7b61ff");
+        ctx.fillStyle = barGrad;
+        roundRect(32, barY + 10, fillW, 8, 4);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.font = "11px Inter, sans-serif";
+        ctx.fillText("voyageranalytics.netlify.app", 32, CARD_H - 22);
+
+        ctx.textAlign = "right";
+        ctx.fillText(`Total Trades: ${data.analytics.trade_count}  •  Total P&L: $${data.analytics.total_profit}`, CARD_W - 32, CARD_H - 22);
+        ctx.textAlign = "left";
+    }
+</script>
 </body>
 </html>
