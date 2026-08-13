@@ -3545,6 +3545,70 @@ async def public_demo_macro_matrix(request: Request):
     }
 
 
+@app.get("/public/demo/economic-calendar")
+@limiter.limit("30/minute")
+def public_demo_economic_calendar(request: Request):
+    events = economic_calendar_cache.get("data") or []
+
+    if not events:
+        return {"events": [], "scores": [], "note": "Live data warming up — check back shortly."}
+
+    import re
+
+    def parse_value(raw):
+        if not raw or str(raw).strip() == "":
+            return None
+        s = str(raw).strip()
+        m = re.match(r"^(-?[\d,.]+)\s*([%KMBkmb]?)$", s)
+        if not m:
+            return None
+        try:
+            return float(m.group(1).replace(",", ""))
+        except ValueError:
+            return None
+
+    demo_countries = ["USD", "EUR", "GBP", "JPY"]
+    sums   = {c: 0.0 for c in demo_countries}
+    counts = {c: 0   for c in demo_countries}
+
+    for ev in events:
+        country = ev.get("country")
+        if country not in sums:
+            continue
+        actual   = parse_value(ev.get("actual"))
+        forecast = parse_value(ev.get("forecast"))
+        if actual is None or forecast is None:
+            continue
+
+        weight  = 2 if ev.get("impact") == "high" else 1
+        base    = abs(forecast) or 1
+        dev     = ((actual - forecast) / base) * 100
+        clamped = max(-10, min(10, dev))
+
+        sums[country]   += clamped * weight
+        counts[country] += weight
+
+    scores = []
+    for c in demo_countries:
+        w = counts[c] or 1
+        score = round(sums[c] / w, 2)
+        scores.append({
+            "code":      c,
+            "score":     score,
+            "sentiment": "bullish" if score > 0.5 else "bearish" if score < -0.5 else "neutral"
+        })
+
+    released = [
+        e for e in events
+        if e.get("country") in demo_countries and parse_value(e.get("actual")) is not None
+    ]
+    released.sort(key=lambda e: e.get("date", ""), reverse=True)
+
+    return {
+        "events": released[:6],
+        "scores": scores,
+        "note": "Sample of 4 economies and their most recent releases. Sign up for the full 9-economy calendar with live filtering."
+    }
 
 
 
