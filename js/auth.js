@@ -1,3 +1,35 @@
+// Already signed in? Skip the form entirely and honor any pending redirect.
+(function(){
+    const existingToken = localStorage.getItem('token');
+    if(existingToken){
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get('redirect');
+        const plan = params.get('plan');
+        window.location.href = redirectTo === 'pricing'
+            ? (plan ? `pricing.html?autoplan=${plan}` : 'pricing.html')
+            : 'dashboard/dashboard.html';
+    }
+})();
+
+function startCooldown(btn, seconds){
+    setLoading(btn, false);
+    btn.disabled = true;
+    const textEl = btn.querySelector('.btn-text');
+    const originalText = textEl.textContent;
+    let remaining = seconds;
+    textEl.textContent = `Try again in ${remaining}s`;
+    const interval = setInterval(() => {
+        remaining--;
+        if(remaining <= 0){
+            clearInterval(interval);
+            btn.disabled = false;
+            textEl.textContent = originalText;
+        } else {
+            textEl.textContent = `Try again in ${remaining}s`;
+        }
+    }, 1000);
+}
+
 (function() {
     'use strict';
 
@@ -41,6 +73,7 @@
         setTimeout(() => toast.remove(), 300);
     }
 
+    
     // ─── Validation ───
     const Validators = {
         email(value) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); },
@@ -221,6 +254,7 @@
 
             if (result._status === 429) {
                 showToast('warning', 'Too many attempts', 'Please wait a minute before trying again.');
+                startCooldown(btn, 60);
                 return;
             }
 
@@ -295,6 +329,7 @@
 
             if (result._status === 429) {
                 showToast('warning', 'Too many attempts', 'Please wait a minute before trying again.');
+                startCooldown(btn, 60);
                 return;
             }
 
