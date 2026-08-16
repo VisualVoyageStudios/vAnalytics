@@ -499,6 +499,42 @@ def delete_account_user(current_user=Depends(get_current_user), db: Session = De
     db.commit()
     return {"message": "Account deleted"}
 
+
+#-------------
+# Google Auth
+#-------------
+from utils.google_oauth import build_google_auth_url, exchange_google_code, GOOGLE_CLIENT_ID
+
+@app.get("/auth/google/login")
+def google_login():
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=503, detail="Google sign-in is not configured yet")
+    return RedirectResponse(url=build_google_auth_url())
+
+
+@app.get("/auth/google/callback")
+async def google_callback(code: str, db: Session = Depends(get_db)):
+    userinfo = await exchange_google_code(code)
+    email = userinfo.get("email")
+
+    if not email:
+        return RedirectResponse(url="https://visualvoyagestudios.github.io/vAnalytics/auth.html?error=google_failed")
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        # Google-authenticated accounts get an unusable random password hash —
+        # they can never log in via the email/password form with it
+        user = User(id=str(uuid4()), email=email, password_hash=hash_password(str(uuid4())))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    token = create_access_token({"user_id": user.id, "email": user.email})
+    return RedirectResponse(
+        url=f"https://visualvoyagestudios.github.io/vAnalytics/auth-callback.html?token={token}"
+    )
+
+    
 # ─────────────────────────────────────────
 #  ACCOUNTS
 # ─────────────────────────────────────────
