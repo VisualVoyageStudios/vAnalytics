@@ -30,6 +30,20 @@ function startCooldown(btn, seconds){
     }, 1000);
 }
 
+function setupCapsLockWarning(inputId, warningId){
+    const input = document.getElementById(inputId);
+    const warning = document.getElementById(warningId);
+    if(!input || !warning) return;
+    const handler = (e) => {
+        warning.classList.toggle('visible', !!(e.getModifierState && e.getModifierState('CapsLock')));
+    };
+    input.addEventListener('keyup', handler);
+    input.addEventListener('keydown', handler);
+    input.addEventListener('blur', () => warning.classList.remove('visible'));
+}
+setupCapsLockWarning('password', 'capsLockWarningLogin');
+setupCapsLockWarning('registerPassword', 'capsLockWarningRegister');
+
 (function() {
     'use strict';
 
