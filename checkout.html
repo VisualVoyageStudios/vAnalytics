@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout | Voyager Analytics</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/landing.css">
+<style>
+
+.checkout-page {
+    min-height: 100vh;
+    padding: 60px 8%;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.checkout-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.checkout-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.checkout-header p {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* Plan selector */
+.plan-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 36px;
+}
+
+.plan-option {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+}
+
+.plan-option.selected {
+    border-color: #00d4ff;
+    background: rgba(0,212,255,0.05);
+}
+
+.plan-option .plan-name {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.plan-option .plan-price {
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+
+.plan-option .plan-period {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.plan-option .selected-dot {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+}
+
+.plan-option.selected .selected-dot {
+    background: #00d4ff;
+    border-color: #00d4ff;
+}
+
+.plan-option.selected .selected-dot::after {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: white;
+}
+
+/* Method tabs */
+.method-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+
+.method-tab {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.method-tab:hover { color: white; }
+
+.method-tab.active {
+    color: #00d4ff;
+    border-bottom-color: #00d4ff;
+}
+
+.method-panel { display: none; }
+.method-panel.active { display: block; }
+
+/* Bank selector */
+.bank-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.bank-btn {
+    padding: 12px 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+}
+
+.bank-btn:hover,
+.bank-btn.selected {
+    border-color: #00d4ff;
+    color: white;
+    background: rgba(0,212,255,0.06);
+}
+
+/* Bank details card */
+.bank-details {
+    background: #0d1420;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.bank-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.bank-detail-row:last-child { border-bottom: none; }
+
+.bank-detail-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bank-detail-value {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.copy-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.copy-btn:hover { color: white; border-color: white; }
+.copy-btn.copied { color: #22c55e; border-color: #22c55e; }
+
+/* Amount highlight */
+.amount-highlight {
+    background: rgba(0,212,255,0.06);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.amount-highlight .amount {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #00d4ff;
+}
+
+.amount-highlight .amount-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+/* Crypto addresses */
+.crypto-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.crypto-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.crypto-tab.active,
+.crypto-tab:hover {
+    border-color: #f59e0b;
+    color: #f59e0b;
+    background: rgba(245,158,11,0.08);
+}
+
+.crypto-panel { display: none; }
+.crypto-panel.active { display: block; }
+
+.crypto-address-card {
+    background: #0d1420;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+}
+
+.crypto-address-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.crypto-address {
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-all;
+    color: #f59e0b;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.15);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.crypto-warning {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #ef4444;
+    line-height: 1.6;
+    margin-top: 12px;
+}
+
+/* USD / PayPal */
+.paypal-card {
+    background: #0d1420;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.paypal-logo {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+.paypal-logo span:first-child { color: #003087; }
+.paypal-logo span:last-child { color: #009cde; }
+
+/* Submit proof section */
+.submit-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-top: 32px;
+}
+
+.submit-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.submit-section p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.submit-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.submit-btn {
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: opacity .2s;
+}
+
+.submit-btn:hover { opacity: 0.85; }
+
+.submit-btn.whatsapp {
+    background: #25d366;
+    color: white;
+}
+
+.submit-btn.email {
+    background: var(--primary);
+    color: white;
+}
+
+.info-box {
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.info-box i { color: #3b82f6; margin-right: 6px; }
+
+@media (max-width: 600px) {
+    .plan-selector { grid-template-columns: 1fr; }
+    .submit-buttons { grid-template-columns: 1fr; }
+    .method-tab { padding: 10px 14px; font-size: 12px; }
+}
+
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="logo" style="text-decoration:none; color:white;">
+        <div class="logo-icon"><i class="fas fa-rocket"></i></div>
+        VOYAGER
+    </a>
+    <ul class="nav-links">
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="auth.html">Login</a></li>
+    </ul>
+</nav>
+
+<div class="checkout-page">
+
+    <div class="checkout-header">
+        <h1>Complete Your Order</h1>
+        <p>Select your plan and preferred payment method below</p>
+    </div>
+
+    <!-- Plan Selector -->
+    <div class="plan-selector">
+        <div class="plan-option selected" id="planMonthly" onclick="selectPlan('monthly')">
+            <div class="selected-dot"></div>
+            <div class="plan-name">Monthly</div>
+            <div class="plan-price">R359.99</div>
+            <div class="plan-period">per month · counts toward lifetime</div>
+        </div>
+        <div class="plan-option" id="planLifetime" onclick="selectPlan('lifetime')">
+            <div class="selected-dot"></div>
+            <div class="plan-name">Lifetime</div>
+            <div class="plan-price">R1,799.99</div>
+            <div class="plan-period">once-off · own it forever</div>
+        </div>
+    </div>
+
+    <!-- Amount highlight -->
+    <div class="amount-highlight">
+        <div>
+            <div class="amount-label">Amount Due</div>
+            <div class="amount" id="amountDisplay">R359.99</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:13px; color:var(--muted);" id="planLabel">Monthly Plan</div>
+            <div style="font-size:12px; color:var(--muted); margin-top:4px;">
+                Use your email as reference
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Method Tabs -->
+    <div class="method-tabs">
+        <button class="method-tab active" onclick="switchMethod('eft')">
+            <i class="fas fa-building-columns"></i> EFT (ZAR)
+        </button>
+        <button class="method-tab" onclick="switchMethod('usd')">
+            <i class="fas fa-dollar-sign"></i> USD (PayPal)
+        </button>
+        <button class="method-tab" onclick="switchMethod('crypto')">
+            <i class="fab fa-bitcoin"></i> Crypto
+        </button>
+    </div>
+
+    <!-- ── EFT Panel ── -->
+    <div class="method-panel active" id="panel-eft">
+
+        <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.6;">
+            Make an EFT directly to our business bank account. Use your <strong style="color:white;">email address</strong>
+            as the payment reference so we can identify your payment.
+        </p>
+
+        <!-- Bank selector -->
+        <p style="font-size:12px; color:var(--muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px;">
+            Your bank
+        </p>
+        <div class="bank-selector">
+            <div class="bank-btn" onclick="selectBank(this)">ABSA</div>
+            <div class="bank-btn" onclick="selectBank(this)">Standard Bank</div>
+            <div class="bank-btn" onclick="selectBank(this)">Nedbank</div>
+            <div class="bank-btn" onclick="selectBank(this)">FNB</div>
+            <div class="bank-btn" onclick="selectBank(this)">Capitec</div>
+            <div class="bank-btn" onclick="selectBank(this)">TymeBank</div>
+        </div>
+
+        <div class="info-box">
+            <i class="fas fa-circle-info"></i>
+            For <strong style="color:white;">same-bank transfers</strong> (if you bank with Capitec),
+            funds reflect instantly. Other banks may take up to 2 business days.
+        </div>
+
+        <!-- Bank details -->
+        <div class="bank-details">
+
+            <div class="bank-detail-row">
+                <span class="bank-detail-label">Account Name</span>
+                <span class="bank-detail-value">
+                    Visual Voyage
+                    <button class="copy-btn" onclick="copyText('Visual Voyage', this)">Copy</button>
+                </span>
+            </div>
+
+            <div class="bank-detail-row">
+                <span class="bank-detail-label">Bank</span>
+                <span class="bank-detail-value">Capitec Bank</span>
+            </div>
+
+            <div class="bank-detail-row">
+                <span class="bank-detail-label">Account Number</span>
+                <span class="bank-detail-value">
+                    2562809781
+                    <button class="copy-btn" onclick="copyText('2562809781', this)">Copy</button>
+                </span>
+            </div>
+
+            <div class="bank-detail-row">
+                <span class="bank-detail-label">Branch Code</span>
+                <span class="bank-detail-value">
+                    470010
+                    <button class="copy-btn" onclick="copyText('470010', this)">Copy</button>
+                </span>
+            </div>
+
+            <div class="bank-detail-row">
+                <span class="bank-detail-label">Account Type</span>
+                <span class="bank-detail-value">Savings / Transaction</span>
+            </div>
+
+            <div class="bank-detail-row">
+                <span class="bank-detail-label">Reference</span>
+                <span class="bank-detail-value" style="color:#00d4ff;">
+                    <span id="eftRef">Your email address</span>
+                </span>
+            </div>
+
+        </div>
+
+        <!-- SWIFT for international ZAR -->
+        <details style="margin-bottom:24px;">
+            <summary style="cursor:pointer; font-size:13px; color:var(--muted); padding:12px 0;">
+                <i class="fas fa-globe" style="margin-right:6px;"></i>
+                International SWIFT transfer details
+            </summary>
+            <div class="bank-details" style="margin-top:12px;">
+
+                <div class="bank-detail-row">
+                    <span class="bank-detail-label">SWIFT / BIC</span>
+                    <span class="bank-detail-value">
+                        CABLZAJJ
+                        <button class="copy-btn" onclick="copyText('CABLZAJJ', this)">Copy</button>
+                    </span>
+                </div>
+
+                <div class="bank-detail-row">
+                    <span class="bank-detail-label">SWIFT (Full)</span>
+                    <span class="bank-detail-value">
+                        CABLZAJJXXX
+                        <button class="copy-btn" onclick="copyText('CABLZAJJXXX', this)">Copy</button>
+                    </span>
+                </div>
+
+                <div class="bank-detail-row">
+                    <span class="bank-detail-label">Bank Name</span>
+                    <span class="bank-detail-value">Capitec Bank Ltd</span>
+                </div>
+
+                <div class="bank-detail-row">
+                    <span class="bank-detail-label">Country</span>
+                    <span class="bank-detail-value">South Africa 🇿🇦</span>
+                </div>
+
+            </div>
+        </details>
+
+    </div>
+
+    <!-- ── USD / PayPal Panel ── -->
+    <div class="method-panel" id="panel-usd">
+
+        <div class="info-box">
+            <i class="fas fa-circle-info"></i>
+            USD payments are processed via <strong style="color:white;">PayPal</strong>.
+            The ZAR amount will be converted at the current exchange rate automatically.
+            Your PayPal receipt is your proof of payment.
+        </div>
+
+        <div class="paypal-card">
+            <div class="paypal-logo">
+                <span>Pay</span><span>Pal</span>
+            </div>
+            <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.6;">
+                Click the button below to send your payment via PayPal.<br>
+                Include your <strong style="color:white;">email address</strong> in the payment note.
+            </p>
+            <div id="paypalAmountUSD" style="font-size:13px; color:var(--muted); margin-bottom:20px;"></div>
+            <a id="paypalLink" href="#" target="_blank" class="btn-primary" style="
+                display: inline-flex; align-items: center; gap: 10px;
+                padding: 14px 32px; border-radius: 12px; font-size: 15px;
+                font-weight: 700; text-decoration: none; color: white;
+                background: #0070ba;
+            ">
+                <i class="fab fa-paypal"></i> Pay with PayPal
+            </a>
+            <p style="margin-top:16px; font-size:12px; color:var(--muted);">
+                Don't have PayPal? You can still pay by card through the PayPal link above.
+            </p>
+        </div>
+
+        <div style="background:#0d1420; border:1px solid var(--border); border-radius:14px; padding:20px;">
+            <p style="font-size:13px; color:var(--muted); line-height:1.6;">
+                <i class="fas fa-info-circle" style="color:#3b82f6; margin-right:6px;"></i>
+                PayPal converts your USD payment to ZAR automatically.
+                The exchange rate used will be PayPal's live rate at the time of payment.
+                You will receive a PayPal receipt — please save this as your proof of payment.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- ── Crypto Panel ── -->
+    <div class="method-panel" id="panel-crypto">
+
+        <div class="info-box">
+            <i class="fas fa-circle-info"></i>
+            Send the <strong style="color:white;">exact amount</strong> in your chosen cryptocurrency.
+            Payments are confirmed after network confirmation (usually 10–30 minutes).
+            Include your email in the transaction memo/note where possible.
+        </div>
+
+        <!-- Crypto selector -->
+        <div class="crypto-tabs">
+            <div class="crypto-tab active" onclick="switchCrypto('btc', this)">₿ BTC</div>
+            <div class="crypto-tab" onclick="switchCrypto('eth', this)">Ξ ETH</div>
+            <div class="crypto-tab" onclick="switchCrypto('xrp', this)">◎ XRP</div>
+            <div class="crypto-tab" onclick="switchCrypto('usdt', this)">₮ USDT</div>
+        </div>
+
+        <!-- BTC -->
+        <div class="crypto-panel active" id="crypto-btc">
+            <div class="crypto-address-card">
+                <div class="crypto-address-label">Bitcoin (BTC) Address</div>
+                <div class="crypto-address">1MGGbUgQbksV4vWMkWEoxTanvcSRyJJqvb</div>
+                <button class="copy-btn" style="font-size:13px; padding:8px 16px;" onclick="copyText('1MGGbUgQbksV4vWMkWEoxTanvcSRyJJqvb', this)">
+                    <i class="fas fa-copy"></i> Copy Address
+                </button>
+                <div class="crypto-warning">
+                    <i class="fas fa-triangle-exclamation" style="margin-right:6px;"></i>
+                    Only send <strong>Bitcoin (BTC)</strong> to this address. Sending any other coin will result in permanent loss of funds.
+                </div>
+            </div>
+        </div>
+
+        <!-- ETH -->
+        <div class="crypto-panel" id="crypto-eth">
+            <div class="crypto-address-card">
+                <div class="crypto-address-label">Ethereum (ETH) Address — ERC20 Network</div>
+                <div class="crypto-address">0xe1c299d679858a28ded7b038cd090c230aa26f8c</div>
+                <button class="copy-btn" style="font-size:13px; padding:8px 16px;" onclick="copyText('0xe1c299d679858a28ded7b038cd090c230aa26f8c', this)">
+                    <i class="fas fa-copy"></i> Copy Address
+                </button>
+                <div class="crypto-warning">
+                    <i class="fas fa-triangle-exclamation" style="margin-right:6px;"></i>
+                    Only send <strong>ETH on the ERC20 network</strong> to this address. Do not use BEP20 or any other network.
+                </div>
+            </div>
+        </div>
+
+        <!-- XRP -->
+        <div class="crypto-panel" id="crypto-xrp">
+            <div class="crypto-address-card">
+                <div class="crypto-address-label">XRP Address</div>
+                <div class="crypto-address">rJn2zAPdFA193sixJwuFixRkYDUtx3apQh</div>
+                <button class="copy-btn" style="font-size:13px; padding:8px 16px;" onclick="copyText('rJn2zAPdFA193sixJwuFixRkYDUtx3apQh', this)">
+                    <i class="fas fa-copy"></i> Copy Address
+                </button>
+
+                <div style="margin-top:16px;">
+                    <div class="crypto-address-label">Destination Tag (Required)</div>
+                    <div class="crypto-address" style="font-size:1.4rem; font-weight:800; text-align:center;">
+                        501591852
+                    </div>
+                    <button class="copy-btn" style="font-size:13px; padding:8px 16px;" onclick="copyText('501591852', this)">
+                        <i class="fas fa-copy"></i> Copy Tag
+                    </button>
+                </div>
+
+                <div class="crypto-warning">
+                    <i class="fas fa-triangle-exclamation" style="margin-right:6px;"></i>
+                    <strong>The destination tag is mandatory.</strong> XRP sent without the correct tag will be lost permanently.
+                </div>
+            </div>
+        </div>
+
+        <!-- USDT -->
+        <div class="crypto-panel" id="crypto-usdt">
+            <div class="crypto-address-card">
+                <div class="crypto-address-label">USDT Address — ERC20 Network (Ethereum)</div>
+                <div class="crypto-address">0xe1c299d679858a28ded7b038cd090c230aa26f8c</div>
+                <button class="copy-btn" style="font-size:13px; padding:8px 16px;" onclick="copyText('0xe1c299d679858a28ded7b038cd090c230aa26f8c', this)">
+                    <i class="fas fa-copy"></i> Copy Address
+                </button>
+                <div class="crypto-warning">
+                    <i class="fas fa-triangle-exclamation" style="margin-right:6px;"></i>
+                    Only send <strong>USDT on the ERC20 (Ethereum) network</strong>. Do not use TRC20 or BEP20 — funds sent on the wrong network will be lost.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Submit Proof of Payment ── -->
+    <div class="submit-section">
+        <h3><i class="fas fa-receipt" style="margin-right:10px; color:#00d4ff;"></i>Submit Proof of Payment</h3>
+        <p>
+            Once you've made your payment, send your proof of payment (screenshot or bank confirmation)
+            via WhatsApp or email. Your account will be upgraded within <strong style="color:white;">24 hours</strong>
+            of confirmation.
+        </p>
+
+        <div class="info-box" style="margin-bottom:20px;">
+            <i class="fas fa-circle-info"></i>
+            Please include your <strong style="color:white;">registered email address</strong> and
+            <strong style="color:white;">chosen plan (Monthly / Lifetime)</strong> in your message.
+        </div>
+
+        <div class="submit-buttons">
+            <a id="whatsappBtn" href="#" target="_blank" class="submit-btn whatsapp">
+                <i class="fab fa-whatsapp" style="font-size:20px;"></i>
+                Send via WhatsApp
+            </a>
+            <a href="mailto:visualvoyagerbsn@gmail.com?subject=Voyager Analytics - Proof of Payment&body=Hi, I've made payment for the [Monthly/Lifetime] plan. Please find my proof of payment attached. My registered email is: [your email]" class="submit-btn email">
+                <i class="fas fa-envelope" style="font-size:18px;"></i>
+                Send via Email
+            </a>
+        </div>
+
+        <p style="font-size:12px; color:var(--muted); margin-top:16px; text-align:center;">
+            Email: <strong style="color:white;">visualvoyagerbsn@gmail.com</strong>
+        </p>
+    </div>
+
+</div>
+
+<script>
+// ── Plan state ──────────────────────────────────────────────────────
+
+const PLANS = {
+    monthly:  { label: "Monthly Plan",  zar: "R359.99",   usd: "$20.00" },
+    lifetime: { label: "Lifetime Plan", zar: "R1,799.99", usd: "$99.00" }
+};
+
+// Replace with your actual PayPal.me link once created
+const PAYPAL_ME = "https://paypal.me/visualvoyage"; 
+
+// Replace with your WhatsApp number (international format, no + or spaces)
+const WHATSAPP_NUMBER = "27814758138";
+
+let selectedPlan = "monthly";
+
+function selectPlan(plan){
+    selectedPlan = plan;
+
+    document.getElementById("planMonthly").classList.toggle("selected",  plan === "monthly");
+    document.getElementById("planLifetime").classList.toggle("selected", plan === "lifetime");
+
+    const p = PLANS[plan];
+    document.getElementById("amountDisplay").textContent = p.zar;
+    document.getElementById("planLabel").textContent     = p.label;
+    document.getElementById("paypalAmountUSD").innerHTML =
+        `Equivalent amount: <strong style="color:white;">${p.usd}</strong> USD`;
+
+    updatePayPalLink();
+    updateWhatsAppLink();
+}
+
+function updatePayPalLink(){
+    const p    = PLANS[selectedPlan];
+    const note = encodeURIComponent(`Voyager Analytics ${p.label}`);
+    document.getElementById("paypalLink").href = `${PAYPAL_ME}/${note}`;
+}
+
+function updateWhatsAppLink(){
+    const p    = PLANS[selectedPlan];
+    const msg  = encodeURIComponent(
+        `Hi! I've made payment for the Voyager Analytics ${p.label} (${p.zar}). ` +
+        `Please find my proof of payment attached. My email is: `
+    );
+    document.getElementById("whatsappBtn").href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+}
+
+
+// ── Method switching ────────────────────────────────────────────────
+
+function switchMethod(method){
+    document.querySelectorAll(".method-tab").forEach((t, i) => {
+        const methods = ["eft","usd","crypto"];
+        t.classList.toggle("active", methods[i] === method);
+    });
+    document.querySelectorAll(".method-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById(`panel-${method}`).classList.add("active");
+}
+
+
+// ── Bank selector ───────────────────────────────────────────────────
+
+function selectBank(el){
+    document.querySelectorAll(".bank-btn").forEach(b => b.classList.remove("selected"));
+    el.classList.add("selected");
+}
+
+
+// ── Crypto tab switching ────────────────────────────────────────────
+
+function switchCrypto(coin, el){
+    document.querySelectorAll(".crypto-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".crypto-panel").forEach(p => p.classList.remove("active"));
+    el.classList.add("active");
+    document.getElementById(`crypto-${coin}`).classList.add("active");
+}
+
+
+// ── Copy to clipboard ───────────────────────────────────────────────
+
+function copyText(text, btn){
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => {
+            btn.textContent = orig;
+            btn.classList.remove("copied");
+        }, 2000);
+    });
+}
+
+
+// ── Read plan from URL param ─────────────────────────────────────────
+
+function init(){
+    const params = new URLSearchParams(window.location.search);
+    const plan   = params.get("plan") || "monthly";
+    selectPlan(plan);
+}
+
+init();
+</script>
+
+</body>
+</html>
