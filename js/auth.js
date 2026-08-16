@@ -11,6 +11,7 @@
     }
 })();
 
+// rate limit---
 function startCooldown(btn, seconds){
     setLoading(btn, false);
     btn.disabled = true;
@@ -30,6 +31,7 @@ function startCooldown(btn, seconds){
     }, 1000);
 }
 
+// --- caps warning---
 function setupCapsLockWarning(inputId, warningId){
     const input = document.getElementById(inputId);
     const warning = document.getElementById(warningId);
@@ -43,6 +45,18 @@ function setupCapsLockWarning(inputId, warningId){
 }
 setupCapsLockWarning('password', 'capsLockWarningLogin');
 setupCapsLockWarning('registerPassword', 'capsLockWarningRegister');
+
+// --- google auth---
+document.querySelectorAll('#googleSignInBtn, #googleSignUpBtn').forEach(btn => {
+    btn?.addEventListener('click', () => {
+        const params = new URLSearchParams(window.location.search);
+        if(params.get('redirect') === 'pricing'){
+            const plan = params.get('plan');
+            localStorage.setItem('voyager_post_oauth_redirect', plan ? `pricing.html?autoplan=${plan}` : 'pricing.html');
+        }
+        window.location.href = `${API_URL}/auth/google/login`;
+    });
+});
 
 (function() {
     'use strict';
