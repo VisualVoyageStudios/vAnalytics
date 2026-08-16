@@ -1,10 +1,11 @@
 {
     "name": "Voyager Analytics",
     "short_name": "Voyager",
-    "description": "Professional journaling and analytics dashboard for active traders",
-    "start_url": "/vAnalytics/auth.html",
+    "description": "Professional trading journal and market intelligence for active traders",
+    "start_url": "/vAnalytics/dashboard/dashboard.html",
     "scope": "/vAnalytics/",
     "display": "standalone",
+    "display_override": ["standalone", "minimal-ui"],
     "orientation": "portrait-primary",
     "background_color": "#070b14",
     "theme_color": "#070b14",
@@ -31,15 +32,15 @@
             "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
         },
         {
-            "name": "Journal",
-            "short_name": "Journal",
-            "url": "/vAnalytics/dashboard/journal.html",
-            "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
-        },
-        {
             "name": "Watchlist",
             "short_name": "Watchlist",
             "url": "/vAnalytics/dashboard/watchlist.html",
+            "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Journal",
+            "short_name": "Journal",
+            "url": "/vAnalytics/dashboard/journal.html",
             "icons": [{ "src": "/vAnalytics/icons/voyagerLogo-192.png", "sizes": "192x192" }]
         },
         {
