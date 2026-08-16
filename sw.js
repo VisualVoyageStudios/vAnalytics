@@ -9,13 +9,13 @@ const STATIC_ASSETS = [
     "/vAnalytics/risk.html",
     "/vAnalytics/index.html",
     "/vAnalytics/auth.html",
+    "/vAnalytics/pricing.html",
     "/vAnalytics/dashboard/dashboard.html",
     "/vAnalytics/dashboard/accounts.html",
     "/vAnalytics/dashboard/trades.html",
     "/vAnalytics/dashboard/analytics.html",
     "/vAnalytics/dashboard/journal.html",
     "/vAnalytics/dashboard/riskReward.html",
-    "/vAnalytics/dashboard/settings.html",
     "/vAnalytics/dashboard/watchlist.html",
     "/vAnalytics/dashboard/macroMatrix.html",
     "/vAnalytics/dashboard/centralBanks.html",
@@ -32,11 +32,15 @@ const STATIC_ASSETS = [
     "/vAnalytics/dashboard/goalTracker.html",
     "/vAnalytics/dashboard/recapCard.html",
     "/vAnalytics/dashboard/reports.html",
+    "/vAnalytics/dashboard/settings.html",
     "/vAnalytics/css/global.css",
+    "/vAnalytics/css/landing.css",
+    "/vAnalytics/css/ambient.css",
     "/vAnalytics/css/dashboard.css",
     "/vAnalytics/css/components.css",
     "/vAnalytics/css/pgAnime.css",
     "/vAnalytics/css/economicHeatmap.css",
+    "/vAnalytics/css/tooltip.css",
     "/vAnalytics/js/api.js",
     "/vAnalytics/js/nav.js",
     "/vAnalytics/js/pgAnime.js",
@@ -51,49 +55,53 @@ const STATIC_ASSETS = [
     "/vAnalytics/js/currencyStrength.js",
     "/vAnalytics/js/edgeFinder.js",
     "/vAnalytics/js/economicHeatmap.js",
+    "/vAnalytics/js/tooltip.js",
+    "/vAnalytics/js/pwa-install.js",
     "/vAnalytics/icons/voyagerLogo-192.png",
     "/vAnalytics/icons/voyagerLogo-512.png"
 ];
 
-// ── Install — cache static assets ─────────────────────────────────────
-// NOTE: cache.addAll() fails ATOMICALLY if even one URL 404s — the previous
-// version referenced login.html/register.html/riskDisclaimer.html which
-// don't exist, silently breaking the entire offline cache. All URLs below
-// have been corrected to match real files.
+// ── Install — cache static assets, resiliently ────────────────────────
+// Uses allSettled instead of addAll so ONE bad/missing path doesn't
+// silently kill caching for every other asset (that was the earlier
+// "Uncaught TypeError: Failed to execute 'addAll'" bug).
 self.addEventListener("install", event => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(STATIC_ASSETS))
-            .then(() => self.skipWaiting())
-            .catch(err => console.error("SW install/cache.addAll failed:", err))
+        caches.open(CACHE_NAME).then(async (cache) => {
+            const results = await Promise.allSettled(
+                STATIC_ASSETS.map(url => cache.add(url))
+            );
+            const failed = results
+                .map((r, i) => r.status === "rejected" ? STATIC_ASSETS[i] : null)
+                .filter(Boolean);
+            if (failed.length) {
+                console.warn("SW install: could not cache these (site still works, they just won't be available offline):", failed);
+            }
+            return self.skipWaiting();
+        })
     );
 });
 
-// ── Activate — clean up old caches ───────────────────────────────────
+// ── Activate — clean up old caches ─────────────────────────────────────
 self.addEventListener("activate", event => {
     event.waitUntil(
         caches.keys().then(keys =>
             Promise.all(
-                keys
-                    .filter(key => key !== CACHE_NAME)
-                    .map(key => caches.delete(key))
+                keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
             )
         ).then(() => self.clients.claim())
     );
 });
 
-// ── Fetch strategy ────────────────────────────────────────────────────
-// Static assets: cache-first (fast loads, works offline)
-// API calls: network-first (always try live data, fall back to cache)
+// ── Fetch strategy ──────────────────────────────────────────────────────
+// Static assets: cache-first. API calls: network-first, falls back to cache.
 self.addEventListener("fetch", event => {
     const url = new URL(event.request.url);
 
-    // API requests — network first
-    if(url.hostname === "vanalytics-1.onrender.com"){
+    if(url.hostname === "vanalytics.onrender.com"){
         event.respondWith(
             fetch(event.request)
                 .then(res => {
-                    // cache successful GET responses
                     if(event.request.method === "GET" && res.ok){
                         const clone = res.clone();
                         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
@@ -105,7 +113,6 @@ self.addEventListener("fetch", event => {
         return;
     }
 
-    // Static assets — cache first
     event.respondWith(
         caches.match(event.request)
             .then(cached => cached || fetch(event.request)
