@@ -132,7 +132,7 @@ async function loadPricing(){
                 <li><i class="fas fa-check"></i> Watchlist &amp; Trade Ideas</li>
                 <li><i class="fas fa-check"></i> Economic Calendar</li>
             </ul>
-            <a href="register.html" class="btn-secondary pricing-btn">Get Started Free</a>
+            <a href="auth.html" class="btn-secondary pricing-btn">Get Started Free</a>
         </div>
 
         <div class="pricing-card popular">
@@ -200,13 +200,15 @@ async function loadPricing(){
 
 async function startCheckout(type){
     if(!token){
-        window.location.href = `register.html?redirect=pricing&plan=${type}`;
+        window.location.href = `auth.html?redirect=pricing&plan=${type}`;
         return;
     }
 
     const endpoint = type === "lifetime"
         ? "/payments/paystack/initialize-lifetime"
         : "/payments/paystack/initialize-subscription";
+
+    
 
     try {
         const res  = await fetch(`https://vanalytics-1.onrender.com${endpoint}`, {
@@ -221,6 +223,15 @@ async function startCheckout(type){
         alert("Could not start checkout. Please try again.");
     }
 }
+
+// Resume checkout if the visitor just signed in from the pricing redirect
+window.addEventListener("load", () => {
+    const autoplan = new URLSearchParams(window.location.search).get("autoplan");
+    if(autoplan && token){
+        startCheckout(autoplan);
+    }
+});
+
 
 loadPricing();
 </script>
