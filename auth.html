@@ -223,6 +223,16 @@
         .btn-google:hover { opacity: 0.9; }
         .btn-google:active { transform: scale(0.98); }
 
+        .security-badge {
+            display: inline-flex; align-items: center; gap: 16px;
+            padding: 14px 32px; background: rgba(0, 212, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.15); border-radius: 60px;
+            color: #cbd5e1; font-size: 0.85rem; font-weight: 500; backdrop-filter: blur(4px);
+        }
+        .security-badge .badge-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .security-badge .badge-icon svg { width: 100%; height: 100%; stroke: #00d4ff; fill: none; }
+        .security-badge .badge-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.08); }
+
         /* ─── Toast ─── */
         .toast-container {
             position: fixed;
@@ -422,6 +432,18 @@
             </div>
 
         </div>
+
+        <!-- secutity -->
+        <div class="security-badge" style="margin-top: 24px;">
+            <div class="badge-icon">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/>
+                </svg>
+            </div>
+            <div class="badge-divider"></div>
+            <span>Your data is encrypted and never shared</span>
+        </div>
+        
     </div>
 </div>
 
