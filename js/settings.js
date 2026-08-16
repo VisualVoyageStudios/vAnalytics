@@ -400,6 +400,12 @@ if(savedAccent){
     });
 }
 
+// ── Show install card if not already installed ───────────────────────
+if(!(window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true)){
+    const card = document.getElementById("installCard");
+    if(card) card.style.display = "block";
+}
+
 // ── Handle cTrader redirect back ─────────────────────────
 if(new URLSearchParams(window.location.search).get("ctrader") === "connected"){
     showToast("cTrader account connected.", "success");
