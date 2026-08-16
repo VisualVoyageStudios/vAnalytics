@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Voyager Analytics | Built for traders</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#070b14">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Voyager">
+    <link rel="apple-touch-icon" href="icons/voyagerLogo-192.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="css/global.css" />
     <link rel="stylesheet" href="css/landing.css" />
@@ -627,6 +633,13 @@
             <li><a href="#showcase">Showcase</a></li>
             <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="pricing.html">Pricing</a></li>
+            <li>
+                <button class="pwa-install-btn" style="
+                    display:none; background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3);
+                    color:#00d4ff; padding:8px 16px; border-radius:8px; font-size:13px;
+                    font-weight:600; cursor:pointer; align-items:center; gap:6px;
+                "><i class="fas fa-download"></i> Install App</button>
+            </li>
             <li><a href="auth.html">Login</a></li>
             <li><a href="auth.html" class="btn-primary nav-cta">Get Started</a></li>
         </ul>
@@ -1336,7 +1349,8 @@
                 <p class="footer-copy">© 2026 Voyager Analytics. Trading involves risk — no tool guarantees results.</p>
             </div>
         </div>
-    </footer>    
+    </footer>
+    <script src="js/pwa-install.js"></script>
     <script>
     // REVEAL + DELAY //
     window.addEventListener("scroll", () => {
