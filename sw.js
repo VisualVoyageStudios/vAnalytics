@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
     "/vAnalytics/index.html",
     "/vAnalytics/auth.html",
     "/vAnalytics/pricing.html",
+    "/vAnalytics/checkout.html",
     "/vAnalytics/dashboard/dashboard.html",
     "/vAnalytics/dashboard/accounts.html",
     "/vAnalytics/dashboard/trades.html",
