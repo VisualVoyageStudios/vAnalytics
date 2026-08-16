@@ -196,6 +196,17 @@
         }
         .form-options a:hover { color: #00d4ff; }
 
+        /* -- caps warning--*/
+        .caps-lock-warning {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #f59e0b;
+            margin-top: 4px;
+        }
+        .caps-lock-warning.visible { display: flex; }
+
         /* ─── Toast ─── */
         .toast-container {
             position: fixed;
@@ -302,6 +313,8 @@
                         <div class="input-error" id="passwordError">Password is required</div>
                     </div>
 
+                    <div class="caps-lock-warning" id="capsLockWarningLogin"><i class="fas fa-triangle-exclamation"></i> Caps Lock is on</div>
+
                     <div class="form-options">
                         <label>
                             <input type="checkbox" id="rememberMe">
@@ -355,6 +368,8 @@
                         </button>
                         <div class="input-error" id="confirmPasswordError">Passwords do not match</div>
                     </div>
+
+                    <div class="caps-lock-warning" id="capsLockWarningRegister"><i class="fas fa-triangle-exclamation"></i> Caps Lock is on</div>
 
                     <div class="terms-check">
                         <input type="checkbox" id="termsCheck" required>
